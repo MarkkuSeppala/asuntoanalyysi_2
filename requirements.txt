@@ -9,4 +9,6 @@ psycopg2-binary==2.9.9
 Flask-SQLAlchemy==3.1.1
 Flask-Login==0.6.3
 Flask-WTF==1.2.1
-email-validator==2.2.0 
+email-validator==2.2.0
+# Varmistetaan että gunicorn on asennettu
+gunicorn>=21.2.0 

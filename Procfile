@@ -1,1 +1,1 @@
-web: PATH=$PATH:$(python -m site --user-base)/bin gunicorn app:app
+web: python -m gunicorn wsgi:app
