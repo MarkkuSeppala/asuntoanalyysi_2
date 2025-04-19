@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - Asuntoanalyysi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Lisätään Markdown-tuen kirjasto -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        .analysis-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .analysis-header h2 {
+            margin: 0;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-download {
+            display: inline-block;
+            background-color: #f0f0f0;
+            color: #333;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+        
+        .analysis-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            line-height: 1.6;
+        }
+        
+        .analysis-content h1 {
+            font-size: 2.2rem;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+        
+        .analysis-content h2 {
+            font-size: 1.8rem;
+            margin-top: 30px;
+            color: var(--primary-color);
+        }
+        
+        .analysis-content h3 {
+            font-size: 1.4rem;
+            margin-top: 25px;
+        }
+        
+        .analysis-content p {
+            margin-bottom: 15px;
+        }
+        
+        .analysis-content ul, 
+        .analysis-content ol {
+            margin-bottom: 20px;
+            padding-left: 25px;
+        }
+        
+        .analysis-content li {
+            margin-bottom: 8px;
+        }
+        
+        .analysis-content em {
+            font-style: italic;
+        }
+        
+        .analysis-content strong {
+            font-weight: bold;
+        }
+        
+        .analysis-footer {
+            margin-top: 30px;
+            color: #777;
+            font-size: 0.9em;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Asuntoanalyysi</h1>
+            <nav>
+                <a href="/analyses" class="btn-back">← Takaisin analyyseihin</a>
+            </nav>
+        </header>
+        
+        <main>
+            <section>
+                <div class="analysis-header">
+                    <h2>{{ title }}</h2>
+                    <div class="actions">
+                        <a href="{{ url_for('download_analysis', filename=filename) }}" class="btn-download">Lataa tiedostona</a>
+                    </div>
+                </div>
+                
+                <div class="analysis-content markdown-content" id="analysisContent">
+                    <!-- Tähän tulee markdown-sisältö -->
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>&copy; 2024 Asuntoanalyysi - Kaikki oikeudet pidätetään</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Markdown-tekstin käsittely
+        document.addEventListener('DOMContentLoaded', function() {
+            const analysisContent = document.getElementById('analysisContent');
+            const contentStr = `{{ content|safe }}`;
+            
+            try {
+                if (contentStr && contentStr.trim()) {
+                    analysisContent.innerHTML = marked.parse(contentStr);
+                } else {
+                    analysisContent.innerHTML = '<p class="error-message">Analyysin sisältöä ei voitu ladata.</p>';
+                }
+            } catch (error) {
+                console.error('Virhe markdown-käsittelyssä:', error);
+                analysisContent.innerHTML = '<p class="error-message">Virhe sisällön käsittelyssä.</p>';
+            }
+        });
+    </script>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html> 

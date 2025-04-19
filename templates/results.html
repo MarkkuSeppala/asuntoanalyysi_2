@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asuntoanalyysi - Tulokset</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Lisätään Markdown-tuen kirjasto -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        
+        .btn-analyses {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .btn-analyses:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Asuntoanalyysi - Tulokset</h1>
+            <nav class="nav-links">
+                <a href="/" class="btn-back">← Takaisin etusivulle</a>
+                <a href="{{ url_for('list_analyses') }}" class="btn-analyses">Näytä tallennetut analyysit</a>
+            </nav>
+        </header>
+        
+        <main>
+            <section class="results-section">
+                <div class="results-tabs">
+                    <button class="tab-btn active" data-tab="analysis">Analyysi</button>
+                    <button class="tab-btn" data-tab="raw-data">Asunnon tiedot</button>
+                </div>
+                
+                <div class="tab-content active" id="analysis">
+                    <div class="analysis-content markdown-content">
+                        <!-- Tähän tulee analyysi markdown-muodossa -->
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="raw-data">
+                    <div class="raw-data-content markdown-content">
+                        <!-- Tähän tulee raakatiedot markdown-muodossa -->
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>&copy; 2024 Asuntoanalyysi - Kaikki oikeudet pidätetään</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Markdown-tiedot valmiina
+        const propertyData = `{{ property_data|safe }}`;
+        const analysisData = `{{ analysis|safe }}`;
+        
+        // Täytetään sisältö sivun latautuessa
+        document.addEventListener('DOMContentLoaded', function() {
+            // Käsitellään markdown-teksti HTML-muotoon
+            const analysisContent = document.querySelector('.analysis-content');
+            const rawDataContent = document.querySelector('.raw-data-content');
+            
+            try {
+                if (analysisData && analysisData.trim()) {
+                    analysisContent.innerHTML = marked.parse(analysisData);
+                } else {
+                    analysisContent.innerHTML = '<p class="error-message">Analyysiä ei voitu ladata.</p>';
+                }
+                
+                if (propertyData && propertyData.trim()) {
+                    rawDataContent.innerHTML = marked.parse(propertyData);
+                } else {
+                    rawDataContent.innerHTML = '<p class="error-message">Asunnon tietoja ei voitu ladata.</p>';
+                }
+            } catch (error) {
+                console.error('Virhe markdown-käsittelyssä:', error);
+                analysisContent.innerHTML = '<p class="error-message">Virhe sisällön käsittelyssä.</p>';
+                rawDataContent.innerHTML = '<p class="error-message">Virhe sisällön käsittelyssä.</p>';
+            }
+            
+            // Hallitaan välilehtiä
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Poistetaan aktiivinen tila kaikilta välilehdiltä
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // Lisätään aktiivinen tila valitulle välilehdelle
+                    button.classList.add('active');
+                    const tabId = button.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
+    </script>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html> 

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asuntoanalyysi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .header-actions {
+            margin-top: 15px;
+        }
+        
+        .btn-analyses {
+            display: inline-block;
+            color: var(--primary-color);
+            text-decoration: none;
+            padding: 5px 10px;
+            border: 1px solid var(--primary-color);
+            border-radius: 4px;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+        
+        .btn-analyses:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Asuntoanalyysi</h1>
+            <p>Syötä Oikotie-asuntomyynti-ilmoituksen URL-osoite saadaksesi syvällisen analyysin asunnosta</p>
+            <div class="header-actions">
+                <a href="{{ url_for('list_analyses') }}" class="btn-analyses">Näytä tallennetut analyysit</a>
+            </div>
+        </header>
+        
+        <main>
+            <section class="form-section">
+                <form action="/analyze" method="POST">
+                    <div class="form-group">
+                        <label for="url">Asuntoilmoituksen URL</label>
+                        <input type="url" id="url" name="url" placeholder="https://asunnot.oikotie.fi/myytavat-asunnot/..." required>
+                        <small>Esim. https://asunnot.oikotie.fi/myytavat-asunnot/vantaa/16013052</small>
+                    </div>
+                    <button type="submit" class="btn-primary">Analysoi asunto</button>
+                </form>
+            </section>
+            
+            <section class="info-section">
+                <h2>Miten palvelu toimii?</h2>
+                <ol>
+                    <li>Syötä Oikotien asuntoilmoituksen URL-osoite lomakkeeseen</li>
+                    <li>Järjestelmä hakee asuntoilmoituksen tiedot automaattisesti</li>
+                    <li>Tekoäly analysoi asunnon tiedot ja tuottaa syvällisen analyysin</li>
+                    <li>Saat kattavan raportin asunnosta ja sen arvosta</li>
+                </ol>
+            </section>
+        </main>
+        
+        <footer>
+            <p>&copy; 2024 Asuntoanalyysi - Kaikki oikeudet pidätetään</p>
+        </footer>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html> 

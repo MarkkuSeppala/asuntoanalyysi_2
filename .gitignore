@@ -1,0 +1,69 @@
+# Python-kompilointi
+__pycache__/
+__pycache__/*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtuaaliympäristöt
+venv/
+ENV/
+env/
+.env
+
+# Yksikkötestit / kattavuusraportit
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Loki & data-tiedostot
+*.log
+*.log.*
+logs/
+.DS_Store
+analyses/*
+!analyses/.gitkeep
+data/
+
+# IDE ja editoreiden tiedostot
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# Sensitiivistä tietoa
+.env
+.flaskenv
+.secrets
+*.pem
+*.key
+*.cert
+
+# Tämän projektin omia
+api_calls.log 
