@@ -3,7 +3,7 @@ import os
 import logging
 from real_estate_scraper import RealEstateScraper
 import api_call
-from flask_login import LoginManager, current_user
+from flask_login import LoginManager, current_user, login_required
 from models import db, User
 from auth import auth
 from config import get_config
@@ -55,12 +55,20 @@ with app.app_context():
 def inject_now():
     return {'now': datetime.now()}
 
+@app.route('/welcome')
+@login_required
+def welcome():
+    """Tervetulosivu kirjautuneille käyttäjille"""
+    return render_template('welcome.html')
+
 @app.route('/')
+@login_required
 def index():
     """Etusivu, jossa käyttäjä voi syöttää asuntolinkin"""
     return render_template('index.html')
 
 @app.route('/analyze', methods=['POST'])
+@login_required
 def analyze():
     """Käsittelee käyttäjän syöttämän URL:n ja palauttaa analyysin"""
     try:
@@ -119,6 +127,7 @@ def analyze():
         return jsonify({'error': f'Virhe: {str(e)}'}), 500
 
 @app.route('/api/analyze', methods=['POST'])
+@login_required
 def api_analyze():
     """API-pääte, joka ottaa vastaan URL:n ja palauttaa analyysin JSON-muodossa"""
     try:
@@ -162,6 +171,7 @@ def api_analyze():
         return jsonify({'error': f'Virhe: {str(e)}'}), 500
 
 @app.route('/analyses')
+@login_required
 def list_analyses():
     """Näyttää kaikki tallennetut analyysit listana"""
     try:
@@ -213,6 +223,7 @@ def list_analyses():
         return jsonify({'error': f'Virhe analyysien listaamisessa: {str(e)}'}), 500
 
 @app.route('/analysis/<filename>')
+@login_required
 def view_analysis(filename):
     """Näyttää yksittäisen tallennetun analyysin"""
     try:
@@ -248,6 +259,7 @@ def view_analysis(filename):
         return jsonify({'error': f'Virhe analyysin näyttämisessä: {str(e)}'}), 500
 
 @app.route('/analysis/raw/<filename>')
+@login_required
 def download_analysis(filename):
     """Lataa analyysin raakasisällön tekstitiedostona"""
     try:

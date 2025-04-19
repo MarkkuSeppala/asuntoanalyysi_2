@@ -21,6 +21,7 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
+                {% if current_user.is_authenticated %}
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('index') }}"><i class="fas fa-home"></i> Etusivu</a>
@@ -29,6 +30,13 @@
                         <a class="nav-link" href="{{ url_for('list_analyses') }}"><i class="fas fa-list"></i> Analyysit</a>
                     </li>
                 </ul>
+                {% else %}
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.login') }}"><i class="fas fa-info-circle"></i> Kirjaudu sisään käyttääksesi sovellusta</a>
+                    </li>
+                </ul>
+                {% endif %}
                 <ul class="navbar-nav">
                     {% if current_user.is_authenticated %}
                     <li class="nav-item dropdown">
@@ -43,16 +51,27 @@
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> Kirjaudu</a>
+                        <a class="nav-link btn btn-outline-light btn-sm me-2" href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> Kirjaudu</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.register') }}"><i class="fas fa-user-plus"></i> Rekisteröidy</a>
+                        <a class="nav-link btn btn-light btn-sm text-primary" href="{{ url_for('auth.register') }}"><i class="fas fa-user-plus"></i> Rekisteröidy</a>
                     </li>
                     {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
+
+    <!-- Viestit käyttäjälle -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
 
     <!-- Sivun sisältö -->
     <main>

@@ -11,13 +11,9 @@
                     <h4 class="mb-0">Kirjaudu sisään</h4>
                 </div>
                 <div class="card-body">
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ category }}">{{ message }}</div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endwith %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Sovelluksen käyttö edellyttää kirjautumista. Jos sinulla ei ole vielä tunnuksia, voit rekisteröityä alta.
+                    </div>
                     
                     <form method="POST">
                         {{ form.hidden_tag() }}
@@ -45,7 +41,7 @@
                     </form>
                 </div>
                 <div class="card-footer text-center">
-                    <p class="mb-0">Ei vielä käyttäjätiliä? <a href="{{ url_for('auth.register') }}">Rekisteröidy tästä</a></p>
+                    <p class="mb-0">Ei vielä käyttäjätiliä? <a href="{{ url_for('auth.register') }}" class="fw-bold">Rekisteröidy tästä</a></p>
                 </div>
             </div>
         </div>

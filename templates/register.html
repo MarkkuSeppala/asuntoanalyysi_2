@@ -11,13 +11,9 @@
                     <h3 class="mb-0">Rekisteröidy</h3>
                 </div>
                 <div class="card-body">
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ category }}">{{ message }}</div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endwith %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Luo itsellesi käyttäjätili, jotta voit käyttää asuntoanalyysi-sovellusta.
+                    </div>
                     
                     <form method="POST" action="">
                         {{ form.hidden_tag() }}
@@ -85,7 +81,7 @@
                 </div>
                 <div class="card-footer text-center">
                     <div class="small">
-                        Onko sinulla jo tili? <a href="{{ url_for('auth.login') }}">Kirjaudu sisään</a>
+                        Onko sinulla jo tili? <a href="{{ url_for('auth.login') }}" class="fw-bold">Kirjaudu sisään</a>
                     </div>
                 </div>
             </div>
