@@ -283,6 +283,14 @@ def _sanitize_content(content):
     return content
 
 if __name__ == '__main__':
-    # Tuotannossa ei debug-tilaa
-    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=debug_mode) 
+    # Luodaan templates-kansio, jos sitä ei ole
+    os.makedirs('templates', exist_ok=True)
+    # Luodaan static/css ja static/js -kansiot, jos niitä ei ole
+    os.makedirs('static/css', exist_ok=True)
+    os.makedirs('static/js', exist_ok=True)
+    # Luodaan analyses-kansio, jos sitä ei ole
+    os.makedirs('analyses', exist_ok=True)
+    
+    # Sovelluksen käynnistys
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port) 

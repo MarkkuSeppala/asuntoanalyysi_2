@@ -14,7 +14,9 @@ class Config:
     TESTING = False
     
     # PostgreSQL -tietokanta
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'postgresql://postgres:postgres@localhost/asuntoanalyysi')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith("postgres://"):
+        SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace("postgres://", "postgresql://", 1)
 
 class DevelopmentConfig(Config):
     """Kehitysympäristön konfiguraatio"""
@@ -40,6 +42,10 @@ class ProductionConfig(Config):
     
     # Tuotannossa tarvitaan vähemmän lokitusta
     LOG_LEVEL = 'ERROR'
+    
+    # Tuotannossa CSRF-suojaus
+    WTF_CSRF_ENABLED = True
+    SESSION_COOKIE_HTTPONLY = True
 
 # Konfiguraatioiden valinta ympäristömuuttujan perusteella
 config = {
