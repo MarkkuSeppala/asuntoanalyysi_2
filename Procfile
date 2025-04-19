@@ -1,1 +1,1 @@
-web: gunicorn app:app
+web: PATH=$PATH:$(python -m site --user-base)/bin gunicorn app:app

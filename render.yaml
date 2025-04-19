@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: asuntoanalyysi
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.10.4 
