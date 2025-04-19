@@ -2,7 +2,9 @@
 # exit on error
 set -o errexit
 
+# Asennetaan riippuvuudet
 pip install -r requirements.txt
 
-# Luodaan tietokanta
-python -c "from app import app, db; app.app_context().push(); db.create_all()"
+# Ei luoda tietokantaa vielä tässä vaiheessa, koska ympäristömuuttujia ei välttämättä ole saatavilla
+# Tietokannan luonti tapahtuu sovelluksen käynnistyessä app.py:ssä olevan koodin kautta
+echo "Build complete. Database will be initialized at startup."
