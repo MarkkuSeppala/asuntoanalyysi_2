@@ -12,6 +12,9 @@ pip install gunicorn
 echo "Gunicorn versio:"
 pip show gunicorn
 
+# Varmistetaan että start.sh on suoritettava
+chmod +x start.sh
+
 # Tarkistetaan että gunicorn on asennettu ja näkyy PATH:issa
 python -m gunicorn --version || echo "VAROITUS: gunicorn ei toimi python -m kanssa"
 
