@@ -3,6 +3,11 @@ import os
 import logging
 from real_estate_scraper import RealEstateScraper
 import api_call
+from flask_login import LoginManager, current_user
+from models import db, User
+from auth import auth
+from config import get_config
+from datetime import datetime
 
 # Asetetaan lokitus
 logging.basicConfig(
@@ -13,6 +18,42 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+
+# Asetetaan sovelluksen konfigurointi
+app.config.from_object(get_config())
+
+# Alustetaan tietokanta
+db.init_app(app)
+
+# Alustetaan kirjautumisenhallinta
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'auth.login'
+login_manager.login_message = 'Kirjaudu sisään käyttääksesi tätä sivua.'
+login_manager.login_message_category = 'info'
+
+@login_manager.user_loader
+def load_user(user_id):
+    """Lataa käyttäjä session tunnisteen perusteella"""
+    return User.query.get(int(user_id))
+
+# Rekisteröidään blueprint-komponentit
+app.register_blueprint(auth, url_prefix='/auth')
+
+# Luodaan tietokantafunktio, joka suoritetaan ennen ensimmäistä pyyntöä
+def create_tables():
+    """Luo tietokanta ja taulut jos ne eivät ole olemassa"""
+    with app.app_context():
+        db.create_all()
+
+# Varmistetaan että taulut on luotu sovelluksen käynnistyessä
+with app.app_context():
+    db.create_all()
+
+# Lisätään päivämäärä kaikkiin templateihin
+@app.context_processor
+def inject_now():
+    return {'now': datetime.now()}
 
 @app.route('/')
 def index():
@@ -242,10 +283,6 @@ def _sanitize_content(content):
     return content
 
 if __name__ == '__main__':
-    # Luodaan templates-kansio, jos sitä ei ole
-    os.makedirs('templates', exist_ok=True)
-    # Luodaan static/css ja static/js -kansiot, jos niitä ei ole
-    os.makedirs('static/css', exist_ok=True)
-    os.makedirs('static/js', exist_ok=True)
-    
-    app.run(debug=True) 
+    # Tuotannossa ei debug-tilaa
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=debug_mode) 

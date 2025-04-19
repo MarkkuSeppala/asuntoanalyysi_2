@@ -66,4 +66,46 @@ data/
 *.cert
 
 # Tämän projektin omia
-api_calls.log 
+api_calls.log
+
+# Python välimuistit ja pyc-tiedostot
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Ympäristömuuttujat ja kehitysympäristö
+.env
+.venv
+env/
+venv/
+ENV/
+.env.*
+
+# Tietokannat
+*.sqlite
+*.db
+*.postgresql
+*.sql
+
+# Lokit
+*.log
+logs/
+
+# OpenAI API-avaimet ja muut salaisuudet
+api_keys.py
+secrets.py
+
+# Kehitysympäristön tiedostot
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Käyttöjärjestelmäkohtaiset tiedostot
+.DS_Store
+Thumbs.db
+.directory
+
+# Analyysitiedostot
+analyses/ 
