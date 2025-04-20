@@ -116,7 +116,7 @@ Tehtävänäsi on tehdä ostajalle analyysi myynnisssä olevasta kohteesta.
 Perhedy tietoihin huolellisesi. Tee kohteen tiedoista implisiittisiä päätelmiä ostajalle tärkeistä asioista.
 
 Analyysin alussa on yhteenveto. Tee siitä hyvin napakka ja jopa räväkkä. On tärkeää, että kiinnittää huomiota.
-Kerro suorasanaisesti kohteen puutteet ja vahvuudet.
+Kerro suorasanaisesti kohteen puutteet ja vahvuudet. Vältä toistoa.
 
 
 Hinta-arvioanalyysissä käytä ainostaan kohteen velatonta hintaa.
@@ -134,23 +134,28 @@ Alla kuvaus vastauksen rakenteesta.
 **KOHDE:**
 \"Kaivokselantie 5, Vantaa\"
 
-**Yhteenveto**
-
-*Hinta:*
+<yhteenveto>
+*Hinta:* (kerro pyyntihinta ja esitä tässä myös oma hinta-arviosi)
 *Sijainti:*
 *Taloyhtiö ja rakennus:*
-*Asunnon varustelu:*
-*Jälleenmyyntinäkymä:*
-*Mahdolliset riskit:*
-*Kunnossapitotarpeet ja autopaikan erillisyys:*
+</yhteenveto>
 
 *1. Sijainti ja alueellinen konteksti*
+Anna tässä rehellinen kuvaus alueesta, jossa kiinteistö sijaitsee. Kerro suoraan, jos alue on maineeltaan kyseenalainen.
+
 *2. Rakennus ja taloyhtiö*
+Pyri tekemään omia päätelmiäsi siitä, millainen rakennus ja taloyhtiö on kyseessä, myös sen perusteella, mitä ilmoituksessa ei ole sanottu. On tärkeää, ettei tässä kohdassa ainoastaan toisteta samoja asioita, jotka ilmenevät jo ilmoituksessa.
+
 *3. Asunto ja varustelutaso*
 *4. Markkina- ja ostotilanne*
 *5. Mahdolliset huomiot tai riskitekijät*
+Tämä on tärkeä osio. Pyri kirjoittamaan tämä osio mahdollisimman vakuuttavasti, niin että lukija kokee saaneensa arvokasta tietoa.
+
 *6. Kohteen hinta verrattuna vastaaviin*
+Anna tässä konkreettinen oma hinta-arviosi kohteesta perusteluineen.
+
 *7. Kysymyslista välittäjälle*
+Listaa tähän kolme kysymystä, jotka olisi mielestäsi tärkeä kysyä välittäjältä.
 </rakennekuvaus>
 
 
@@ -159,7 +164,7 @@ Alla kuvaus vastauksen rakenteesta.
             start_time = time.time()
             
             response = client.responses.create(
-                model="gpt-4.1-mini",
+                model="gpt-4.1",
                 input=[
                     {
                         "role": "system",
