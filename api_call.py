@@ -158,6 +158,8 @@ Anna tässä konkreettinen oma hinta-arviosi kohteesta perusteluineen.
 Listaa tähän kolme kysymystä, jotka olisi mielestäsi tärkeä kysyä välittäjältä.
 </rakennekuvaus>
 
+HUOM! Analysoitava ilmoitus saattaa sisältää ilmoitukseen liittymätöntä mainosmateriaalia. Jos havaitset tällaista, älä käytä sitä analyysissa.
+
 
 **Tämä on tärkeää:** ANNA VASTAUS MARKDOWN -MUODOSSA!"""
 
