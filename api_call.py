@@ -115,10 +115,14 @@ Tehtävänäsi on tehdä ostajalle analyysi myynnisssä olevasta kohteesta.
 **TÄMÄ ON TÄRKEÄÄ:**
 Perhedy tietoihin huolellisesi. Tee kohteen tiedoista implisiittisiä päätelmiä ostajalle tärkeistä asioista.
 
+Analyysin alussa on yhteenveto. Tee siitä hyvin napakka ja jopa räväkkä. On tärkeää, että kiinnittää huomiota.
+Kerro suorasanaisesti kohteen puutteet ja vahvuudet.
+
+
 Hinta-arvioanalyysissä käytä ainostaan kohteen velatonta hintaa.
 
 
-Laadi teksi kohteliaaseen, mutta asiantuntijamaiseen tyyliin. Kerro kuitenkin suoraan kohteen puutteet ja negatiiviset asiat.
+Laadi teksi asiantuntijamaiseen tyyliin. Kerro kuitenkin suoraan kohteen puutteet ja negatiiviset asiat.
 Vältä ilmoitustekstin toistoa, ilman että siinä on mielestäsi jotain huomioitavaa. Ota huomioon, että lukija on jo perehtynyt ilmoituksen sisältöön ja odottaa nyt sinulta huomioita, jotka eivät suoraan ilmene tekstistä.
 Koosta analyysin loppuun kolmen kysymyksen kysymyslista. Tee sellaisia kysymyksiä, jotka ovat oikeasti merkittäviä ostajalle.
 Älä kommentoi välitysliikettä tai välittäjää.
