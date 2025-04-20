@@ -102,9 +102,8 @@
             <small>Luotu: {{ analysis.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
         </div>
         <div class="card-body">
-            <div class="analysis-content">
-                {{ analysis.content|safe }}
-            </div>
+            <div id="analysisContent" class="analysis-content"></div>
+            <div id="analysisRawContent" data-content="{{ analysis.content|safe }}" style="display: none;"></div>
         </div>
     </div>
 </div>
@@ -115,11 +114,13 @@
     // Markdown-tekstin käsittely
     document.addEventListener('DOMContentLoaded', function() {
         const analysisContent = document.getElementById('analysisContent');
-        const contentStr = `{{ content|safe }}`;
         
         try {
-            if (contentStr && contentStr.trim()) {
-                analysisContent.innerHTML = marked.parse(contentStr);
+            // Haetaan sisältö elementistä datasetinä
+            const content = document.getElementById('analysisRawContent').dataset.content;
+            
+            if (content && content.trim()) {
+                analysisContent.innerHTML = marked.parse(content);
             } else {
                 analysisContent.innerHTML = '<p class="error-message">Analyysin sisältöä ei voitu ladata.</p>';
             }
