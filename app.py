@@ -120,7 +120,7 @@ def analyze():
         # Varmistetaan että vastaus on puhdistettu (API:ssa puhdistus tehdään jo, tämä on varmuuden vuoksi)
         analysis_response = api_call.sanitize_markdown_response(analysis_response)
         
-        # Sanitoidaan sisältö ennen template-renderöintiä
+        # Sanitoidaan sisältö ennen template-renderöintiä_
         sanitized_markdown = _sanitize_content(markdown_data)
         sanitized_analysis = _sanitize_content(analysis_response)
         
