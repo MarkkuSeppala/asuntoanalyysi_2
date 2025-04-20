@@ -4,69 +4,342 @@
 
 {% block extra_css %}
 <style>
-    .header-actions {
-        margin-top: 15px;
-    }
-    
-    .btn-analyses {
-        display: inline-block;
-        color: var(--primary-color);
-        text-decoration: none;
-        padding: 5px 10px;
-        border: 1px solid var(--primary-color);
-        border-radius: 4px;
-        font-size: 0.9em;
-        transition: all 0.3s;
-    }
-    
-    .btn-analyses:hover {
-        background-color: var(--primary-color);
+    /* Pääotsikkoalue */
+    .hero-container {
+        background: linear-gradient(135deg, #4568dc, #6a82fb);
         color: white;
+        padding: 80px 0;
+        border-radius: 0 0 15px 15px;
+        margin-bottom: 50px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .hero-heading {
+        font-size: 2.8rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        line-height: 1.2;
+    }
+    
+    .hero-subheading {
+        font-size: 1.4rem;
+        font-weight: 300;
+        margin-bottom: 0;
+        opacity: 0.9;
+    }
+    
+    /* Lomakekortti */
+    .form-card {
+        border-radius: 15px;
+        border: none;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        margin-bottom: 40px;
+    }
+    
+    .form-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .form-header {
+        background: white;
+        color: #4568dc;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        font-weight: 600;
+        padding: 20px 30px;
+    }
+    
+    .form-body {
+        padding: 30px;
+    }
+    
+    /* Lomake */
+    .url-input {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .url-input:focus {
+        border-color: #4568dc;
+        box-shadow: 0 0 0 3px rgba(69, 104, 220, 0.15);
+    }
+    
+    .submit-btn {
+        background: linear-gradient(135deg, #4568dc, #6a82fb);
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        padding: 12px 30px;
+        transition: all 0.3s ease;
+    }
+    
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(69, 104, 220, 0.4);
+    }
+    
+    /* Ohjeet-kortti */
+    .info-card {
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        border: none;
+        overflow: hidden;
+    }
+    
+    .info-header {
+        background: #f8f9fa;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        font-weight: 600;
+        color: #4568dc;
+        padding: 20px 30px;
+    }
+    
+    .info-body {
+        padding: 30px;
+    }
+    
+    .steps-list {
+        counter-reset: step-counter;
+        list-style: none;
+        padding-left: 0;
+    }
+    
+    .step-item {
+        position: relative;
+        padding-left: 60px;
+        margin-bottom: 25px;
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .step-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .step-item:before {
+        content: counter(step-counter);
+        counter-increment: step-counter;
+        position: absolute;
+        left: 0;
+        width: 40px;
+        height: 40px;
+        background-color: #4568dc;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+    
+    /* Latausanimaatio */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.9);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .loading-overlay.show {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .loading-spinner {
+        width: 80px;
+        height: 80px;
+        border: 8px solid #f3f3f3;
+        border-top: 8px solid #4568dc;
+        border-radius: 50%;
+        animation: spin 1.5s linear infinite;
+        margin-bottom: 30px;
+    }
+    
+    .loading-text {
+        color: #4568dc;
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    
+    .loading-subtext {
+        color: #666;
+        text-align: center;
+        max-width: 400px;
+    }
+    
+    .loading-progress-container {
+        width: 300px;
+        height: 10px;
+        background-color: #f3f3f3;
+        border-radius: 5px;
+        margin-top: 20px;
+        overflow: hidden;
+    }
+    
+    .loading-progress-bar {
+        height: 100%;
+        width: 0;
+        background: linear-gradient(135deg, #4568dc, #6a82fb);
+        animation: progressAnimation 30s linear forwards;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    @keyframes progressAnimation {
+        0% { width: 0; }
+        90% { width: 90%; }
+        100% { width: 100%; }
+    }
+    
+    @media (max-width: 768px) {
+        .hero-heading {
+            font-size: 2.2rem;
+        }
+        
+        .hero-subheading {
+            font-size: 1.1rem;
+        }
+        
+        .form-header, .info-header {
+            padding: 15px 20px;
+        }
+        
+        .form-body, .info-body {
+            padding: 20px;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- Hero-osio -->
+<div class="hero-container">
+    <div class="container text-center">
+        <h1 class="hero-heading">Asuntoanalyysi tekoälyllä</h1>
+        <p class="hero-subheading">Analysoi asuntoilmoitukset syvällisesti ja löydä piilevät mahdollisuudet sekä riskit</p>
+    </div>
+</div>
+
 <div class="container">
-    <header class="text-center mt-5 mb-5">
-        <h1 class="display-4">Asuntoanalyysi</h1>
-        <p class="lead">Syötä Oikotie-asuntomyynti-ilmoituksen URL-osoite saadaksesi syvällisen analyysin asunnosta</p>
-    </header>
-    
     <div class="row justify-content-center">
+        <!-- Lomakenäkymä -->
         <div class="col-md-8">
-            <div class="card shadow mb-5">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Syötä asunnon tiedot</h4>
+            <div class="form-card">
+                <div class="form-header">
+                    <h4 class="m-0">Syötä asunnon tiedot</h4>
                 </div>
-                <div class="card-body">
-                    <form action="/analyze" method="POST">
-                        <div class="form-group mb-3">
-                            <label for="url" class="form-label">Asuntoilmoituksen URL</label>
-                            <input type="url" id="url" name="url" class="form-control" placeholder="https://asunnot.oikotie.fi/myytavat-asunnot/..." required>
-                            <small class="text-muted">Esim. https://asunnot.oikotie.fi/myytavat-asunnot/vantaa/16013052</small>
+                <div class="form-body">
+                    <form id="analyzeForm" action="/analyze" method="POST">
+                        <div class="mb-4">
+                            <label for="url" class="form-label fw-bold">Asuntoilmoituksen URL</label>
+                            <input type="url" id="url" name="url" class="form-control url-input" placeholder="https://asunnot.oikotie.fi/myytavat-asunnot/..." required>
+                            <div class="form-text mt-2">
+                                <i class="fas fa-info-circle me-1"></i> Kopioi ja liitä Oikotien asuntoilmoituksen osoite
+                            </div>
                         </div>
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">Analysoi asunto</button>
+                        <div class="d-grid">
+                            <button type="submit" class="btn submit-btn">
+                                <i class="fas fa-search-dollar me-2"></i>Analysoi asunto
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
             
-            <div class="card shadow">
-                <div class="card-header bg-light">
-                    <h4 class="mb-0">Miten palvelu toimii?</h4>
+            <!-- Ohjekortti -->
+            <div class="info-card">
+                <div class="info-header">
+                    <h4 class="m-0">
+                        <i class="fas fa-lightbulb me-2"></i>Miten palvelu toimii?
+                    </h4>
                 </div>
-                <div class="card-body">
-                    <ol class="mb-0">
-                        <li class="mb-2">Syötä Oikotien asuntoilmoituksen URL-osoite lomakkeeseen</li>
-                        <li class="mb-2">Järjestelmä hakee asuntoilmoituksen tiedot automaattisesti</li>
-                        <li class="mb-2">Tekoäly analysoi asunnon tiedot ja tuottaa syvällisen analyysin</li>
-                        <li>Saat kattavan raportin asunnosta ja sen arvosta</li>
-                    </ol>
+                <div class="info-body">
+                    <ul class="steps-list">
+                        <li class="step-item">Syötä Oikotien asuntoilmoituksen URL-osoite lomakkeeseen</li>
+                        <li class="step-item">Järjestelmämme hakee asuntoilmoituksen tiedot automaattisesti</li>
+                        <li class="step-item">Tekoäly analysoi asunnon tiedot ja tuottaa syvällisen analyysin</li>
+                        <li class="step-item">Saat kattavan raportin asunnosta, sen arvosta ja mahdollisista riskitekijöistä</li>
+                    </ul>
                 </div>
             </div>
+            
+            {% if current_user.analyses %}
+            <!-- Viimeksi tehdyt analyysit -->
+            <div class="mt-4">
+                <h4 class="mb-3">
+                    <i class="fas fa-history me-2"></i>Viimeisimmät analyysisi
+                </h4>
+                <div class="list-group">
+                    {% for analysis in current_user.analyses[:3] %}
+                    <a href="{{ url_for('view_analysis', analysis_id=analysis.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1">{{ analysis.title or 'Nimetön analyysi' }}</h5>
+                            <p class="mb-1 text-muted">{{ analysis.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">
+                            <i class="fas fa-eye"></i>
+                        </span>
+                    </a>
+                    {% endfor %}
+                </div>
+                <div class="text-end mt-2">
+                    <a href="{{ url_for('list_analyses') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-list me-1"></i>Näytä kaikki analyysit
+                    </a>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
+
+<!-- Latausanimaatio -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <p class="loading-text">Analysoidaan asuntoa...</p>
+    <p class="loading-subtext">Tekoäly käsittelee dataa ja luo sinulle yksityiskohtaisen analyysin. Tämä vie noin 30 sekuntia.</p>
+    <div class="loading-progress-container">
+        <div class="loading-progress-bar"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const analyzeForm = document.getElementById('analyzeForm');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    
+    analyzeForm.addEventListener('submit', function(e) {
+        // Näytä latausanimaatio
+        loadingOverlay.classList.add('show');
+        
+        // Form käsitellään normaalisti, joten emme estä sen lähetystä
+        // Animaatio jatkuu kunnes sivu päivittyy uuden sisällön kanssa
+    });
+});
+</script>
 {% endblock %} 
