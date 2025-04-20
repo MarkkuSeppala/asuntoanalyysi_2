@@ -1,55 +1,72 @@
-<!DOCTYPE html>
-<html lang="fi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asuntoanalyysi - Analysoi sijoitusasunnot tekoälyllä</title>
-    <meta name="description" content="Analysoi sijoitusasunnot tekoälyllä - Saat kattavan analyysin sijoitusasunnosta tai asuntokohteesta">
-    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
-    
-    <!-- Ladataan React-sovelluksen CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='dist/css/main.css') }}">
-    
-    <!-- Bootstrapin CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Mukautettu CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
-<body>
-    <!-- CSRF token ja käyttäjätiedot data-attribuuteissa -->
-    <div 
-        id="root" 
-        data-csrf="{{ csrf_token() }}"
-        {% if current_user.is_authenticated %}
-        data-user-id="{{ current_user.id }}"
-        data-username="{{ current_user.username }}"
-        data-email="{{ current_user.email }}"
-        {% endif %}
-    ></div>
-    
-    <!-- React-sovelluksen pääbundle -->
-    <script src="{{ url_for('static', filename='dist/js/main.bundle.js') }}"></script>
-    
-    <!-- Bootstrap JS (valinnainen, jos tarvitaan) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% extends "base.html" %}
 
-    <!-- Käyttäjätietojen alustus -->
-    <script>
-        window.CSRF_TOKEN = document.getElementById('root').getAttribute('data-csrf');
-        
-        const rootElement = document.getElementById('root');
-        const userId = rootElement.getAttribute('data-user-id');
-        
-        if (userId) {
-            window.USER_DATA = {
-                id: parseInt(userId, 10),
-                username: rootElement.getAttribute('data-username'),
-                email: rootElement.getAttribute('data-email')
-            };
-        } else {
-            window.USER_DATA = null;
-        }
-    </script>
-</body>
-</html> 
+{% block title %}Asuntoanalyysi{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header-actions {
+        margin-top: 15px;
+    }
+    
+    .btn-analyses {
+        display: inline-block;
+        color: var(--primary-color);
+        text-decoration: none;
+        padding: 5px 10px;
+        border: 1px solid var(--primary-color);
+        border-radius: 4px;
+        font-size: 0.9em;
+        transition: all 0.3s;
+    }
+    
+    .btn-analyses:hover {
+        background-color: var(--primary-color);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="text-center mt-5 mb-5">
+        <h1 class="display-4">Asuntoanalyysi</h1>
+        <p class="lead">Syötä Oikotie-asuntomyynti-ilmoituksen URL-osoite saadaksesi syvällisen analyysin asunnosta</p>
+    </header>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow mb-5">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Syötä asunnon tiedot</h4>
+                </div>
+                <div class="card-body">
+                    <form action="/analyze" method="POST">
+                        <div class="form-group mb-3">
+                            <label for="url" class="form-label">Asuntoilmoituksen URL</label>
+                            <input type="url" id="url" name="url" class="form-control" placeholder="https://asunnot.oikotie.fi/myytavat-asunnot/..." required>
+                            <small class="text-muted">Esim. https://asunnot.oikotie.fi/myytavat-asunnot/vantaa/16013052</small>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Analysoi asunto</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card shadow">
+                <div class="card-header bg-light">
+                    <h4 class="mb-0">Miten palvelu toimii?</h4>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0">
+                        <li class="mb-2">Syötä Oikotien asuntoilmoituksen URL-osoite lomakkeeseen</li>
+                        <li class="mb-2">Järjestelmä hakee asuntoilmoituksen tiedot automaattisesti</li>
+                        <li class="mb-2">Tekoäly analysoi asunnon tiedot ja tuottaa syvällisen analyysin</li>
+                        <li>Saat kattavan raportin asunnosta ja sen arvosta</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

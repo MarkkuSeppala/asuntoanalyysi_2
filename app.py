@@ -1,9 +1,6 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory, redirect
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import os
 import logging
-import subprocess
-import sys
-import threading
 from real_estate_scraper import RealEstateScraper
 import api_call
 from flask_login import LoginManager, current_user, login_required
@@ -67,17 +64,6 @@ with app.app_context():
 def inject_now():
     return {'now': datetime.now()}
 
-# Määritellään julkinen static-kansio React-buildille
-@app.route('/static/dist/<path:path>')
-def serve_static(path):
-    return send_from_directory('static/dist', path)
-
-# Yksittäisen API-vastauksen tiedoston lataus
-@app.route('/analyses/<path:filename>')
-@login_required
-def serve_analysis_file(filename):
-    return send_from_directory(os.path.abspath(api_call.ANALYSES_DIR), filename)
-
 @app.route('/welcome')
 @login_required
 def welcome():
@@ -88,7 +74,6 @@ def welcome():
 @login_required
 def index():
     """Etusivu, jossa käyttäjä voi syöttää asuntolinkin"""
-    # Ohjataan React-sovellukseen
     return render_template('index.html')
 
 @app.route('/analyze', methods=['POST'])
@@ -259,11 +244,6 @@ def download_analysis(analysis_id):
         logger.exception(f"Virhe analyysin lataamisessa: {e}")
         return jsonify({'error': f'Virhe analyysin lataamisessa: {str(e)}'}), 500
 
-# Ohjataan kaikki muut reitit React-sovellukseen (SPA-tuki)
-@app.route('/<path:path>')
-def catch_all(path):
-    return render_template('index.html')
-
 def _sanitize_content(content):
     """Sanitoi sisällön poistamalla Jinja2-templaten erikoismerkit."""
     if not content:
@@ -289,49 +269,6 @@ if __name__ == '__main__':
     # Luodaan analyses-kansio, jos sitä ei ole
     os.makedirs('analyses', exist_ok=True)
     
-    # React-frontendin käynnistys kehitystilassa, jos --with-frontend argumentti annettu
-    # Tätä käytetään vain lokaalissa kehitysympäristössä, ei tuotannossa (kuten Render.com)
-    if '--with-frontend' in sys.argv:
-        react_app_dir = os.path.join('static', 'js', 'react-app')
-        
-        # Tarkista onko React-sovelluksen kansio olemassa
-        if os.path.exists(react_app_dir):
-            logger.info("Käynnistetään React-frontend kehitystilassa...")
-            
-            def run_frontend():
-                try:
-                    # Käynnistä npm start erillisessä prosessissa
-                    frontend_process = subprocess.Popen(
-                        ['npm', 'run', 'start'], 
-                        cwd=react_app_dir,
-                        shell=True
-                    )
-                    logger.info("React-frontend käynnistetty onnistuneesti")
-                    
-                    # Odota kunnes pääprosessi päättyy
-                    frontend_process.wait()
-                except Exception as e:
-                    logger.error(f"Virhe React-frontendin käynnistämisessä: {e}")
-            
-            # Käynnistä frontend omassa säikeessään, jotta Flask-palvelin voi käynnistyä samaan aikaan
-            frontend_thread = threading.Thread(target=run_frontend)
-            frontend_thread.daemon = True  # Säie päättyy kun pääohjelma päättyy
-            frontend_thread.start()
-            
-            logger.info("Flask-backend ja React-frontend käynnistetty rinnakkain")
-        else:
-            logger.warning(f"React-sovelluksen kansiota ei löydy: {react_app_dir}")
-    
-    # Tarkistetaan ollaanko tuotantoympäristössä (kuten Render.com)
-    is_production = os.environ.get('RENDER', False) or os.environ.get('PRODUCTION', False)
-    
     # Sovelluksen käynnistys
     port = int(os.environ.get('PORT', 5000))
-    if is_production:
-        # Tuotantoympäristössä ei käytetä debug-tilaa
-        logger.info(f"Käynnistetään sovellus tuotantotilassa portissa {port}")
-        app.run(host='0.0.0.0', port=port)
-    else:
-        # Kehitysympäristössä käytetään debug-tilaa
-        logger.info(f"Käynnistetään sovellus kehitystilassa portissa {port}")
-        app.run(host='0.0.0.0', port=port, debug=True) 
+    app.run(host='0.0.0.0', port=port) 

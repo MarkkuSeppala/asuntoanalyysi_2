@@ -1,45 +1,11 @@
 services:
   - type: web
     name: asuntoanalyysi
-    env: python
-    buildCommand: |
-      # Asennetaan Python-riippuvuudet
-      pip install -r requirements.txt
-      
-      # Varmista, että npm on saatavilla
-      which npm || (echo "npm not found, installing Node.js" && apt-get update && apt-get install -y nodejs npm)
-      
-      # Varmistetaan että tarvittavat hakemistot ovat olemassa
-      mkdir -p static/dist
-      
-      # Asennetaan React-sovelluksen riippuvuudet ja käännetään tuotantoversio
-      cd static/js/react-app && npm install && npm run build
-    
-    startCommand: |
-      # Asetetaan ympäristömuuttuja ilmaisemaan tuotantotilaa
-      export PRODUCTION=true
-      
-      # Käynnistetään Flask-palvelin
-      gunicorn app:app
-    
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "bash ./start.sh"
     envVars:
+      - key: FLASK_ENV
+        value: production
       - key: PYTHON_VERSION
-        value: 3.11.0
-      
-      - key: OPENAI_API_KEY
-        sync: false # Tämä tarkoittaa, että arvo asetetaan Render-hallintapaneelissa
-      
-      # Lisää tämä, jos haluat käyttää tuotannossa PostgreSQL-tietokantaa
-      - key: DATABASE_URL
-        fromDatabase:
-          name: asuntoanalyysi-db
-          property: connectionString
-    
-    # Asetetaan Renderin sisäinen portti
-    envVars:
-      - key: PORT
-        value: 10000
-
-databases:
-  - name: asuntoanalyysi-db
-    plan: starter # tai free, standard-0 riippuen tarpeista 
+        value: 3.11.4 
