@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory, redirect
 import os
 import logging
+import subprocess
+import sys
+import threading
 from real_estate_scraper import RealEstateScraper
 import api_call
 from flask_login import LoginManager, current_user, login_required
@@ -286,6 +289,49 @@ if __name__ == '__main__':
     # Luodaan analyses-kansio, jos sitä ei ole
     os.makedirs('analyses', exist_ok=True)
     
+    # React-frontendin käynnistys kehitystilassa, jos --with-frontend argumentti annettu
+    # Tätä käytetään vain lokaalissa kehitysympäristössä, ei tuotannossa (kuten Render.com)
+    if '--with-frontend' in sys.argv:
+        react_app_dir = os.path.join('static', 'js', 'react-app')
+        
+        # Tarkista onko React-sovelluksen kansio olemassa
+        if os.path.exists(react_app_dir):
+            logger.info("Käynnistetään React-frontend kehitystilassa...")
+            
+            def run_frontend():
+                try:
+                    # Käynnistä npm start erillisessä prosessissa
+                    frontend_process = subprocess.Popen(
+                        ['npm', 'run', 'start'], 
+                        cwd=react_app_dir,
+                        shell=True
+                    )
+                    logger.info("React-frontend käynnistetty onnistuneesti")
+                    
+                    # Odota kunnes pääprosessi päättyy
+                    frontend_process.wait()
+                except Exception as e:
+                    logger.error(f"Virhe React-frontendin käynnistämisessä: {e}")
+            
+            # Käynnistä frontend omassa säikeessään, jotta Flask-palvelin voi käynnistyä samaan aikaan
+            frontend_thread = threading.Thread(target=run_frontend)
+            frontend_thread.daemon = True  # Säie päättyy kun pääohjelma päättyy
+            frontend_thread.start()
+            
+            logger.info("Flask-backend ja React-frontend käynnistetty rinnakkain")
+        else:
+            logger.warning(f"React-sovelluksen kansiota ei löydy: {react_app_dir}")
+    
+    # Tarkistetaan ollaanko tuotantoympäristössä (kuten Render.com)
+    is_production = os.environ.get('RENDER', False) or os.environ.get('PRODUCTION', False)
+    
     # Sovelluksen käynnistys
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port) 
+    if is_production:
+        # Tuotantoympäristössä ei käytetä debug-tilaa
+        logger.info(f"Käynnistetään sovellus tuotantotilassa portissa {port}")
+        app.run(host='0.0.0.0', port=port)
+    else:
+        # Kehitysympäristössä käytetään debug-tilaa
+        logger.info(f"Käynnistetään sovellus kehitystilassa portissa {port}")
+        app.run(host='0.0.0.0', port=port, debug=True) 
