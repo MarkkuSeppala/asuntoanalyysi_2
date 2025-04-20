@@ -8,6 +8,7 @@ from models import db, User, Analysis
 from auth import auth
 from config import get_config
 from datetime import datetime
+import sqlalchemy
 
 # Asetetaan lokitus
 logging.basicConfig(
@@ -47,9 +48,16 @@ def create_tables():
         db.create_all()
 
 # Varmistetaan että taulut on luotu sovelluksen käynnistyessä
-if os.environ.get('FLASK_ENV') != 'production':
-    with app.app_context():
+with app.app_context():
+    # Tarkista onko tauluja jo olemassa
+    inspector = sqlalchemy.inspect(db.engine)
+    tables = inspector.get_table_names()
+    if not tables:
+        logger.info("Tietokanta on tyhjä. Luodaan taulut...")
         db.create_all()
+        logger.info("Taulut luotu.")
+    else:
+        logger.info(f"Tietokanta sisältää jo taulut: {tables}")
 
 # Lisätään päivämäärä kaikkiin templateihin
 @app.context_processor
