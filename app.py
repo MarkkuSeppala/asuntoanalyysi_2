@@ -47,8 +47,9 @@ def create_tables():
         db.create_all()
 
 # Varmistetaan että taulut on luotu sovelluksen käynnistyessä
-with app.app_context():
-    db.create_all()
+if os.environ.get('FLASK_ENV') != 'production':
+    with app.app_context():
+        db.create_all()
 
 # Lisätään päivämäärä kaikkiin templateihin
 @app.context_processor
