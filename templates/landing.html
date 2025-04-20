@@ -240,6 +240,41 @@
     </div>
 </section>
 
+<!-- How it works -->
+<section class="container mt-5 pt-5">
+    <h2 class="text-center mb-5 section-title">Miten se toimii?</h2>
+    <div class="row align-items-center">
+        <div class="col-lg-6">
+            <div class="pe-lg-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; min-width: 50px;">1</div>
+                    <div class="ms-3">
+                        <h4>Syötä asunnon Oikotie-linkki</h4>
+                        <p class="text-muted">Kopioi ja liitä asunnon Oikotie-osoite analysoitavaksi.</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; min-width: 50px;">2</div>
+                    <div class="ms-3">
+                        <h4>AI hakee ja analysoi tiedot</h4>
+                        <p class="text-muted">Tekoäly käy läpi kaikki asunnon tiedot ja vertailee niitä alueen trendeihin.</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; min-width: 50px;">3</div>
+                    <div class="ms-3">
+                        <h4>Tarkastele kattavaa analyysia</h4>
+                        <p class="text-muted">Saat selkeän ja yksityiskohtaisen analyysin sekä tärkeimmät kysymykset välittäjälle.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mt-5 mt-lg-0">
+            <img src="{{ url_for('static', filename='img/analysis-example.svg') }}" alt="Analyysin esimerkki" class="img-fluid demo-screenshot">
+        </div>
+    </div>
+</section>
+
 <!-- Demo Section - Uusi osio -->
 <section class="demo-section">
     <div class="container">
@@ -283,41 +318,6 @@
                     <span id="errorMessage">Virhe analysoitaessa asuntoa. Tarkista URL ja yritä uudelleen.</span>
                 </div>
             </div>
-        </div>
-    </div>
-</section>
-
-<!-- How it works -->
-<section class="container mt-5 pt-5">
-    <h2 class="text-center mb-5 section-title">Miten se toimii?</h2>
-    <div class="row align-items-center">
-        <div class="col-lg-6">
-            <div class="pe-lg-5">
-                <div class="d-flex align-items-center mb-4">
-                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; min-width: 50px;">1</div>
-                    <div class="ms-3">
-                        <h4>Syötä asunnon Oikotie-linkki</h4>
-                        <p class="text-muted">Kopioi ja liitä asunnon Oikotie-osoite analysoitavaksi.</p>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center mb-4">
-                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; min-width: 50px;">2</div>
-                    <div class="ms-3">
-                        <h4>AI hakee ja analysoi tiedot</h4>
-                        <p class="text-muted">Tekoäly käy läpi kaikki asunnon tiedot ja vertailee niitä alueen trendeihin.</p>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center">
-                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; min-width: 50px;">3</div>
-                    <div class="ms-3">
-                        <h4>Tarkastele kattavaa analyysia</h4>
-                        <p class="text-muted">Saat selkeän ja yksityiskohtaisen analyysin sekä tärkeimmät kysymykset välittäjälle.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-6 mt-5 mt-lg-0">
-            <img src="{{ url_for('static', filename='img/analysis-example.svg') }}" alt="Analyysin esimerkki" class="img-fluid demo-screenshot">
         </div>
     </div>
 </section>
@@ -464,7 +464,7 @@
                 demoResult.classList.remove('d-none');
                 
                 // Aseta otsikko, jos saatavilla
-                let title = 'Analyysi kohteesta';
+                let title = '';
                 
                 // Etsi otsikko analyysistä (ensimmäinen rivi joka alkaa #-merkillä)
                 const lines = data.analysis.split('\n');
