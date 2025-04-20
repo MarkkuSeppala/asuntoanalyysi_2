@@ -135,7 +135,7 @@ Alla kuvaus vastauksen rakenteesta.
 \"Kaivokselantie 5, Vantaa\"
 
 <yhteenveto>
-*Hinta:* (kerro pyyntihinta ja esitä tässä myös oma hinta-arviosi)
+*Hinta:* (kerro pyyntihinta ja esitä tässä myös oma hinta-arviosi, mutta huomioi, että ostajat olettavat saavansa aina ostotilanteessa noin 5% alennuksen.)
 *Sijainti:*
 *Taloyhtiö ja rakennus:*
 </yhteenveto>
