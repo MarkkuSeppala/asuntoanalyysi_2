@@ -1,6 +1,6 @@
 import os
 from datetime import timedelta
-
+ 
 class Config:
     """Perus konfiguraatio kaikille ympäristöille"""
     SECRET_KEY = os.environ.get('SECRET_KEY', 'kehitys-avain-vaihda-tuotannossa')
@@ -16,7 +16,7 @@ class Config:
     # Asetetaan sessioiden kesto
     PERMANENT_SESSION_LIFETIME = timedelta(days=30)
     
-    # Yleiset säädöt
+    # Yleiset säädöt_
     DEBUG = False
     TESTING = False
     
