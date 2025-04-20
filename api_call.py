@@ -155,7 +155,7 @@ Alla kuvaus vastauksen rakenteesta.
             start_time = time.time()
             
             response = client.responses.create(
-                model="gpt-4.1",
+                model="gpt-4.1-mini",
                 input=[
                     {
                         "role": "system",
