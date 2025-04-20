@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Asuntoanalyysi - Tallennetut analyysit{% endblock %}
+{% block title %}Omat analyysit{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -47,34 +47,37 @@
 {% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Tallennetut analyysit</h1>
-        <a href="/" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Takaisin etusivulle</a>
-    </div>
+<div class="container mt-4">
+    <h1 class="mb-4">Omat analyysit</h1>
     
-    <div class="card shadow mb-4">
-        <div class="card-body">
-            {% if analyses %}
-                <ul class="analyses-list">
-                    {% for analysis in analyses %}
-                        <li class="analysis-item">
-                            <h3>{{ analysis.title }}</h3>
-                            <div class="analysis-date">{{ analysis.date }}</div>
-                            <div class="analysis-actions">
-                                <a href="{{ url_for('view_analysis', filename=analysis.filename) }}" class="btn btn-primary">Näytä analyysi</a>
-                                <a href="{{ url_for('download_analysis', filename=analysis.filename) }}" class="btn btn-outline-secondary">Lataa tiedosto</a>
-                            </div>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <div class="empty-state">
-                    <p class="h4 mb-3">Ei tallennettuja analyyseja.</p>
-                    <p>Tee uusi analyysi <a href="/">etusivulta</a>.</p>
-                </div>
-            {% endif %}
+    {% if analyses|length > 0 %}
+        <div class="list-group mb-4">
+            {% for analysis in analyses %}
+                <a href="{{ url_for('view_analysis', analysis_id=analysis.id) }}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">{{ analysis.title or 'Nimetön analyysi' }}</h5>
+                        <small>{{ analysis.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                    </div>
+                    <p class="mb-1">{{ analysis.property_url }}</p>
+                    <div class="d-flex justify-content-end mt-2">
+                        <a href="{{ url_for('download_analysis', analysis_id=analysis.id) }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-download"></i> Lataa
+                        </a>
+                    </div>
+                </a>
+            {% endfor %}
         </div>
+    {% else %}
+        <div class="alert alert-info">
+            <p>Sinulla ei ole vielä tallennettuja analyysejä.</p>
+            <p>Voit tehdä uuden analyysin <a href="{{ url_for('index') }}">etusivulla</a>.</p>
+        </div>
+    {% endif %}
+    
+    <div class="mt-4">
+        <a href="{{ url_for('index') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Tee uusi analyysi
+        </a>
     </div>
 </div>
 {% endblock %} 

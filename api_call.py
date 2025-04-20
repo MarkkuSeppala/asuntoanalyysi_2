@@ -8,6 +8,8 @@ import re
 from typing import Optional, Dict, Any
 from datetime import datetime
 import hashlib
+from models import db, Analysis
+from flask_login import current_user
 
 # Asetetaan lokitus
 logging.basicConfig(
@@ -82,12 +84,13 @@ def sanitize_markdown_response(text: str) -> str:
     logger.debug("Sanitoitu markdown-vastaus")
     return text.strip()
 
-def get_analysis(markdown_data: str) -> str:
+def get_analysis(markdown_data: str, property_url: str = None) -> str:
     """
     Lähettää asunnon tiedot markdown-muodossa OpenAI:lle ja pyytää analyysin.
     
     Args:
         markdown_data (str): Asunnon tiedot markdown-muodossa
+        property_url (str, optional): Analysoitavan asunnon URL
         
     Returns:
         str: OpenAI:n tuottama analyysi
@@ -193,8 +196,8 @@ Alla kuvaus vastauksen rakenteesta.
                 # Sanitoidaan vastaus ennen tallennusta ja palautusta
                 sanitized_response = sanitize_markdown_response(response.output_text)
                 
-                # Tallennetaan analyysi tiedostoon
-                save_analysis_to_file(sanitized_response, markdown_data)
+                # Tallennetaan analyysi tiedostoon ja tietokantaan
+                saved_file = save_analysis_to_file(sanitized_response, markdown_data, property_url)
                 
                 return sanitized_response
             else:
@@ -245,13 +248,14 @@ Alla kuvaus vastauksen rakenteesta.
     logger.error(f"Kaikki {max_retries} yritystä epäonnistuivat")
     return ERROR_MESSAGES["general"]
 
-def save_analysis_to_file(analysis: str, markdown_data: str) -> str:
+def save_analysis_to_file(analysis: str, markdown_data: str, property_url: str = None) -> str:
     """
-    Tallentaa analyysin tekstitiedostoon analyses-hakemistoon.
+    Tallentaa analyysin tekstitiedostoon analyses-hakemistoon ja tietokantaan.
     
     Args:
         analysis (str): Analyysi teksti
         markdown_data (str): Alkuperäinen markdown-muotoinen data, josta analyysi tehtiin
+        property_url (str, optional): Analysoitavan asunnon URL
         
     Returns:
         str: Tallennetun tiedoston polku
@@ -265,19 +269,20 @@ def save_analysis_to_file(analysis: str, markdown_data: str) -> str:
         hash_digest = hashlib.md5(data_preview.encode('utf-8')).hexdigest()[:8]
         
         # Luodaan tiedoston nimi
-        filename = f"{ANALYSES_DIR}/analyysi_{timestamp}_{hash_digest}.txt"
+        filename = f"analyysi_{timestamp}_{hash_digest}.txt"
+        filepath = os.path.join(ANALYSES_DIR, filename)
+        
+        # Etsitään osoitetta tai otsikkoa markdown-datasta
+        address_or_title = ""
+        for line in markdown_data.split("\n"):
+            if line.startswith("# "):  # Markdown-otsikko
+                address_or_title = line[2:].strip()
+                break
         
         # Tallennetaan analyysi tiedostoon
-        with open(filename, "w", encoding="utf-8") as file:
+        with open(filepath, "w", encoding="utf-8") as file:
             # Kirjoitetaan otsikko ja aikaleima
             file.write(f"# Asuntoanalyysi {timestamp}\n\n")
-            
-            # Etsitään osoitetta tai otsikkoa markdown-datasta
-            address_or_title = ""
-            for line in markdown_data.split("\n"):
-                if line.startswith("# "):  # Markdown-otsikko
-                    address_or_title = line[2:].strip()
-                    break
             
             if address_or_title:
                 file.write(f"Kohde: {address_or_title}\n\n")
@@ -289,8 +294,29 @@ def save_analysis_to_file(analysis: str, markdown_data: str) -> str:
             # Lisätään alaviite
             file.write(f"\n\n---\nGeneroitu {datetime.now().strftime('%d.%m.%Y klo %H:%M:%S')}\n")
         
-        logger.info(f"Analyysi tallennettu tiedostoon: {filename}")
-        return filename
+        # Tallennetaan analyysi tietokantaan, jos käyttäjä on kirjautunut
+        if current_user and current_user.is_authenticated:
+            try:
+                # Luodaan uusi analyysi
+                db_analysis = Analysis(
+                    filename=filename,
+                    title=address_or_title or f"Analyysi {timestamp}",
+                    property_url=property_url,
+                    content=analysis,
+                    user_id=current_user.id
+                )
+                
+                # Lisätään tietokantaan
+                db.session.add(db_analysis)
+                db.session.commit()
+                
+                logger.info(f"Analyysi tallennettu tietokantaan käyttäjälle {current_user.username}")
+            except Exception as db_err:
+                logger.error(f"Virhe analyysin tallentamisessa tietokantaan: {db_err}")
+                # Jatketaan, vaikka tietokantaan tallennus epäonnistuisi
+        
+        logger.info(f"Analyysi tallennettu tiedostoon: {filepath}")
+        return filepath
         
     except Exception as e:
         logger.error(f"Virhe analyysin tallentamisessa tiedostoon: {e}")
@@ -314,14 +340,23 @@ def log_request_details(data: Dict[str, Any]) -> None:
     except Exception as e:
         logger.warning(f"Pyyntötietojen lokitus epäonnistui: {e}")
 
-def get_saved_analyses() -> list:
+def get_saved_analyses(user_id=None) -> list:
     """
     Palauttaa listan tallennetuista analyyseistä.
     
+    Args:
+        user_id (int, optional): Käyttäjän ID, jonka analyysit haetaan
+        
     Returns:
         list: Lista tiedostopolkuja tallennetuista analyyseistä
     """
     try:
+        if user_id:
+            # Jos käyttäjä annettu, haetaan vain kyseisen käyttäjän analyysit
+            from models import Analysis
+            return Analysis.query.filter_by(user_id=user_id).order_by(Analysis.created_at.desc()).all()
+        
+        # Muuten haetaan kaikki analyysit tiedostojärjestelmästä
         if not os.path.exists(ANALYSES_DIR):
             logger.warning(f"Analyses-hakemistoa ei löydy: {ANALYSES_DIR}")
             return []

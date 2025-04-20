@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ title }} - Asuntoanalyysi{% endblock %}
+{% block title %}Analyysi - {{ analysis.title or 'Nimetön analyysi' }}{% endblock %}
 
 {% block extra_css %}
 <!-- Lisätään Markdown-tuen kirjasto -->
@@ -81,20 +81,30 @@
 {% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <div class="mb-4">
-        <div class="d-flex justify-content-between align-items-center">
-            <h1>{{ title }}</h1>
-            <div>
-                <a href="/analyses" class="btn btn-outline-secondary me-2"><i class="fas fa-arrow-left"></i> Takaisin analyyseihin</a>
-                <a href="{{ url_for('download_analysis', filename=filename) }}" class="btn btn-outline-primary">Lataa tiedostona</a>
-            </div>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-3">{{ analysis.title or 'Nimetön analyysi' }}</h1>
+        <div>
+            <a href="{{ url_for('download_analysis', analysis_id=analysis.id) }}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-download"></i> Lataa
+            </a>
+            <a href="{{ url_for('list_analyses') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Takaisin
+            </a>
         </div>
     </div>
-    
-    <div class="card shadow">
-        <div class="card-body analysis-content markdown-content" id="analysisContent">
-            <!-- Tähän tulee markdown-sisältö -->
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <div>
+                <strong>Kohde:</strong> {{ analysis.property_url }}
+            </div>
+            <small>Luotu: {{ analysis.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+        </div>
+        <div class="card-body">
+            <div class="analysis-content">
+                {{ analysis.content|safe }}
+            </div>
         </div>
     </div>
 </div>

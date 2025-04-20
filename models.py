@@ -17,8 +17,8 @@ class User(db.Model, UserMixin):
     is_active = db.Column(db.Boolean, default=True)
     is_admin = db.Column(db.Boolean, default=False)
     
-    # Analyysit, jotka käyttäjä on tehnyt (voidaan lisätä myöhemmin jos halutaan yhdistää analyysit käyttäjätileihin)
-    # analyses = db.relationship('Analysis', backref='user', lazy=True)
+    # Analyysit, jotka käyttäjä on tehnyt
+    analyses = db.relationship('Analysis', backref='user', lazy=True)
     
     def __init__(self, username, email, password, is_admin=False):
         self.username = username
@@ -33,17 +33,17 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         return f'<User {self.username}>'
 
-# Tämä voitaisiin ottaa käyttöön myöhemmin, jos halutaan tallentaa analyysit tietokantaan
-# class Analysis(db.Model):
-#     """Analyysimalli tietokantaa varten"""
-#     __tablename__ = 'analyses'
-#     
-#     id = db.Column(db.Integer, primary_key=True)
-#     filename = db.Column(db.String(255), nullable=False)
-#     title = db.Column(db.String(255), nullable=True)
-#     property_url = db.Column(db.String(500), nullable=True)
-#     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-#     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-#     
-#     def __repr__(self):
-#         return f'<Analysis {self.title}>' 
+class Analysis(db.Model):
+    """Analyysimalli tietokantaa varten"""
+    __tablename__ = 'analyses'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    title = db.Column(db.String(255), nullable=True)
+    property_url = db.Column(db.String(500), nullable=True)
+    content = db.Column(db.Text, nullable=True)  # Analyysisisältö tekstimuodossa
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    def __repr__(self):
+        return f'<Analysis {self.title}>' 

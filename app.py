@@ -4,7 +4,7 @@ import logging
 from real_estate_scraper import RealEstateScraper
 import api_call
 from flask_login import LoginManager, current_user, login_required
-from models import db, User
+from models import db, User, Analysis
 from auth import auth
 from config import get_config
 from datetime import datetime
@@ -102,7 +102,7 @@ def analyze():
         
         # Käytetään OpenAI API:a analyysin tekemiseen
         logger.info("Tehdään OpenAI API -kutsu analyysia varten")
-        analysis_response = api_call.get_analysis(markdown_data)
+        analysis_response = api_call.get_analysis(markdown_data, url)
         
         if not analysis_response:
             logger.error("API-kutsu palautti tyhjän vastauksen")
@@ -155,7 +155,7 @@ def api_analyze():
             return jsonify({'error': 'Markdown-muotoisen datan luominen epäonnistui'}), 500
         
         # Käytetään OpenAI API:a analyysin tekemiseen
-        analysis_response = api_call.get_analysis(markdown_data)
+        analysis_response = api_call.get_analysis(markdown_data, url)
         
         # Varmistetaan että vastaus on puhdistettu (API:ssa puhdistus tehdään jo)
         analysis_response = api_call.sanitize_markdown_response(analysis_response)
@@ -173,106 +173,63 @@ def api_analyze():
 @app.route('/analyses')
 @login_required
 def list_analyses():
-    """Näyttää kaikki tallennetut analyysit listana"""
+    """Näyttää kirjautuneen käyttäjän tallennetut analyysit"""
     try:
-        # Haetaan tallennetut analyysit
-        analyses_files = api_call.get_saved_analyses()
+        # Haetaan käyttäjän analyysit tietokannasta
+        analyses = Analysis.query.filter_by(user_id=current_user.id).order_by(Analysis.created_at.desc()).all()
         
-        analyses_list = []
-        for filepath in analyses_files:
-            filename = os.path.basename(filepath)
-            # Parsitaan tiedostosta päivämäärä ja tunnus
-            parts = filename.replace('.txt', '').split('_')
-            if len(parts) >= 3:
-                date_str = parts[1]
-                time_str = parts[2] if len(parts) > 3 else ""
-                
-                # Formatoidaan päivämäärä luettavampaan muotoon
-                if len(date_str) == 8:  # YYYYMMDD
-                    formatted_date = f"{date_str[6:8]}.{date_str[4:6]}.{date_str[:4]}"
-                else:
-                    formatted_date = date_str
-                
-                # Yritetään lukea otsikko tiedoston ensimmäisiltä riveiltä
-                title = ""
-                try:
-                    with open(filepath, 'r', encoding='utf-8') as f:
-                        for i, line in enumerate(f):
-                            if i > 5:  # Luetaan vain ensimmäiset rivit
-                                break
-                            if line.startswith("Kohde:"):
-                                title = line.replace("Kohde:", "").strip()
-                                break
-                except Exception as e:
-                    logger.warning(f"Virhe tiedoston lukemisessa: {e}")
-                
-                if not title:
-                    title = f"Analyysi {formatted_date}"
-                
-                analyses_list.append({
-                    'filename': filename,
-                    'title': title,
-                    'date': formatted_date,
-                    'time': time_str
-                })
-        
-        return render_template('analyses.html', analyses=analyses_list)
+        return render_template('analyses.html', analyses=analyses)
         
     except Exception as e:
         logger.exception(f"Virhe analyysien listaamisessa: {e}")
         return jsonify({'error': f'Virhe analyysien listaamisessa: {str(e)}'}), 500
 
-@app.route('/analysis/<filename>')
+@app.route('/analysis/<int:analysis_id>')
 @login_required
-def view_analysis(filename):
+def view_analysis(analysis_id):
     """Näyttää yksittäisen tallennetun analyysin"""
     try:
-        # Tarkista että tiedostonimi on turvallinen
-        if not filename or '..' in filename or '/' in filename:
-            return jsonify({'error': 'Virheellinen tiedostonimi'}), 400
-            
-        # Muodosta tiedostopolku
-        filepath = os.path.join(api_call.ANALYSES_DIR, filename)
+        # Haetaan analyysi tietokannasta
+        analysis = Analysis.query.get_or_404(analysis_id)
         
-        # Tarkista että tiedosto on olemassa
-        if not os.path.exists(filepath):
-            return jsonify({'error': 'Analyysiä ei löytynyt'}), 404
+        # Tarkistetaan että käyttäjällä on oikeus nähdä tämä analyysi
+        if analysis.user_id != current_user.id:
+            flash('Sinulla ei ole oikeutta tähän analyysiin.', 'danger')
+            return redirect(url_for('list_analyses'))
             
-        # Lue tiedoston sisältö
-        with open(filepath, 'r', encoding='utf-8') as f:
-            content = f.read()
-            
-        # Hae otsikko tiedostosta
-        title = "Asuntoanalyysi"
-        for line in content.split('\n')[:10]:
-            if line.startswith("Kohde:"):
-                title = line.replace("Kohde:", "").strip()
-                break
-                
-        # Sanitoi sisältö
-        content = _sanitize_content(content)
-            
-        return render_template('analysis.html', title=title, content=content, filename=filename)
+        return render_template('analysis.html', analysis=analysis, title=analysis.title, content=analysis.content)
         
     except Exception as e:
         logger.exception(f"Virhe analyysin näyttämisessä: {e}")
         return jsonify({'error': f'Virhe analyysin näyttämisessä: {str(e)}'}), 500
 
-@app.route('/analysis/raw/<filename>')
+@app.route('/analysis/raw/<int:analysis_id>')
 @login_required
-def download_analysis(filename):
+def download_analysis(analysis_id):
     """Lataa analyysin raakasisällön tekstitiedostona"""
     try:
-        # Tarkista että tiedostonimi on turvallinen
-        if not filename or '..' in filename or '/' in filename:
-            return jsonify({'error': 'Virheellinen tiedostonimi'}), 400
-            
-        return send_from_directory(
-            os.path.abspath(api_call.ANALYSES_DIR),
-            filename,
-            as_attachment=True,
-            mimetype='text/plain'
-        )
+        # Haetaan analyysi tietokannasta
+        analysis = Analysis.query.get_or_404(analysis_id)
+        
+        # Tarkistetaan että käyttäjällä on oikeus ladata tämä analyysi
+        if analysis.user_id != current_user.id:
+            flash('Sinulla ei ole oikeutta tähän analyysiin.', 'danger')
+            return redirect(url_for('list_analyses'))
+        
+        # Jos analysis.filename viittaa olemassa olevaan tiedostoon, ladataan se
+        if analysis.filename and os.path.exists(os.path.join(api_call.ANALYSES_DIR, analysis.filename)):
+            return send_from_directory(
+                os.path.abspath(api_call.ANALYSES_DIR),
+                analysis.filename,
+                as_attachment=True,
+                mimetype='text/plain'
+            )
+        
+        # Muuten luodaan sisällöstä tiedosto ja palautetaan se
+        response = jsonify({'content': analysis.content})
+        response.headers.set('Content-Disposition', f'attachment; filename={analysis.filename or "analyysi.txt"}')
+        response.headers.set('Content-Type', 'text/plain')
+        return response
         
     except Exception as e:
         logger.exception(f"Virhe analyysin lataamisessa: {e}")
