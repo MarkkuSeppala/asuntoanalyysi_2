@@ -70,11 +70,18 @@ def welcome():
     """Tervetulosivu kirjautuneille käyttäjille"""
     return render_template('welcome.html')
 
+@app.route('/landing')
+def landing():
+    """Landing page - sovelluksen markkinointisivu"""
+    return render_template('landing.html')
+
 @app.route('/')
-@login_required
 def index():
-    """Etusivu, jossa käyttäjä voi syöttää asuntolinkin"""
-    return render_template('index.html')
+    """Etusivu, jossa käyttäjä voi syöttää asuntolinkin tai näkee landing-sivun"""
+    if current_user.is_authenticated:
+        return render_template('index.html')
+    else:
+        return render_template('landing.html')
 
 @app.route('/analyze', methods=['POST'])
 @login_required

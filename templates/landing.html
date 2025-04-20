@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Asuntoanalyysi - Älykäs asuntomarkkinoiden analysointityökalu{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #4568dc, #6a82fb);
+        padding: 100px 0;
+        margin-bottom: 50px;
+        color: white;
+        border-radius: 0 0 15px 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .hero-title {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.4rem;
+        font-weight: 300;
+        margin-bottom: 30px;
+        opacity: 0.9;
+    }
+    
+    .hero-cta {
+        background-color: #ffffff;
+        color: #4568dc;
+        padding: 12px 30px;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .hero-cta:hover {
+        background-color: #f8f9fa;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-card {
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        transition: all 0.3s ease;
+        border: 1px solid #eaeaea;
+        height: 100%;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-icon {
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+        color: #4568dc;
+    }
+    
+    .testimonial-section {
+        background-color: #f8f9fa;
+        padding: 80px 0;
+        margin: 50px 0;
+        border-radius: 15px;
+    }
+    
+    .testimonial-card {
+        background-color: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    .testimonial-text {
+        font-style: italic;
+        margin-bottom: 20px;
+    }
+    
+    .testimonial-author {
+        font-weight: 600;
+    }
+    
+    .cta-section {
+        background: linear-gradient(135deg, #4568dc, #6a82fb);
+        padding: 80px 0;
+        color: white;
+        border-radius: 15px;
+        margin-bottom: 50px;
+    }
+    
+    .footer {
+        margin-top: 50px;
+        padding-top: 50px;
+        padding-bottom: 30px;
+        border-top: 1px solid #eaeaea;
+    }
+    
+    .section-title {
+        margin-bottom: 50px;
+        position: relative;
+        display: inline-block;
+    }
+    
+    .section-title:after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+        width: 50px;
+        height: 3px;
+        background: #4568dc;
+    }
+    
+    .demo-screenshot {
+        border-radius: 10px;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .demo-screenshot:hover {
+        transform: scale(1.02);
+    }
+    
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.2rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="hero-title">Tee fiksumpia asuntopäätöksiä tekoälyn avulla</h1>
+                <p class="hero-subtitle">Asuntoanalyysi auttaa sinua analysoimaan potentiaalisia asuntokohteita syvällisesti ja tunnistamaan piilevät riskit ja mahdollisuudet.</p>
+                <div class="d-flex flex-wrap gap-3">
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('index') }}" class="btn hero-cta">Analysoi asunto</a>
+                    <a href="{{ url_for('list_analyses') }}" class="btn btn-outline-light">Katso analyysejäsi</a>
+                    {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn hero-cta">Kirjaudu sisään</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light">Rekisteröidy</a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block text-center">
+                <img src="{{ url_for('static', filename='img/hero-image.svg') }}" alt="Asuntoanalyysi sovelluksen demo" class="img-fluid mt-4" style="max-height: 350px;">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="container">
+    <h2 class="text-center mb-5 section-title">Miksi valita Asuntoanalyysi?</h2>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="feature-card text-center">
+                <div class="feature-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h3>Tekoälyanalyysi</h3>
+                <p>Kehittynyt tekoäly analysoi asunnon tiedot ja tuottaa ammattimaisen analyysin potentiaalisesta kodistasi.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card text-center">
+                <div class="feature-icon">
+                    <i class="fas fa-search-dollar"></i>
+                </div>
+                <h3>Hinta-arvio</h3>
+                <p>Saat tarkan arvion asunnon hinnoittelusta verrattuna vastaaviin kohteisiin samalla alueella.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card text-center">
+                <div class="feature-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3>Riskien tunnistus</h3>
+                <p>Tunnista mahdolliset piilevät ongelmat ja riskit ennen ostopäätöksen tekemistä.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How it works -->
+<section class="container mt-5 pt-5">
+    <h2 class="text-center mb-5 section-title">Miten se toimii?</h2>
+    <div class="row align-items-center">
+        <div class="col-lg-6">
+            <div class="pe-lg-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; min-width: 50px;">1</div>
+                    <div class="ms-3">
+                        <h4>Syötä asunnon Oikotie-linkki</h4>
+                        <p class="text-muted">Kopioi ja liitä asunnon Oikotie-osoite analysoitavaksi.</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; min-width: 50px;">2</div>
+                    <div class="ms-3">
+                        <h4>AI hakee ja analysoi tiedot</h4>
+                        <p class="text-muted">Tekoäly käy läpi kaikki asunnon tiedot ja vertailee niitä alueen trendeihin.</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; min-width: 50px;">3</div>
+                    <div class="ms-3">
+                        <h4>Tarkastele kattavaa analyysia</h4>
+                        <p class="text-muted">Saat selkeän ja yksityiskohtaisen analyysin sekä tärkeimmät kysymykset välittäjälle.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mt-5 mt-lg-0">
+            <img src="{{ url_for('static', filename='img/analysis-example.svg') }}" alt="Analyysin esimerkki" class="img-fluid demo-screenshot">
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section class="testimonial-section">
+    <div class="container">
+        <h2 class="text-center mb-5 section-title">Mitä asiakkaamme sanovat</h2>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"Asuntoanalyysi auttoi minua huomaamaan useita tärkeitä yksityiskohtia asunnosta, joita en muuten olisi huomannut. Säästyin monelta ongelmalta tulevaisuudessa."</p>
+                    <p class="testimonial-author">- Sanna K., Helsinki</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"Sovelluksen avulla tein järkevän tarjouksen uudesta kodistani. Analyysi auttoi myös neuvottelutilanteessa, kun pystyin paremmin perustelemaan tarjoukseni."</p>
+                    <p class="testimonial-author">- Mikko T., Tampere</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"Tekoälyn lista kysymyksistä välittäjälle oli kultaakin kalliimpi. Olisin muuten unohtanut kysyä monia oleellisia asioita asuntonäytössä."</p>
+                    <p class="testimonial-author">- Liisa R., Turku</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container text-center">
+        <h2 class="mb-4">Aloita fiksumpi asunnonhaku tänään</h2>
+        <p class="mb-5">Liity satojen tyytyväisten käyttäjien joukkoon ja tee varma asuntopäätös.</p>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('index') }}" class="btn hero-cta btn-lg">Analysoi asunto nyt</a>
+        {% else %}
+        <a href="{{ url_for('auth.register') }}" class="btn hero-cta btn-lg">Rekisteröidy ilmaiseksi</a>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-4 mb-md-0">
+                <h5>Asuntoanalyysi</h5>
+                <p>Tekoälyä hyödyntävä työkalu asunnonostajille. Analyysimme auttavat sinua tekemään parempia asuntopäätöksiä.</p>
+            </div>
+            <div class="col-md-2 mb-4 mb-md-0">
+                <h5>Linkit</h5>
+                <ul class="list-unstyled">
+                    <li><a href="{{ url_for('index') }}">Etusivu</a></li>
+                    <li><a href="#">Tietoa meistä</a></li>
+                    <li><a href="#">Palvelut</a></li>
+                    <li><a href="#">Blogi</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3 mb-4 mb-md-0">
+                <h5>Yhteystiedot</h5>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-envelope me-2"></i> info@asuntoanalyysi.fi</li>
+                    <li><i class="fas fa-phone me-2"></i> +358 40 123 4567</li>
+                    <li><i class="fas fa-map-marker-alt me-2"></i> Helsinki, Suomi</li>
+                </ul>
+            </div>
+            <div class="col-md-3">
+                <h5>Seuraa meitä</h5>
+                <div class="d-flex gap-3 mt-3">
+                    <a href="#" class="text-dark fs-4"><i class="fab fa-facebook"></i></a>
+                    <a href="#" class="text-dark fs-4"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-dark fs-4"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="text-dark fs-4"><i class="fab fa-linkedin"></i></a>
+                </div>
+            </div>
+        </div>
+        <hr>
+        <div class="text-center">
+            <p>&copy; {{ now.year }} Asuntoanalyysi. Kaikki oikeudet pidätetään.</p>
+        </div>
+    </div>
+</footer>
+{% endblock %} 
