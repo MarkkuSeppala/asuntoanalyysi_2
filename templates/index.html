@@ -231,6 +231,29 @@
             padding: 20px;
         }
     }
+    
+    /* Lisään tyylit virheilmoitukselle */
+    .url-input.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
+    }
+    
+    .url-error {
+        display: none;
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+    
+    .url-error.show {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 </style>
 {% endblock %}
 
@@ -258,6 +281,9 @@
                             <input type="url" id="url" name="url" class="form-control url-input" placeholder="https://asunnot.oikotie.fi/myytavat-asunnot/..." required>
                             <div class="form-text mt-2">
                                 <i class="fas fa-info-circle me-1"></i> Kopioi ja liitä Oikotien asuntoilmoituksen osoite
+                            </div>
+                            <div class="url-error" id="urlError">
+                                <i class="fas fa-exclamation-circle me-1"></i> URL-osoitteen täytyy olla Oikotie-palvelusta (oikotie.fi tai asunnot.oikotie.fi)
                             </div>
                         </div>
                         <div class="d-grid">
@@ -332,13 +358,48 @@
 document.addEventListener('DOMContentLoaded', function() {
     const analyzeForm = document.getElementById('analyzeForm');
     const loadingOverlay = document.getElementById('loadingOverlay');
+    const urlInput = document.getElementById('url');
+    const urlError = document.getElementById('urlError');
     
-    analyzeForm.addEventListener('submit', function(e) {
-        // Näytä latausanimaatio
-        loadingOverlay.classList.add('show');
+    // URL validointi
+    function validateOikotieUrl(url) {
+        if (!url) return false;
         
-        // Form käsitellään normaalisti, joten emme estä sen lähetystä
-        // Animaatio jatkuu kunnes sivu päivittyy uuden sisällön kanssa
+        try {
+            const parsedUrl = new URL(url);
+            const hostname = parsedUrl.hostname;
+            return hostname.includes('oikotie.fi') || hostname.includes('asunnot.oikotie.fi');
+        } catch (e) {
+            return false;
+        }
+    }
+    
+    // Tarkista URL kun käyttäjä kirjoittaa
+    urlInput.addEventListener('input', function() {
+        // Poista virhetyylit
+        urlInput.classList.remove('is-invalid');
+        urlError.classList.remove('show');
+    });
+    
+    // Lomakkeen lähetyksen käsittely
+    analyzeForm.addEventListener('submit', function(e) {
+        const url = urlInput.value.trim();
+        
+        // Tarkista URL ennen lähetystä
+        if (!validateOikotieUrl(url)) {
+            e.preventDefault(); // Estä lomakkeen lähetys
+            
+            // Näytä virhe
+            urlInput.classList.add('is-invalid');
+            urlError.classList.add('show');
+            
+            // Fokusoi kenttään
+            urlInput.focus();
+            return;
+        }
+        
+        // Jos URL on OK, näytä latausanimaatio
+        loadingOverlay.classList.add('show');
     });
 });
 </script>
