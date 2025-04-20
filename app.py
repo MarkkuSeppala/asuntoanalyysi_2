@@ -251,6 +251,49 @@ def download_analysis(analysis_id):
         logger.exception(f"Virhe analyysin lataamisessa: {e}")
         return jsonify({'error': f'Virhe analyysin lataamisessa: {str(e)}'}), 500
 
+@app.route('/api/demo-analyze', methods=['POST'])
+def api_demo_analyze():
+    """API-pääte demoanalyysiä varten (landing page)"""
+    try:
+        data = request.get_json()
+        url = data.get('url')
+        
+        if not url:
+            return jsonify({'error': 'URL-osoite puuttuu'}), 400
+        
+        # Tarkistetaan, että URL on Oikotien asunto-URL
+        if 'oikotie.fi' not in url and 'asunnot.oikotie.fi' not in url:
+            return jsonify({'error': 'Syötä kelvollinen Oikotie-asuntolinkin URL'}), 400
+        
+        # Käytetään scraperia hakemaan asuntotiedot
+        scraper = RealEstateScraper(url)
+        success = scraper.run()
+        
+        if not success:
+            return jsonify({'error': 'Asunnon tietojen hakeminen epäonnistui'}), 500
+        
+        # Haetaan asunnon tiedot markdown-muodossa
+        markdown_data = scraper.format_to_markdown()
+        
+        if not markdown_data:
+            return jsonify({'error': 'Markdown-muotoisen datan luominen epäonnistui'}), 500
+        
+        # Käytetään OpenAI API:a analyysin tekemiseen
+        analysis_response = api_call.get_analysis(markdown_data, url)
+        
+        # Varmistetaan että vastaus on puhdistettu
+        analysis_response = api_call.sanitize_markdown_response(analysis_response)
+        
+        # Palautetaan analyysi JSON-muodossa
+        return jsonify({
+            'property_data': markdown_data,
+            'analysis': analysis_response
+        })
+        
+    except Exception as e:
+        logger.error(f"Virhe demo-analyysin teossa: {e}")
+        return jsonify({'error': f'Virhe: {str(e)}'}), 500
+
 def _sanitize_content(content):
     """Sanitoi sisällön poistamalla Jinja2-templaten erikoismerkit."""
     if not content:

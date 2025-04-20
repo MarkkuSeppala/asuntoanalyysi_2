@@ -135,6 +135,49 @@
             font-size: 1.1rem;
         }
     }
+    
+    /* Demo-osio */
+    .demo-section {
+        background-color: #f8f9fa;
+        padding: 80px 0;
+        margin: 50px 0;
+        border-radius: 15px;
+    }
+    
+    .demo-form {
+        background-color: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 30px;
+    }
+    
+    .demo-result {
+        background-color: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        padding: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .demo-preview {
+        position: relative;
+    }
+    
+    .fade-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 250px;
+        background: linear-gradient(transparent, rgba(255, 255, 255, 0.8) 50%, white);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        padding-bottom: 30px;
+    }
 </style>
 {% endblock %}
 
@@ -192,6 +235,53 @@
                 </div>
                 <h3>Riskien tunnistus</h3>
                 <p>Tunnista mahdolliset piilevät ongelmat ja riskit ennen ostopäätöksen tekemistä.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Demo Section - Uusi osio -->
+<section class="demo-section">
+    <div class="container">
+        <h2 class="text-center mb-5 section-title">Kokeile Asuntoanalyysiä</h2>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="demo-form">
+                    <h4 class="mb-4">Testaa palvelua ilmaiseksi</h4>
+                    <p class="mb-4">Syötä Oikotie-asuntoilmoituksen URL alle nähdäksesi, miten Asuntoanalyysi toimii:</p>
+                    <form id="demoForm" class="mb-4">
+                        <div class="input-group">
+                            <input type="url" id="demoUrl" class="form-control" placeholder="https://asunnot.oikotie.fi/..." required>
+                            <button type="submit" class="btn btn-primary">Analysoi</button>
+                        </div>
+                        <small class="form-text text-muted">Esim: https://asunnot.oikotie.fi/myytavat-asunnot/helsinki/16675455</small>
+                    </form>
+                </div>
+                
+                <div class="demo-result d-none" id="demoResult">
+                    <h4 class="mb-4" id="demoTitle">Analyysi kohteesta</h4>
+                    <div class="demo-preview" id="demoPreview">
+                        <div class="markdown-content"></div>
+                        <div class="fade-overlay">
+                            <p class="mb-4 text-center">Näet koko analyysin rekisteröitymällä palveluun</p>
+                            <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Rekisteröidy nyt</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info d-none" id="demoLoading">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm me-3" role="status">
+                            <span class="visually-hidden">Ladataan...</span>
+                        </div>
+                        <span>Analysoidaan asuntoa... Tämä voi kestää hetken.</span>
+                    </div>
+                </div>
+                
+                <div class="alert alert-danger d-none" id="demoError">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span id="errorMessage">Virhe analysoitaessa asuntoa. Tarkista URL ja yritä uudelleen.</span>
+                </div>
             </div>
         </div>
     </div>
@@ -313,4 +403,93 @@
         </div>
     </div>
 </footer>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const demoForm = document.getElementById('demoForm');
+        const demoResult = document.getElementById('demoResult');
+        const demoPreview = document.getElementById('demoPreview');
+        const demoLoading = document.getElementById('demoLoading');
+        const demoError = document.getElementById('demoError');
+        const errorMessage = document.getElementById('errorMessage');
+        const demoTitle = document.getElementById('demoTitle');
+        
+        demoForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const demoUrl = document.getElementById('demoUrl').value;
+            
+            if (!demoUrl) {
+                errorMessage.textContent = 'Syötä URL-osoite';
+                demoError.classList.remove('d-none');
+                return;
+            }
+            
+            if (!demoUrl.includes('oikotie.fi')) {
+                errorMessage.textContent = 'Syötä kelvollinen Oikotie-asuntolinkin URL';
+                demoError.classList.remove('d-none');
+                return;
+            }
+            
+            // Piilota virheilmoitus jos näkyvissä
+            demoError.classList.add('d-none');
+            demoResult.classList.add('d-none');
+            
+            // Näytä latausanimaatio
+            demoLoading.classList.remove('d-none');
+            
+            // Tee API-kutsu
+            fetch('/api/demo-analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url: demoUrl }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Virhe analysoinnissa');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Piilota latausanimaatio
+                demoLoading.classList.add('d-none');
+                
+                // Näytä tulos
+                demoResult.classList.remove('d-none');
+                
+                // Aseta otsikko, jos saatavilla
+                let title = 'Analyysi kohteesta';
+                
+                // Etsi otsikko analyysistä (ensimmäinen rivi joka alkaa #-merkillä)
+                const lines = data.analysis.split('\n');
+                for (let line of lines) {
+                    if (line.startsWith('# ')) {
+                        title = line.replace('# ', '');
+                        break;
+                    }
+                }
+                
+                demoTitle.textContent = title;
+                
+                // Aseta sisältö
+                const contentContainer = demoPreview.querySelector('.markdown-content');
+                contentContainer.innerHTML = marked.parse(data.analysis);
+            })
+            .catch(error => {
+                // Piilota latausanimaatio
+                demoLoading.classList.add('d-none');
+                
+                // Näytä virheilmoitus
+                errorMessage.textContent = error.message || 'Virhe analysoinnissa';
+                demoError.classList.remove('d-none');
+            });
+        });
+    });
+</script>
 {% endblock %} 
