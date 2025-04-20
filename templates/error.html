@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}{{ error_title or 'Virhe' }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">{{ error_title or 'Virhe' }}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-exclamation-circle text-danger" style="font-size: 4rem;"></i>
+                    </div>
+                    
+                    <p class="lead text-center">{{ error_message }}</p>
+                    
+                    {% if error_title == "API-kutsujen rajoitus" %}
+                    <div class="alert alert-info mt-4">
+                        <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Miksi näen tämän?</h5>
+                        <p>Ilmaisversiossa jokainen käyttäjä voi tehdä vain 2 analyysiä. Tämä rajoitus on asetettu palvelun resurssien hallitsemiseksi.</p>
+                        <hr>
+                        <p class="mb-0">Jos haluat jatkaa palvelun käyttöä, ota yhteyttä ylläpitoon saadaksesi admin-oikeudet.</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="text-center mt-4">
+                        <a href="/" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-home me-1"></i>Etusivulle
+                        </a>
+                        <a href="/analyses" class="btn btn-outline-secondary">
+                            <i class="fas fa-list me-1"></i>Omat analyysit
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

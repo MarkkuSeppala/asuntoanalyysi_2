@@ -88,6 +88,12 @@ def index():
 def analyze():
     """Käsittelee käyttäjän syöttämän URL:n ja palauttaa analyysin"""
     try:
+        # Tarkistetaan onko käyttäjä oikeutettu tekemään API-kutsun
+        if not current_user.can_make_api_call():
+            return render_template('error.html', 
+                                error_title="API-kutsujen rajoitus", 
+                                error_message="Olet käyttänyt kaikki API-kutsusi (2). Päivitä tilisi admin-tasoon jatkaaksesi käyttöä."), 403
+        
         # Haetaan URL käyttäjän lomakkeesta
         url = request.form.get('url')
         
@@ -131,6 +137,10 @@ def analyze():
         sanitized_markdown = _sanitize_content(markdown_data)
         sanitized_analysis = _sanitize_content(analysis_response)
         
+        # Kasvatetaan käyttäjän API-kutsujen määrää, jos ei ole admin
+        if not current_user.is_admin:
+            current_user.increment_api_call_count()
+        
         logger.info("Renderöidään vastaussivu käyttäjälle")
         
         # Palautetaan sekä raakatiedot että analyysi
@@ -147,6 +157,13 @@ def analyze():
 def api_analyze():
     """API-pääte, joka ottaa vastaan URL:n ja palauttaa analyysin JSON-muodossa"""
     try:
+        # Tarkistetaan onko käyttäjä oikeutettu tekemään API-kutsun
+        if not current_user.can_make_api_call():
+            return jsonify({
+                'error': 'API-kutsujen rajoitus', 
+                'message': 'Olet käyttänyt kaikki API-kutsusi (2). Päivitä tilisi admin-tasoon jatkaaksesi käyttöä.'
+            }), 403
+        
         data = request.get_json()
         url = data.get('url')
         
@@ -175,6 +192,10 @@ def api_analyze():
         
         # Varmistetaan että vastaus on puhdistettu (API:ssa puhdistus tehdään jo)
         analysis_response = api_call.sanitize_markdown_response(analysis_response)
+        
+        # Kasvatetaan käyttäjän API-kutsujen määrää, jos ei ole admin
+        if not current_user.is_admin:
+            current_user.increment_api_call_count()
         
         # Palautetaan sekä raakatiedot että analyysi JSON-muodossa
         return jsonify({

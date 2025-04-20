@@ -286,8 +286,29 @@
                                 <i class="fas fa-exclamation-circle me-1"></i> URL-osoitteen täytyy olla Oikotie-palvelusta (oikotie.fi tai asunnot.oikotie.fi)
                             </div>
                         </div>
+                        
+                        {% if not current_user.is_admin %}
+                        <div class="alert alert-info mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="fas fa-info-circle fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">API-kutsujen rajoitus</h6>
+                                    <p class="mb-0">Olet käyttänyt {{ current_user.api_calls_count }}/2 analyysiä. 
+                                    {% if current_user.api_calls_count >= 2 %}
+                                    <span class="text-danger fw-bold">Et voi enää tehdä analyysejä.</span>
+                                    {% else %}
+                                    Sinulla on vielä {{ 2 - current_user.api_calls_count }} analyysiä jäljellä.
+                                    {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
                         <div class="d-grid">
-                            <button type="submit" class="btn submit-btn">
+                            <button type="submit" class="btn submit-btn" {% if not current_user.is_admin and current_user.api_calls_count >= 2 %}disabled{% endif %}>
                                 <i class="fas fa-search-dollar me-2"></i>Analysoi asunto
                             </button>
                         </div>
