@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, redirect
 import os
 import logging
 from real_estate_scraper import RealEstateScraper
@@ -64,6 +64,17 @@ with app.app_context():
 def inject_now():
     return {'now': datetime.now()}
 
+# Määritellään julkinen static-kansio React-buildille
+@app.route('/static/dist/<path:path>')
+def serve_static(path):
+    return send_from_directory('static/dist', path)
+
+# Yksittäisen API-vastauksen tiedoston lataus
+@app.route('/analyses/<path:filename>')
+@login_required
+def serve_analysis_file(filename):
+    return send_from_directory(os.path.abspath(api_call.ANALYSES_DIR), filename)
+
 @app.route('/welcome')
 @login_required
 def welcome():
@@ -74,6 +85,7 @@ def welcome():
 @login_required
 def index():
     """Etusivu, jossa käyttäjä voi syöttää asuntolinkin"""
+    # Ohjataan React-sovellukseen
     return render_template('index.html')
 
 @app.route('/analyze', methods=['POST'])
@@ -243,6 +255,11 @@ def download_analysis(analysis_id):
     except Exception as e:
         logger.exception(f"Virhe analyysin lataamisessa: {e}")
         return jsonify({'error': f'Virhe analyysin lataamisessa: {str(e)}'}), 500
+
+# Ohjataan kaikki muut reitit React-sovellukseen (SPA-tuki)
+@app.route('/<path:path>')
+def catch_all(path):
+    return render_template('index.html')
 
 def _sanitize_content(content):
     """Sanitoi sisällön poistamalla Jinja2-templaten erikoismerkit."""
