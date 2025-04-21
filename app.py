@@ -9,6 +9,8 @@ from auth import auth
 from config import get_config
 from datetime import datetime
 import sqlalchemy
+from riskianalyysi import riskianalyysi
+import json
 
 # Asetetaan lokitus
 logging.basicConfig(
@@ -141,12 +143,23 @@ def analyze():
         if not current_user.is_admin:
             current_user.increment_api_call_count()
         
+        # Tehdään riskianalyysi API-vastauksesta
+        try:
+            logger.info("Tehdään riskianalyysi kohteesta")
+            riski_data_json = riskianalyysi(analysis_response)
+            riski_data = json.loads(riski_data_json)
+            logger.info(f"Riskianalyysi valmis: {riski_data.get('kokonaisriskitaso', 'N/A')}/10")
+        except Exception as e:
+            logger.error(f"Virhe riskianalyysissä: {e}")
+            riski_data = None
+        
         logger.info("Renderöidään vastaussivu käyttäjälle")
         
         # Palautetaan sekä raakatiedot että analyysi
         return render_template('results.html', 
                             property_data=sanitized_markdown, 
-                            analysis=sanitized_analysis)
+                            analysis=sanitized_analysis,
+                            riski_data=riski_data)
         
     except Exception as e:
         logger.exception(f"Odottamaton virhe analyysin teossa: {e}")

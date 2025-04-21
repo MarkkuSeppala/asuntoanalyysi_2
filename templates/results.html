@@ -49,6 +49,114 @@
     .tab-content.active {
         display: block;
     }
+    
+    /* Riskimittarityylittelyt */
+    .risk-meter-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+    
+    .risk-meter {
+        width: 100%;
+        max-width: 400px;
+        height: 60px;
+        background: linear-gradient(90deg, #4CAF50, #FFEB3B, #F44336);
+        border-radius: 10px;
+        position: relative;
+        margin: 20px 0;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+    
+    .risk-meter-marker {
+        position: absolute;
+        top: -20px;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 80px;
+        background-color: #000;
+    }
+    
+    .risk-meter-value {
+        position: absolute;
+        top: -40px;
+        transform: translateX(-50%);
+        font-weight: bold;
+        font-size: 1.5rem;
+    }
+    
+    .risk-scale {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        max-width: 400px;
+        padding: 0 10px;
+    }
+    
+    .risk-detail-container {
+        margin-top: 40px;
+    }
+    
+    .risk-progress {
+        height: 15px;
+        border-radius: 10px;
+        margin-bottom: 5px;
+    }
+    
+    .risk-title {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+    }
+    
+    .risk-label {
+        font-weight: 600;
+    }
+    
+    .risk-value {
+        font-weight: bold;
+    }
+    
+    .risk-description {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+    
+    .risk-category {
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .risk-category:last-child {
+        border-bottom: none;
+    }
+    
+    .risk-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 40px;
+    }
+    
+    .risk-header-value {
+        font-size: 3.5rem;
+        font-weight: bold;
+        margin-right: 20px;
+        line-height: 1;
+    }
+    
+    .risk-header-scale {
+        font-size: 1.5rem;
+        color: #6c757d;
+        margin-top: -5px;
+    }
+    
+    .risk-header-label {
+        font-weight: 500;
+        color: #495057;
+    }
 </style>
 <!-- Lisätään Markdown-tuen kirjasto -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -67,6 +175,7 @@
         <div class="card-body">
             <div class="results-tabs">
                 <button class="tab-btn active" data-tab="analysis">Analyysi</button>
+                <button class="tab-btn" data-tab="risk-analysis">Riskianalyysi</button>
                 <button class="tab-btn" data-tab="raw-data">Asunnon tiedot</button>
             </div>
             
@@ -74,6 +183,63 @@
                 <div class="analysis-content markdown-content">
                     <!-- Tähän tulee analyysi markdown-muodossa -->
                 </div>
+            </div>
+            
+            <div class="tab-content" id="risk-analysis">
+                {% if riski_data %}
+                <div class="risk-meter-container">
+                    <div class="risk-header">
+                        <div class="risk-header-value">{{ riski_data.kokonaisriskitaso }}</div>
+                        <div>
+                            <div class="risk-header-scale">/10</div>
+                            <div class="risk-header-label">Kokonaisriskitaso</div>
+                        </div>
+                    </div>
+                    
+                    <div class="risk-meter">
+                        <div class="risk-meter-marker" style="left: {{ riski_data.kokonaisriskitaso * 10 }}%;"></div>
+                        <div class="risk-meter-value" style="left: {{ riski_data.kokonaisriskitaso * 10 }}%;">{{ riski_data.kokonaisriskitaso }}</div>
+                    </div>
+                    <div class="risk-scale">
+                        <div>Matala riski (0)</div>
+                        <div>Korkea riski (10)</div>
+                    </div>
+                </div>
+                
+                <div class="risk-detail-container">
+                    <h3 class="mb-4">Riskiarvio osa-alueittain</h3>
+                    
+                    {% for riski in riski_data.riskimittari %}
+                    <div class="risk-category">
+                        <div class="risk-title">
+                            <span class="risk-label">{{ riski.osa_alue }}</span>
+                            <span class="risk-value">{{ riski.riski_taso }}/10</span>
+                        </div>
+                        <div class="progress risk-progress">
+                            <div class="progress-bar 
+                                {% if riski.riski_taso < 4 %}bg-success
+                                {% elif riski.riski_taso < 7 %}bg-warning
+                                {% else %}bg-danger{% endif %}" 
+                                role="progressbar" 
+                                style="width: {{ riski.riski_taso * 10 }}%" 
+                                aria-valuenow="{{ riski.riski_taso }}" 
+                                aria-valuemin="0" 
+                                aria-valuemax="10">
+                            </div>
+                        </div>
+                        <div class="risk-description">
+                            {{ riski.kuvaus }}
+                        </div>
+                        <div class="text-muted small">Painoarvo: {{ riski.osuus_prosenttia }}%</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <h4 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Riskianalyysi ei saatavilla</h4>
+                    <p>Riskianalyysin laskemisessa tapahtui virhe tai dataa ei ole saatavilla.</p>
+                </div>
+                {% endif %}
             </div>
             
             <div class="tab-content" id="raw-data">
