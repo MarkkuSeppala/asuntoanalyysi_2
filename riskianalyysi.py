@@ -62,8 +62,14 @@ def riskianalyysi(kohde_teksti):
         )
         
         # Tarkistetaan saatu vastaus
-        json_text = response.text
-        logger.info(f"Saatu riskianalyysi: {json_text[:100]}...")
+        # Huomaa: response.text on nyt objekti eikä merkkijono, joten hankitaan teksti oikealla tavalla
+        if hasattr(response, 'text') and hasattr(response.text, 'value'):
+            json_text = response.text.value
+        else:
+            # Jos text.value ei löydy, yritetään muuttaa response suoraan stringiksi
+            json_text = str(response)
+        
+        logger.info(f"Saatu riskianalyysi: {json_text[:100] if isinstance(json_text, str) else 'Tekstiä ei voitu lukea'}...")
         
         # Varmistetaan että vastaus on validia JSON
         try:
