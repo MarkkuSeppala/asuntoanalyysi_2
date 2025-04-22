@@ -34,7 +34,31 @@ def riskianalyysi(kohde_teksti):
                 "content": [
                     {
                     "type": "input_text",
-                    "text": "Olet kiinteistöalan asiantuntija.\n\nTehtävänäsi on arvioida alla esitellyn kiinteistön riskit ostajalle.\nNäitä riskejä ovat:\n\nLaitteisiin ja rakenteisiin liittyvä riski - Ajanmukaisuus, kunto, korjausvelka\nJälleenmyyntiriski - Kohteen myyntipotentiaali tulevaisuudessa, ostajakunnan laajuus, hintakehityksen epävarmuus\nSijainti- ja alueriski - Alueen kehittyneisyys, mahdolliset negatiiviset mielikuvat tai epävarmuustekijät\nTaloyhtiöriski - Taloyhtiön koko ja koostumus, yhtiön taloudellinen tila, vuokralaisten osuus, hallintotavat\nPisteytä jokainen osa-alue 0-10.\n\nAnna vastaus JSON-muodossa.\n\n<esimerkkivastaus> { \"kohde\": \"Graniittilinnankatu 2 E, Kakola, Turku\", \"kokonaisriskitaso\": 4, \"riskimittari\": [ { \"osa_alue\": \"Laitteisiin ja rakenteisiin liittyvä riski\", \"riski_taso\": 5, \"osuus_prosenttia\": 25, \"kuvaus\": \"Suora sähkölämmitys nostaa energikustannusta. Hiljattain tehty kattava linjasaneeraus pienentää huomattavasti korjauskuluriskiä\" }, { \"osa_alue\": \"Taloyhtiöriski\", \"riski_taso\": 3, \"osuus_prosenttia\": 20, \"kuvaus\": \"Iso yhtiö hajauttaa riskejä, mutta vuokrakäyttöä paljon. Dynaamisuus voi kärsiä.\" }, { \"osa_alue\": \"Asuntokohtainen riski\", \"riski_taso\": 2, \"osuus_prosenttia\": 10, \"kuvaus\": \"Trendikäs ja hyväkuntoinen, mutta hyvin pieni ja käyttömahdollisuudet rajalliset.\" }, { \"osa_alue\": \"Jälleenmyyntiriski\", \"riski_taso\": 4, \"osuus_prosenttia\": 15, \"kuvaus\": \"Pieni ostajakunta ja mahdollinen arvonlasku yhtiölainan vuoksi. Tuottoriski sijoittajalle.\" }, { \"osa_alue\": \"Markkinariski\", \"riski_taso\": 4, \"osuus_prosenttia\": 20, \"kuvaus\": \"Korkeat hinnat ja kilpailu. Pienet asunnot liikkuvat hitaasti, neuvotteluvaraa odotettavissa.\" }, { \"osa_alue\": \"Sijainti- ja alueriski\", \"riski_taso\": 1, \"osuus_prosenttia\": 10, \"kuvaus\": \"Hyvä sijainti ja trendikkyys, mutta alueen kehitys kesken ja mahdollinen stigma.\" } ] } </esimerkkivastaus>\n\n"
+                    "text": "Olet kiinteistöalan asiantuntija.  
+Tehtävänäsi on arvioida alla esitellyn kiinteistön riskit ostajalle. 
+Näitä riskejä ovat:
+
+
+Laitteisiin ja rakenteisiin liittyvä riski - Ajanmukaisuus, kunto, korjausvelka 
+
+
+Jälleenmyyntiriski - Kohteen myyntipotentiaali, ostajakunnan laajuus, hintakehityksen epävarmuus.
+
+
+Sijainti- ja alueriski - Alueen kehittyneisyys, mahdolliset negatiiviset mielikuvat tai epävarmuustekijät, alueen kehitysnäkymät tulevaisuuteen.
+
+
+Taloyhtiöriski - Taloyhtiön koko ja koostumus, yhtiön taloudellinen tila, vuokralaisten osuus, hallintotavat.
+HUOMIO, JOS KYSEESSÄ ON OMAKOTITALO, JÄTÄ TALOYHTIÖRISKI POIS ARVIOSTA.
+
+
+Pisteytä jokainen osa-alue 0-10.  
+Anna vastaus JSON-muodossa.  <esimerkkivastaus> {  "kohde ":  "Graniittilinnankatu 2 E, Kakola, Turku ",  "kokonaisriskitaso ": 4,  "riskimittari ": [ {  "osa_alue ":  "Laitteisiin ja rakenteisiin liittyvä riski ",  "riski_taso ": 5,  "osuus_prosenttia ": 25,  "kuvaus ":  },
+{  "osa_alue ":  "Laitteisiin ja rakenteisiin liittyvä riski ",  "riski_taso ": 3,  "osuus_prosenttia ": 20,  "kuvaus ":  },
+{  "osa_alue ":  "Jälleenmyyntiriski  ",  "riski_taso ": 2,  "osuus_prosenttia ": 10,  "kuvaus ":   },
+{  "osa_alue ":  "Taloyhtiöriski ",  "riski_taso ": 4,  "osuus_prosenttia ": 15,  "kuvaus ":  },
+{  "osa_alue ":  "Sijainti- ja alueriski ",  "riski_taso ": 1,  "osuus_prosenttia ": 10,  "kuvaus ": } ] } </esimerkkivastaus>  "
+
                     }
                 ]
                 },
