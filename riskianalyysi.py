@@ -49,11 +49,11 @@ Sijainti- ja alueriski - Alueen kehittyneisyys, mahdolliset negatiiviset mieliku
 
 
 Taloyhtiöriski - Taloyhtiön koko ja koostumus, yhtiön taloudellinen tila, vuokralaisten osuus, hallintotavat.
-HUOMIO, JOS KYSEESSÄ ON OMAKOTITALO, JÄTÄ TALOYHTIÖRISKI POIS ARVIOSTA.
+HUOMIO, OLE TARKKA, SEURAAVA OHJE ON TÄRKEÄ: JOS KYSEESSÄ ON OMAKOTITALO, JÄTÄ TALOYHTIÖRISKI POIS ARVIOSTA.
 
 
 Pisteytä jokainen osa-alue 0-10.  
-Anna vastaus JSON-muodossa.  <esimerkkivastaus> {  "kohde ":  "Graniittilinnankatu 2 E, Kakola, Turku ",  "kokonaisriskitaso ": 4,  "riskimittari ": [ {  "osa_alue ":  "Laitteisiin ja rakenteisiin liittyvä riski ",  "riski_taso ": 5,  "osuus_prosenttia ": 25,  "kuvaus ":  },
+Anna vastaus JSON-muodossa.  <esimerkkivastaus> {  "kohde ":  ,  "kokonaisriskitaso ": 4,  "riskimittari ": [ {  "osa_alue ":  "Laitteisiin ja rakenteisiin liittyvä riski ",  "riski_taso ": 5,  "osuus_prosenttia ": 25,  "kuvaus ":  },
 {  "osa_alue ":  "Laitteisiin ja rakenteisiin liittyvä riski ",  "riski_taso ": 3,  "osuus_prosenttia ": 20,  "kuvaus ":  },
 {  "osa_alue ":  "Jälleenmyyntiriski  ",  "riski_taso ": 2,  "osuus_prosenttia ": 10,  "kuvaus ":   },
 {  "osa_alue ":  "Taloyhtiöriski ",  "riski_taso ": 4,  "osuus_prosenttia ": 15,  "kuvaus ":  },
