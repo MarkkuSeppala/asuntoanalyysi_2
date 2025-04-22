@@ -127,16 +127,6 @@
                         <div>Normaali riski (5)</div>
                         <div>Kohonnut riski (10)</div>
                     </div>
-                    
-                    <!-- Selite eri väreille -->
-                    <div class="risk-legend">
-                        {% for riski in riski_data.riskimittari %}
-                            <div class="risk-legend-item">
-                                <div class="risk-legend-color" style="background-color: {{ colors[loop.index0 % colors|length] }};"></div>
-                                <span>{{ riski.osa_alue }} ({{ riski.riski_taso }}/10)</span>
-                            </div>
-                        {% endfor %}
-                    </div>
                 </div>
                 
                 <div class="risk-detail-container">
