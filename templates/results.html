@@ -206,7 +206,7 @@
         // Markdown-muotoilu
         const analysisContent = document.querySelector('.analysis-content');
         if (analysisContent) {
-            const markdownText = "{{ analysis|safe|escape('js') }}";
+            const markdownText = {{ analysis|safe|tojson }};
             if (markdownText) {
                 analysisContent.innerHTML = marked.parse(markdownText);
             }
@@ -214,7 +214,7 @@
         
         const rawDataContent = document.querySelector('.raw-data-content');
         if (rawDataContent) {
-            const markdownText = "{{ property_data|safe|escape('js') }}";
+            const markdownText = {{ property_data|safe|tojson }};
             if (markdownText) {
                 rawDataContent.innerHTML = marked.parse(markdownText);
             }
