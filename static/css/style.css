@@ -278,7 +278,7 @@ small {
 /* Responsiivisuus */
 @media (max-width: 768px) {
     .container {
-        padding: 15px;
+        padding: 10px;
     }
     
     header h1 {
@@ -293,4 +293,7 @@ small {
         padding: 8px 12px;
         font-size: 0.9rem;
     }
-} 
+}
+
+/* Lisätään riskimittarin tyylit */
+@import url('risk-meter.css'); 

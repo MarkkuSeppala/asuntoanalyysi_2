@@ -49,117 +49,11 @@
     .tab-content.active {
         display: block;
     }
-    
-    /* Riskimittarityylittelyt */
-    .risk-meter-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin-bottom: 30px;
-    }
-    
-    .risk-meter {
-        width: 100%;
-        max-width: 400px;
-        height: 60px;
-        background: linear-gradient(90deg, #4CAF50, #f2f2f2, #f0792a);
-        border-radius: 10px;
-        position: relative;
-        margin: 20px 0;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-    }
-    
-    .risk-meter-marker {
-        position: absolute;
-        top: -20px;
-        transform: translateX(-50%);
-        width: 4px;
-        height: 80px;
-        background-color: #000;
-    }
-    
-    .risk-meter-value {
-        position: absolute;
-        top: -40px;
-        transform: translateX(-50%);
-        font-weight: bold;
-        font-size: 1.5rem;
-    }
-    
-    .risk-scale {
-        display: flex;
-        justify-content: space-between;
-        width: 100%;
-        max-width: 400px;
-        padding: 0 10px;
-    }
-    
-    .risk-detail-container {
-        margin-top: 40px;
-    }
-    
-    .risk-progress {
-        height: 15px;
-        border-radius: 10px;
-        margin-bottom: 5px;
-    }
-    
-    .risk-title {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 5px;
-    }
-    
-    .risk-label {
-        font-weight: 600;
-    }
-    
-    .risk-value {
-        font-weight: bold;
-    }
-    
-    .risk-description {
-        font-size: 0.9rem;
-        color: #6c757d;
-        margin-bottom: 20px;
-    }
-    
-    .risk-category {
-        margin-bottom: 25px;
-        padding-bottom: 15px;
-        border-bottom: 1px solid #eee;
-    }
-    
-    .risk-category:last-child {
-        border-bottom: none;
-    }
-    
-    .risk-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 40px;
-    }
-    
-    .risk-header-value {
-        font-size: 3.5rem;
-        font-weight: bold;
-        margin-right: 20px;
-        line-height: 1;
-    }
-    
-    .risk-header-scale {
-        font-size: 1.5rem;
-        color: #6c757d;
-        margin-top: -5px;
-    }
-    
-    .risk-header-label {
-        font-weight: 500;
-        color: #495057;
-    }
 </style>
 <!-- Lisätään Markdown-tuen kirjasto -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<!-- Lisätään riskimittarin tyylit -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/risk-meter.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -196,14 +90,48 @@
                         </div>
                     </div>
                     
+                    <!-- Uusi riskimittari, joka näyttää kaikki osa-alueet yhtenä palkkina -->
                     <div class="risk-meter">
+                        <!-- Kokonaisriskin merkki -->
                         <div class="risk-meter-marker" style="left: {{ riski_data.kokonaisriskitaso * 10 }}%;"></div>
                         <div class="risk-meter-value" style="left: {{ riski_data.kokonaisriskitaso * 10 }}%;">{{ riski_data.kokonaisriskitaso }}</div>
+                        
+                        <!-- Riskin osa-alueet -->
+                        {% set colors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#d35400'] %}
+                        {% for riski in riski_data.riskimittari %}
+                            <div 
+                                class="risk-area" 
+                                style="width: {{ riski.osuus_prosenttia }}%; background-color: {{ colors[loop.index0 % colors|length] }};"
+                                data-tooltip-id="tooltip-{{ loop.index }}">
+                            </div>
+                            
+                            <!-- Tooltip kyseiselle riskialueelle -->
+                            <div id="tooltip-{{ loop.index }}" class="risk-tooltip">
+                                <div class="risk-tooltip-title">
+                                    {{ riski.osa_alue }} 
+                                    <span class="risk-tooltip-value">{{ riski.riski_taso }}/10</span>
+                                </div>
+                                <div class="risk-tooltip-description">
+                                    {{ riski.kuvaus }}
+                                </div>
+                            </div>
+                        {% endfor %}
                     </div>
+                    
                     <div class="risk-scale">
                         <div>Matala riski (0)</div>
                         <div>Normaali riski (5)</div>
                         <div>Kohonnut riski (10)</div>
+                    </div>
+                    
+                    <!-- Selite eri väreille -->
+                    <div class="risk-legend">
+                        {% for riski in riski_data.riskimittari %}
+                            <div class="risk-legend-item">
+                                <div class="risk-legend-color" style="background-color: {{ colors[loop.index0 % colors|length] }};"></div>
+                                <span>{{ riski.osa_alue }} ({{ riski.riski_taso }}/10)</span>
+                            </div>
+                        {% endfor %}
                     </div>
                 </div>
                 
@@ -254,51 +182,46 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Välilehdet ja Markdown-muotoilu -->
 <script>
-    // Markdown-tiedot valmiina
-    const propertyData = `{{ property_data|safe }}`;
-    const analysisData = `{{ analysis|safe }}`;
-    
-    // Täytetään sisältö sivun latautuessa
     document.addEventListener('DOMContentLoaded', function() {
-        // Käsitellään markdown-teksti HTML-muotoon
-        const analysisContent = document.querySelector('.analysis-content');
-        const rawDataContent = document.querySelector('.raw-data-content');
-        
-        try {
-            if (analysisData && analysisData.trim()) {
-                analysisContent.innerHTML = marked.parse(analysisData);
-            } else {
-                analysisContent.innerHTML = '<p class="error-message">Analyysiä ei voitu ladata.</p>';
-            }
-            
-            if (propertyData && propertyData.trim()) {
-                rawDataContent.innerHTML = marked.parse(propertyData);
-            } else {
-                rawDataContent.innerHTML = '<p class="error-message">Asunnon tietoja ei voitu ladata.</p>';
-            }
-        } catch (error) {
-            console.error('Virhe markdown-käsittelyssä:', error);
-            analysisContent.innerHTML = '<p class="error-message">Virhe sisällön käsittelyssä.</p>';
-            rawDataContent.innerHTML = '<p class="error-message">Virhe sisällön käsittelyssä.</p>';
-        }
-        
-        // Hallitaan välilehtiä
+        // Välilehtien vaihtaminen
         const tabButtons = document.querySelectorAll('.tab-btn');
         const tabContents = document.querySelectorAll('.tab-content');
         
         tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                // Poistetaan aktiivinen tila kaikilta välilehdiltä
+            button.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+                
+                // Poista active-luokka kaikilta napeista ja sisällöiltä
                 tabButtons.forEach(btn => btn.classList.remove('active'));
                 tabContents.forEach(content => content.classList.remove('active'));
                 
-                // Lisätään aktiivinen tila valitulle välilehdelle
-                button.classList.add('active');
-                const tabId = button.getAttribute('data-tab');
+                // Lisää active-luokka klikatulle napille ja vastaavalle sisällölle
+                this.classList.add('active');
                 document.getElementById(tabId).classList.add('active');
             });
         });
+        
+        // Markdown-muotoilu
+        const analysisContent = document.querySelector('.analysis-content');
+        if (analysisContent) {
+            const markdownText = "{{ analysis|safe|escape('js') }}";
+            if (markdownText) {
+                analysisContent.innerHTML = marked.parse(markdownText);
+            }
+        }
+        
+        const rawDataContent = document.querySelector('.raw-data-content');
+        if (rawDataContent) {
+            const markdownText = "{{ property_data|safe|escape('js') }}";
+            if (markdownText) {
+                rawDataContent.innerHTML = marked.parse(markdownText);
+            }
+        }
     });
 </script>
+
+<!-- Lisätään riskimittarin JavaScript -->
+<script src="{{ url_for('static', filename='js/risk-meter.js') }}"></script>
 {% endblock %} 
