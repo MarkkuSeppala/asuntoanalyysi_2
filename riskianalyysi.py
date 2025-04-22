@@ -34,7 +34,7 @@ def riskianalyysi(kohde_teksti):
                 "content": [
                     {
                     "type": "input_text",
-                    "text": "Olet kiinteistöalan asiantuntija.  
+                    "text": """Olet kiinteistöalan asiantuntija.  
 Tehtävänäsi on arvioida alla esitellyn kiinteistön riskit ostajalle. 
 Näitä riskejä ovat:
 
@@ -57,7 +57,7 @@ Anna vastaus JSON-muodossa.  <esimerkkivastaus> {  "kohde ":  "Graniittilinnanka
 {  "osa_alue ":  "Laitteisiin ja rakenteisiin liittyvä riski ",  "riski_taso ": 3,  "osuus_prosenttia ": 20,  "kuvaus ":  },
 {  "osa_alue ":  "Jälleenmyyntiriski  ",  "riski_taso ": 2,  "osuus_prosenttia ": 10,  "kuvaus ":   },
 {  "osa_alue ":  "Taloyhtiöriski ",  "riski_taso ": 4,  "osuus_prosenttia ": 15,  "kuvaus ":  },
-{  "osa_alue ":  "Sijainti- ja alueriski ",  "riski_taso ": 1,  "osuus_prosenttia ": 10,  "kuvaus ": } ] } </esimerkkivastaus>  "
+{  "osa_alue ":  "Sijainti- ja alueriski ",  "riski_taso ": 1,  "osuus_prosenttia ": 10,  "kuvaus ": } ] } </esimerkkivastaus>"""
 
                     }
                 ]
