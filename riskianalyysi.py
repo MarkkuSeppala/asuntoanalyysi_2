@@ -100,14 +100,17 @@ Anna vastaus JSON-muodossa.  <esimerkkivastaus> {  "kohde ":  ,  "kokonaisriskit
             # Validoidaan vastauksen rakenne
             if "kokonaisriskitaso" not in json_data:
                 logger.warning("Kokonaisriskitaso puuttuu vastauksesta, lisätään oletusarvo")
-                json_data["kokonaisriskitaso"] = 5
+                json_data["kokonaisriskitaso"] = 5.0
+            else:
+                # Pyöristetään kokonaisriskitaso 1 desimaalin tarkkuuteen
+                json_data["kokonaisriskitaso"] = round(float(json_data["kokonaisriskitaso"]), 1)
                 
             if "riskimittari" not in json_data or not isinstance(json_data["riskimittari"], list):
                 logger.warning("Riskimittari puuttuu tai ei ole listana, korjataan")
                 json_data["riskimittari"] = [
                     {
                         "osa_alue": "Kokonaisriski",
-                        "riski_taso": json_data.get("kokonaisriskitaso", 5),
+                        "riski_taso": json_data.get("kokonaisriskitaso", 5.0),
                         "osuus_prosenttia": 100,
                         "kuvaus": "Arvioitu kokonaisriski kohteelle."
                     }
@@ -161,11 +164,11 @@ Anna vastaus JSON-muodossa.  <esimerkkivastaus> {  "kohde ":  ,  "kokonaisriskit
             logger.error(f"Vastaus ei ole validia JSON: {e}")
             # Palautetaan virheen sijasta yksinkertainen oletusriski JSON
             default_json = {
-                "kokonaisriskitaso": 5,
+                "kokonaisriskitaso": 5.0,
                 "riskimittari": [
                     {
                         "osa_alue": "Kokonaisriski",
-                        "riski_taso": 5,
+                        "riski_taso": 5.0,
                         "osuus_prosenttia": 100,
                         "kuvaus": "Kohteen riskitason arviointiin liittyi ongelmia. Tämä on oletusarvio."
                     }
@@ -177,11 +180,11 @@ Anna vastaus JSON-muodossa.  <esimerkkivastaus> {  "kohde ":  ,  "kokonaisriskit
         logger.exception(f"Virhe riskianalyysissä: {e}")
         # Palautetaan virheen sijasta yksinkertainen oletusriski JSON
         default_json = {
-            "kokonaisriskitaso": 5,
+            "kokonaisriskitaso": 5.0,
             "riskimittari": [
                 {
                     "osa_alue": "Kokonaisriski",
-                    "riski_taso": 5,
+                    "riski_taso": 5.0,
                     "osuus_prosenttia": 100,
                     "kuvaus": "Kohteen riskitason arviointiin liittyi virhe. Tämä on oletusarvio."
                 }
