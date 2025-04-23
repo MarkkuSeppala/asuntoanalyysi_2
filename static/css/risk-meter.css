@@ -1,10 +1,10 @@
 /* Riskimittarityylittelyt */
 :root {
-    --primary-color: #4a6bff;
+    --primary-color: #fafafa;
     --primary-light: #e8edff;
-    --success-color: #4caf50;
-    --warning-color: #ff9800;
-    --danger-color: #f44336;
+    --success-color: #cfcfcf;
+    --warning-color: #939393;
+    --danger-color: #646464;
     --text-dark: #2c3e50;
     --text-muted: #7f8c8d;
     --border-radius: 12px;
