@@ -20,6 +20,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Lisätään tiedostolokitus
+file_handler = logging.FileHandler('logs/app.log')
+file_handler.setLevel(logging.INFO)
+file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(file_formatter)
+logger.addHandler(file_handler)
+
 app = Flask(__name__)
 
 # Asetetaan sovelluksen konfigurointi
@@ -163,6 +170,7 @@ def analyze():
         try:
             logger.info("Tehdään riskianalyysi kohteesta")
             riski_data_json = riskianalyysi(analysis_response, analysis_id)
+            logger.info(f"Saatiin riskianalyysin JSON vastaus pituudella: {len(riski_data_json)}")
             riski_data = json.loads(riski_data_json)
             logger.info(f"Riskianalyysi valmis: {riski_data.get('kokonaisriskitaso', 'N/A')}/10")
         except Exception as e:
@@ -248,6 +256,7 @@ def api_analyze():
             try:
                 logger.info("API: Tehdään riskianalyysi kohteesta")
                 riski_data_json = riskianalyysi(analysis_response, analysis_id)
+                logger.info(f"API: Saatiin riskianalyysin JSON vastaus pituudella: {len(riski_data_json)}")
                 riski_data = json.loads(riski_data_json)
                 logger.info(f"API: Riskianalyysi valmis: {riski_data.get('kokonaisriskitaso', 'N/A')}/10")
             except Exception as e:
