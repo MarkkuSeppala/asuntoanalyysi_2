@@ -4,7 +4,7 @@ import logging
 from real_estate_scraper import RealEstateScraper
 import api_call
 from flask_login import LoginManager, current_user, login_required
-from models import db, User, Analysis
+from models import db, User, Analysis, RiskAnalysis
 from auth import auth
 from config import get_config
 from datetime import datetime
@@ -297,7 +297,21 @@ def view_analysis(analysis_id):
             flash('Sinulla ei ole oikeutta tähän analyysiin.', 'danger')
             return redirect(url_for('list_analyses'))
             
-        return render_template('analysis.html', analysis=analysis, title=analysis.title, content=analysis.content)
+        # Haetaan mahdollinen riskianalyysi
+        risk_analysis = None
+        try:
+            risk_db = RiskAnalysis.query.filter_by(analysis_id=analysis_id).first()
+            if risk_db and risk_db.risk_data:
+                risk_analysis = json.loads(risk_db.risk_data)
+                logger.info(f"Riskianalyysi löydetty analyysille {analysis_id}")
+        except Exception as e:
+            logger.error(f"Virhe riskianalyysin hakemisessa: {e}")
+            
+        return render_template('analysis.html', 
+                               analysis=analysis, 
+                               title=analysis.title, 
+                               content=analysis.content,
+                               risk_analysis=risk_analysis)
         
     except Exception as e:
         logger.exception(f"Virhe analyysin näyttämisessä: {e}")

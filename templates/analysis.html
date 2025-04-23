@@ -77,6 +77,63 @@
         border-top: 1px solid #eee;
         padding-top: 20px;
     }
+    
+    .risk-analysis {
+        margin-top: 30px;
+    }
+    
+    .risk-meter {
+        width: 100%;
+        height: 5px;
+        background-color: #eee;
+        margin: 10px 0;
+        position: relative;
+    }
+    
+    .risk-meter-fill {
+        height: 100%;
+        background-color: #dc3545;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+    
+    .risk-score {
+        font-size: 32px;
+        font-weight: bold;
+        margin-right: 10px;
+    }
+    
+    .risk-label {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: 5px;
+    }
+    
+    .risk-level-low {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .risk-level-medium {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    
+    .risk-level-high {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .risk-area-row {
+        padding: 10px 15px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .risk-area-row:last-child {
+        border-bottom: none;
+    }
 </style>
 {% endblock %}
 
@@ -106,6 +163,64 @@
             <div id="analysisRawContent" data-content="{{ analysis.content|safe }}" style="display: none;"></div>
         </div>
     </div>
+    
+    {% if risk_analysis %}
+    <div class="card shadow mb-4">
+        <div class="card-header bg-light">
+            <h3 class="mb-0">Riskianalyysi</h3>
+        </div>
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-4">
+                <div class="risk-score">{{ risk_analysis.kokonaisriskitaso }}</div>
+                <div class="flex-grow-1">
+                    <div>Kokonaisriskitaso</div>
+                    <div class="risk-meter">
+                        <div class="risk-meter-fill" style="width: {{ risk_analysis.kokonaisriskitaso * 10 }}%;"></div>
+                    </div>
+                    <div class="text-muted small">
+                        {% if risk_analysis.kokonaisriskitaso <= 3 %}
+                            <span class="risk-label risk-level-low">Matala riski</span>
+                        {% elif risk_analysis.kokonaisriskitaso <= 6 %}
+                            <span class="risk-label risk-level-medium">Keskitason riski</span>
+                        {% else %}
+                            <span class="risk-label risk-level-high">Korkea riski</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="list-group">
+                {% for riski in risk_analysis.riskimittari %}
+                <div class="list-group-item risk-area-row">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h5>{{ riski.osa_alue }}</h5>
+                            {% if riski.kuvaus %}
+                            <p class="mb-1">{{ riski.kuvaus }}</p>
+                            {% endif %}
+                            <div class="risk-meter mt-2">
+                                <div class="risk-meter-fill" style="width: {{ riski.riski_taso * 10 }}%;"></div>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <div class="text-muted small">
+                                    {% if riski.riski_taso <= 3 %}
+                                        <span class="risk-label risk-level-low">Matala ({{ riski.riski_taso }})</span>
+                                    {% elif riski.riski_taso <= 6 %}
+                                        <span class="risk-label risk-level-medium">Keskitaso ({{ riski.riski_taso }})</span>
+                                    {% else %}
+                                        <span class="risk-label risk-level-high">Korkea ({{ riski.riski_taso }})</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-muted small">Osuus: {{ riski.osuus_prosenttia }}%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 
