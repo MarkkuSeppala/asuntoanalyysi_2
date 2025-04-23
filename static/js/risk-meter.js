@@ -35,26 +35,5 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
-        
-        // Luodaan asteikkomerkinnät 0-10
-        const riskMeterContainer = document.querySelector('.risk-meter-container');
-        if (riskMeterContainer) {
-            // Lisätään asteikkomerkinnät
-            const scaleMarks = document.createElement('div');
-            scaleMarks.className = 'risk-scale-marks';
-            
-            // Luodaan 11 merkintää (0-10)
-            for (let i = 0; i <= 10; i++) {
-                const mark = document.createElement('div');
-                mark.className = 'risk-scale-mark';
-                mark.setAttribute('data-value', i);
-                mark.style.left = (i * 10) + '%';
-                scaleMarks.appendChild(mark);
-            }
-            
-            // Lisätään merkinnät riskimittarin alle, mutta ennen selitettä
-            const riskMeter = riskMeterContainer.querySelector('.risk-meter');
-            riskMeterContainer.insertBefore(scaleMarks, riskMeter.nextSibling);
-        }
     }
 }); 

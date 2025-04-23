@@ -12,7 +12,7 @@
 .risk-meter {
     width: 100%;
     max-width: 600px;
-    height: 60px;
+    height: 40px;
     background: #f8f8f8;
     border-radius: 10px;
     position: relative;
@@ -96,32 +96,6 @@
     width: 100%;
     max-width: 600px;
     padding: 0 10px;
-}
-
-.risk-scale-marks {
-    position: absolute;
-    top: 70px;
-    left: 0;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-}
-
-.risk-scale-mark {
-    width: 1px;
-    height: 10px;
-    background-color: #aaa;
-    position: relative;
-}
-
-.risk-scale-mark::before {
-    content: attr(data-value);
-    position: absolute;
-    top: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.8rem;
-    color: #666;
 }
 
 .risk-detail-container {

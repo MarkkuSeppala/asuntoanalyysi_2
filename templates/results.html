@@ -200,8 +200,14 @@
         // Markdown-muotoilu
         const analysisContent = document.querySelector('.analysis-content');
         if (analysisContent) {
-            // Käytetään JSON.stringify-rakennetta Jinja-templaten kanssa yhteensopivasti
-            const markdownText = {% if analysis %}{{ analysis|tojson }}{% else %}""{% endif %};
+            // Alustetaan markdownText -muuttuja
+            var markdownText = "";
+            
+            // Turvallisempi tapa käsitellä Jinja-muuttujia
+            {% if analysis %}
+                markdownText = {{ analysis|tojson }};
+            {% endif %}
+            
             if (markdownText) {
                 analysisContent.innerHTML = marked.parse(markdownText);
             }
@@ -209,7 +215,14 @@
         
         const rawDataContent = document.querySelector('.raw-data-content');
         if (rawDataContent) {
-            const markdownText = {% if property_data %}{{ property_data|tojson }}{% else %}""{% endif %};
+            // Alustetaan markdownText -muuttuja
+            var markdownText = "";
+            
+            // Turvallisempi tapa käsitellä Jinja-muuttujia
+            {% if property_data %}
+                markdownText = {{ property_data|tojson }};
+            {% endif %}
+            
             if (markdownText) {
                 rawDataContent.innerHTML = marked.parse(markdownText);
             }
