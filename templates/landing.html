@@ -186,10 +186,10 @@
 <section class="hero-section">
     <div class="container">
         <div class="row align-items-center">
-            <div class="col-lg-6">
+            <div class="col-lg-12 text-center mb-4">
                 <h1 class="hero-title">Tee fiksumpia asuntopäätöksiä tekoälyn avulla</h1>
                 <p class="hero-subtitle">Asuntoanalyysi auttaa sinua analysoimaan potentiaalisia asuntokohteita syvällisesti ja tunnistamaan piilevät riskit ja mahdollisuudet.</p>
-                <div class="d-flex flex-wrap gap-3">
+                <div class="d-flex flex-wrap gap-3 justify-content-center">
                     {% if current_user.is_authenticated %}
                     <a href="{{ url_for('index') }}" class="btn hero-cta">Analysoi asunto</a>
                     <a href="{{ url_for('list_analyses') }}" class="btn btn-outline-light">Katso analyysejäsi</a>
@@ -198,17 +198,22 @@
                     <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light">Rekisteröidy</a>
                     {% endif %}
                 </div>
-                
+            </div>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
                 <!-- Demo form moved into hero section -->
-                <div class="demo-form mt-4">
-                    <h4 class="mb-3">Testaa palvelua ilmaiseksi</h4>
-                    <p class="mb-3">Syötä Oikotie-asuntoilmoituksen URL alle:</p>
+                <div class="demo-form mt-4 position-relative">
+                    <div class="badge bg-success position-absolute" style="top: -15px; left: 50%; transform: translateX(-50%);">Kokeile ilmaiseksi</div>
+                    <h4 class="mb-3 text-center">Testaa palvelua nyt</h4>
+                    <p class="mb-3 text-center">Syötä Oikotie-asuntoilmoituksen URL alle:</p>
                     <form id="demoForm" class="mb-2">
                         <div class="input-group">
                             <input type="url" id="demoUrl" class="form-control" placeholder="https://asunnot.oikotie.fi/..." required>
                             <button type="submit" class="btn btn-primary">Analysoi</button>
                         </div>
-                        <small class="form-text text-muted">Esim: https://asunnot.oikotie.fi/myytavat-asunnot/helsinki/16675455</small>
+                        <small class="form-text text-muted text-center d-block mt-2">Esim: https://asunnot.oikotie.fi/myytavat-asunnot/helsinki/16675455</small>
                     </form>
                 </div>
                 
@@ -225,9 +230,6 @@
                     <i class="fas fa-exclamation-circle me-2"></i>
                     <span id="errorMessage">Virhe analysoitaessa asuntoa. Tarkista URL ja yritä uudelleen.</span>
                 </div>
-            </div>
-            <div class="col-lg-6 d-none d-lg-block text-center">
-                <img src="{{ url_for('static', filename='img/hero-image.svg') }}" alt="Asuntoanalyysi sovelluksen demo" class="img-fluid mt-4" style="max-height: 350px;">
                 
                 <div class="demo-result d-none mt-4" id="demoResult">
                     <h4 class="mb-3" id="demoTitle">Analyysi kohteesta</h4>
@@ -239,6 +241,10 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            
+            <div class="col-12 text-center mt-4">
+                <img src="{{ url_for('static', filename='img/hero-image.svg') }}" alt="Asuntoanalyysi sovelluksen demo" class="img-fluid" style="max-height: 200px;">
             </div>
         </div>
     </div>
