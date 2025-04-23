@@ -14,12 +14,19 @@ logging.basicConfig(
 )
 
 # Lisätään tiedostolokitus
-file_handler = logging.FileHandler('logs/riskianalyysi.log')
-file_handler.setLevel(logging.INFO)
-file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-file_handler.setFormatter(file_formatter)
-logger = logging.getLogger(__name__)
-logger.addHandler(file_handler)
+try:
+    # Varmistetaan että logs-hakemisto on olemassa
+    os.makedirs('logs', exist_ok=True)
+    
+    file_handler = logging.FileHandler('logs/riskianalyysi.log')
+    file_handler.setLevel(logging.INFO)
+    file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(file_formatter)
+    logger = logging.getLogger(__name__)
+    logger.addHandler(file_handler)
+except Exception as e:
+    print(f"Varoitus: Lokitiedostoa ei voitu avata: {e}")
+    # Jatketaan ilman tiedostolokitusta
 
 api_key = os.environ.get("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
