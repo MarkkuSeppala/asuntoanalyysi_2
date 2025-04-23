@@ -3,8 +3,8 @@
     --primary-color: #000000;
     --primary-light: #89daf8;
     --success-color: #f5ee25e7;
-    --warning-color: #665e5e;
-    --danger-color: #646464;
+    --warning-color: #f58383c1;
+    --danger-color: #f92b2b;
     --text-dark: #2c3e50;
     --text-muted: #7f8c8d;
     --border-radius: 12px;
@@ -178,7 +178,7 @@
 }
 
 .risk-progress .bg-success {
-    background: linear-gradient(to right, #4caf50, #8bc34a) !important;
+    background: linear-gradient(to right, #7154f3, #8bc34a) !important;
 }
 
 .risk-progress .bg-warning {
