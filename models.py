@@ -59,4 +59,19 @@ class Analysis(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
     def __repr__(self):
-        return f'<Analysis {self.title}>' 
+        return f'<Analysis {self.title}>'
+
+class RiskAnalysis(db.Model):
+    """Riskianalyysimalli tietokantaa varten"""
+    __tablename__ = 'risk_analyses'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    analysis_id = db.Column(db.Integer, db.ForeignKey('analyses.id'), nullable=False)
+    risk_data = db.Column(db.Text, nullable=False)  # JSON-muotoinen riskianalyysi
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Määritellään suhde Analysis-tauluun
+    analysis = db.relationship('Analysis', backref=db.backref('risk_analysis', lazy=True, uselist=False))
+    
+    def __repr__(self):
+        return f'<RiskAnalysis for Analysis {self.analysis_id}>' 

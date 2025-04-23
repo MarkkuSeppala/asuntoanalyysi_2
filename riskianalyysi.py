@@ -2,6 +2,9 @@ from openai import OpenAI
 import os
 import json
 import logging
+from models import db, Analysis, RiskAnalysis
+from flask import current_app
+from flask_login import current_user
 
 # Asetetaan lokitus
 logging.basicConfig(
@@ -14,12 +17,13 @@ logger = logging.getLogger(__name__)
 api_key = os.environ.get("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
 
-def riskianalyysi(kohde_teksti):
+def riskianalyysi(kohde_teksti, analysis_id=None):
     """
-    Analysoi asuntokohteen riskitason OpenAI API:n avulla.
+    Analysoi asuntokohteen riskitason OpenAI API:n avulla ja tallentaa tuloksen tietokantaan.
     
     Parameters:
     kohde_teksti (str): API-kutsussa tuotettu analyysi kohteesta
+    analysis_id (int, optional): Analysis-taulun ID, johon riskianalyysi liitetään
     
     Returns:
     str: JSON-muotoinen analyysi riskeistä
@@ -121,8 +125,37 @@ Anna vastaus JSON-muodossa.  <esimerkkivastaus> {  "kohde ":  ,  "kokonaisriskit
                 if "kuvaus" not in riski:
                     riski["kuvaus"] = f"Riskitaso kategorialle {riski['osa_alue']}"
             
+            # Muodostetaan JSON-muotoinen tulos
+            json_result = json.dumps(json_data)
+            
+            # Jos analysis_id on annettu, tallennetaan riskianalyysi tietokantaan
+            if analysis_id:
+                try:
+                    # Tarkistetaan onko tälle analyysille jo olemassa riskianalyysi
+                    existing_risk = RiskAnalysis.query.filter_by(analysis_id=analysis_id).first()
+                    
+                    if existing_risk:
+                        # Päivitetään olemassa olevaa riskianalyysiä
+                        existing_risk.risk_data = json_result
+                        logger.info(f"Päivitettiin riskianalyysi analyysille {analysis_id}")
+                    else:
+                        # Luodaan uusi riskianalyysi
+                        new_risk = RiskAnalysis(
+                            analysis_id=analysis_id,
+                            risk_data=json_result
+                        )
+                        db.session.add(new_risk)
+                        logger.info(f"Luotiin uusi riskianalyysi analyysille {analysis_id}")
+                    
+                    # Tallennetaan muutokset tietokantaan
+                    db.session.commit()
+                    logger.info("Riskianalyysi tallennettu tietokantaan")
+                except Exception as db_error:
+                    logger.error(f"Virhe tallennettaessa riskianalyysiä tietokantaan: {db_error}")
+                    db.session.rollback()
+            
             # Palautetaan korjattu JSON-teksti
-            return json.dumps(json_data)
+            return json_result
             
         except json.JSONDecodeError as e:
             logger.error(f"Vastaus ei ole validia JSON: {e}")

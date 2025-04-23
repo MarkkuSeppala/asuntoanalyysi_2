@@ -143,10 +143,26 @@ def analyze():
         if not current_user.is_admin:
             current_user.increment_api_call_count()
         
+        # Haetaan analyysi tietokannasta URL:n perusteella tai luodaan uusi
+        analysis = Analysis.query.filter_by(property_url=url, user_id=current_user.id).first()
+        analysis_id = None
+
+        if analysis:
+            # Käytetään olemassa olevaa analyysiä
+            analysis_id = analysis.id
+            logger.info(f"Käytetään olemassa olevaa analyysiä ID: {analysis_id}")
+        else:
+            # Tätä voi tapahtua, koska api_call.get_analysis tallentaa analyysin tietokantaan
+            # Yritetään hakea juuri luotu analyysi URL:n perusteella
+            analysis = Analysis.query.filter_by(property_url=url, user_id=current_user.id).first()
+            if analysis:
+                analysis_id = analysis.id
+                logger.info(f"Löydettiin juuri luotu analyysi ID: {analysis_id}")
+
         # Tehdään riskianalyysi API-vastauksesta
         try:
             logger.info("Tehdään riskianalyysi kohteesta")
-            riski_data_json = riskianalyysi(analysis_response)
+            riski_data_json = riskianalyysi(analysis_response, analysis_id)
             riski_data = json.loads(riski_data_json)
             logger.info(f"Riskianalyysi valmis: {riski_data.get('kokonaisriskitaso', 'N/A')}/10")
         except Exception as e:
@@ -210,11 +226,45 @@ def api_analyze():
         if not current_user.is_admin:
             current_user.increment_api_call_count()
         
-        # Palautetaan sekä raakatiedot että analyysi JSON-muodossa
-        return jsonify({
+        # Haetaan analyysi tietokannasta URL:n perusteella tai luodaan uusi
+        analysis = Analysis.query.filter_by(property_url=url, user_id=current_user.id).first()
+        analysis_id = None
+        riski_data = None
+        
+        if analysis:
+            # Käytetään olemassa olevaa analyysiä
+            analysis_id = analysis.id
+            logger.info(f"API: Käytetään olemassa olevaa analyysiä ID: {analysis_id}")
+        else:
+            # Tätä voi tapahtua, koska api_call.get_analysis tallentaa analyysin tietokantaan
+            # Yritetään hakea juuri luotu analyysi URL:n perusteella
+            analysis = Analysis.query.filter_by(property_url=url, user_id=current_user.id).first()
+            if analysis:
+                analysis_id = analysis.id
+                logger.info(f"API: Löydettiin juuri luotu analyysi ID: {analysis_id}")
+                
+        # Tehdään riskianalyysi API-vastauksesta, jos analyysi on löydetty
+        if analysis_id:
+            try:
+                logger.info("API: Tehdään riskianalyysi kohteesta")
+                riski_data_json = riskianalyysi(analysis_response, analysis_id)
+                riski_data = json.loads(riski_data_json)
+                logger.info(f"API: Riskianalyysi valmis: {riski_data.get('kokonaisriskitaso', 'N/A')}/10")
+            except Exception as e:
+                logger.error(f"API: Virhe riskianalyysissä: {e}")
+                riski_data = None
+        
+        # Palautetaan analyysi, raakatiedot ja riskianalyysi JSON-muodossa
+        response_data = {
             'property_data': markdown_data,
             'analysis': analysis_response
-        })
+        }
+        
+        # Lisätään riskianalyysi vastaukseen, jos se on saatavilla
+        if riski_data:
+            response_data['risk_analysis'] = riski_data
+            
+        return jsonify(response_data)
         
     except Exception as e:
         logger.error(f"Virhe API-analyysin teossa: {e}")

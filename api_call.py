@@ -8,7 +8,7 @@ import re
 from typing import Optional, Dict, Any
 from datetime import datetime
 import hashlib
-from models import db, Analysis
+from models import db, Analysis, RiskAnalysis
 from flask_login import current_user
 
 # Asetetaan lokitus
