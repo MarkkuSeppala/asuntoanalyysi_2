@@ -199,17 +199,32 @@ small {
 .results-tabs {
     display: flex;
     border-bottom: 1px solid var(--border-color);
-    margin-bottom: 20px;
+    margin-bottom: 30px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 10;
+    padding: 10px 0;
 }
 
 .tab-btn {
     background: none;
     border: none;
-    padding: 10px 20px;
+    padding: 12px 20px;
     font-size: 1rem;
     cursor: pointer;
     border-bottom: 3px solid transparent;
     transition: all 0.3s;
+    color: #666;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.tab-btn:hover {
+    color: var(--primary-color);
 }
 
 .tab-btn.active {
@@ -220,6 +235,12 @@ small {
 
 .tab-content {
     display: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .tab-content.active {
@@ -229,50 +250,125 @@ small {
 /* Markdown-sisältö */
 .markdown-content {
     line-height: 1.8;
+    font-size: 1.05rem;
 }
 
 .markdown-content h1, 
 .markdown-content h2, 
 .markdown-content h3, 
 .markdown-content h4 {
-    margin-top: 20px;
-    margin-bottom: 10px;
+    margin-top: 25px;
+    margin-bottom: 15px;
     color: var(--primary-color);
+    font-weight: 600;
+}
+
+.markdown-content h1 {
+    font-size: 2rem;
+}
+
+.markdown-content h2 {
+    font-size: 1.7rem;
+}
+
+.markdown-content h3 {
+    font-size: 1.4rem;
+}
+
+.markdown-content h4 {
+    font-size: 1.2rem;
 }
 
 .markdown-content p {
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
 .markdown-content ul, 
 .markdown-content ol {
-    margin-bottom: 15px;
-    padding-left: 20px;
+    margin-bottom: 20px;
+    padding-left: 25px;
+}
+
+.markdown-content li {
+    margin-bottom: 8px;
 }
 
 .markdown-content blockquote {
     border-left: 4px solid var(--primary-color);
-    padding-left: 15px;
+    padding: 15px;
+    background-color: #f8f9fa;
     color: var(--light-text);
-    font-style: italic;
-    margin: 15px 0;
+    margin: 20px 0;
+    border-radius: 0 5px 5px 0;
 }
 
 .markdown-content table {
     width: 100%;
     border-collapse: collapse;
-    margin: 15px 0;
+    margin: 25px 0;
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
 }
 
 .markdown-content th,
 .markdown-content td {
     border: 1px solid var(--border-color);
-    padding: 8px 12px;
+    padding: 12px 15px;
     text-align: left;
 }
 
 .markdown-content th {
-    background-color: var(--secondary-color);
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+}
+
+.markdown-content tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.markdown-content tr:hover {
+    background-color: #f2f2f2;
+}
+
+.markdown-content code {
+    background-color: #f1f1f1;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+.markdown-content pre {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+    margin: 20px 0;
+    border: 1px solid #eee;
+}
+
+.markdown-content pre code {
+    background-color: transparent;
+    padding: 0;
+}
+
+.markdown-content a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.markdown-content a:hover {
+    text-decoration: underline;
+}
+
+.markdown-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+    margin: 15px 0;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 /* Responsiivisuus */
@@ -290,8 +386,63 @@ small {
     }
     
     .tab-btn {
+        padding: 10px 15px;
+        font-size: 0.95rem;
+    }
+    
+    .markdown-content {
+        font-size: 1rem;
+    }
+    
+    .markdown-content h1 {
+        font-size: 1.8rem;
+    }
+    
+    .markdown-content h2 {
+        font-size: 1.5rem;
+    }
+    
+    .markdown-content h3 {
+        font-size: 1.3rem;
+    }
+    
+    .markdown-content h4 {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        padding: 5px;
+    }
+    
+    .tab-btn {
         padding: 8px 12px;
         font-size: 0.9rem;
+    }
+    
+    .card-body {
+        padding: 15px 10px;
+    }
+    
+    .markdown-content {
+        font-size: 0.95rem;
+    }
+    
+    .markdown-content h1 {
+        font-size: 1.6rem;
+    }
+    
+    .markdown-content h2 {
+        font-size: 1.4rem;
+    }
+    
+    .markdown-content h3 {
+        font-size: 1.2rem;
+    }
+    
+    .markdown-content h4 {
+        font-size: 1rem;
     }
 }
 

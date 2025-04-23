@@ -90,7 +90,7 @@
                         </div>
                     </div>
                     
-                    <!-- Uusi riskimittari, joka näyttää kaikki osa-alueet yhtenä palkkina -->
+                    <!-- Riskimittari -->
                     <div class="risk-meter">
                         <!-- Kokonaisriskin perusteella skaalattu sisäcontainer -->
                         <div class="risk-meter-inner" style="width: {{ riski_data.kokonaisriskitaso * 10 }}%;">
@@ -130,32 +130,36 @@
                 </div>
                 
                 <div class="risk-detail-container">
-                    <h3 class="mb-4">Riskiarvio osa-alueittain</h3>
+                    <h3>Riskiarvio osa-alueittain</h3>
                     
-                    {% for riski in riski_data.riskimittari %}
-                    <div class="risk-category">
-                        <div class="risk-title">
-                            <span class="risk-label">{{ riski.osa_alue }}</span>
-                            <span class="risk-value">{{ riski.riski_taso }}/10</span>
-                        </div>
-                        <div class="progress risk-progress">
-                            <div class="progress-bar 
-                                {% if riski.riski_taso < 4 %}bg-success
-                                {% elif riski.riski_taso < 7 %}bg-warning
-                                {% else %}bg-danger{% endif %}" 
-                                role="progressbar" 
-                                style="width: {{ riski.riski_taso * 10 }}%" 
-                                aria-valuenow="{{ riski.riski_taso }}" 
-                                aria-valuemin="0" 
-                                aria-valuemax="10">
+                    <div class="row">
+                        {% for riski in riski_data.riskimittari %}
+                        <div class="col-lg-6 mb-4">
+                            <div class="risk-category">
+                                <div class="risk-title">
+                                    <span class="risk-label">{{ riski.osa_alue }}</span>
+                                    <span class="risk-value">{{ riski.riski_taso }}/10</span>
+                                </div>
+                                <div class="progress risk-progress">
+                                    <div class="progress-bar 
+                                        {% if riski.riski_taso < 4 %}bg-success
+                                        {% elif riski.riski_taso < 7 %}bg-warning
+                                        {% else %}bg-danger{% endif %}" 
+                                        role="progressbar" 
+                                        style="width: {{ riski.riski_taso * 10 }}%" 
+                                        aria-valuenow="{{ riski.riski_taso }}" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="10">
+                                    </div>
+                                </div>
+                                <div class="risk-description">
+                                    {{ riski.kuvaus }}
+                                </div>
+                                <div class="text-muted">Painoarvo: {{ riski.osuus_prosenttia }}%</div>
                             </div>
                         </div>
-                        <div class="risk-description">
-                            {{ riski.kuvaus }}
-                        </div>
-                        <div class="text-muted small">Painoarvo: {{ riski.osuus_prosenttia }}%</div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
                 {% else %}
                 <div class="alert alert-info">
