@@ -203,12 +203,9 @@
         
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <!-- "Kokeile ilmaiseksi" heading -->
-                <h3 class="text-center mt-4 mb-3" style="color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.3); font-weight: 700;">KOKEILE ILMAISEKSI</h3>
-                
                 <!-- Demo form moved into hero section -->
-                <div class="demo-form mt-2 position-relative">
-                    <h4 class="mb-3 text-center">Testaa palvelua nyt</h4>
+                <div class="demo-form mt-4 position-relative">
+                    <h4 class="mb-3 text-center" style="color: #333; font-weight: 700;">Testaa palvelua nyt</h4>
                     <p class="mb-3 text-center">Syötä Oikotie-asuntoilmoituksen URL alle:</p>
                     <form id="demoForm" class="mb-2">
                         <div class="input-group">
@@ -234,23 +231,23 @@
                 </div>
                 
                 <div class="demo-result d-none mt-4" id="demoResult">
-                    <h4 class="mb-3" id="demoTitle">Analyysi kohteesta</h4>
+                    <h4 class="mb-3" id="demoTitle" style="color: #333; font-weight: 700;">Analyysi kohteesta</h4>
                     
                     <!-- Riskimittari -->
                     <div class="risk-meter mb-4">
-                        <h5 class="mb-3">Kohteen riskiarvio</h5>
+                        <h5 class="mb-3" style="color: #333; font-weight: 600;">Kohteen riskiarvio</h5>
                         <div class="progress" style="height: 25px; border-radius: 15px;">
                             <div class="progress-bar bg-success" role="progressbar" style="width: 35%;" aria-valuenow="35" aria-valuemin="0" aria-valuemax="100">Matala riski</div>
                             <div class="progress-bar bg-warning" role="progressbar" style="width: 35%;" aria-valuenow="35" aria-valuemin="0" aria-valuemax="100">Kohtalainen riski</div>
                             <div class="progress-bar bg-danger" role="progressbar" style="width: 30%;" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100">Korkea riski</div>
                         </div>
                         <div class="d-flex justify-content-between mt-2">
-                            <span>Matala riski</span>
-                            <span>Kohtalainen riski</span>
-                            <span>Korkea riski</span>
+                            <span style="color: #333; font-weight: 500;">Matala riski</span>
+                            <span style="color: #333; font-weight: 500;">Kohtalainen riski</span>
+                            <span style="color: #333; font-weight: 500;">Korkea riski</span>
                         </div>
                         <div class="risk-indicator mt-3 d-flex align-items-center">
-                            <span>Kohteen riski:</span>
+                            <span style="color: #333; font-weight: 600;">Kohteen riski:</span>
                             <div class="risk-pointer ms-2" style="position: relative; width: 100%; height: 25px;">
                                 <div style="position: absolute; top: 0; left: 45%; transform: translateX(-50%);">
                                     <i class="fas fa-caret-down fa-2x text-primary"></i>
@@ -260,9 +257,9 @@
                     </div>
                     
                     <div class="demo-preview" id="demoPreview">
-                        <div class="markdown-content"></div>
+                        <div class="markdown-content" style="color: #222;"></div>
                         <div class="fade-overlay">
-                            <p class="mb-3 text-center">Näet koko analyysin rekisteröitymällä palveluun</p>
+                            <p class="mb-3 text-center" style="color: #333; font-weight: 500;">Näet koko analyysin rekisteröitymällä palveluun</p>
                             <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Rekisteröidy nyt</a>
                         </div>
                     </div>
