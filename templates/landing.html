@@ -198,9 +198,47 @@
                     <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light">Rekisteröidy</a>
                     {% endif %}
                 </div>
+                
+                <!-- Demo form moved into hero section -->
+                <div class="demo-form mt-4">
+                    <h4 class="mb-3">Testaa palvelua ilmaiseksi</h4>
+                    <p class="mb-3">Syötä Oikotie-asuntoilmoituksen URL alle:</p>
+                    <form id="demoForm" class="mb-2">
+                        <div class="input-group">
+                            <input type="url" id="demoUrl" class="form-control" placeholder="https://asunnot.oikotie.fi/..." required>
+                            <button type="submit" class="btn btn-primary">Analysoi</button>
+                        </div>
+                        <small class="form-text text-muted">Esim: https://asunnot.oikotie.fi/myytavat-asunnot/helsinki/16675455</small>
+                    </form>
+                </div>
+                
+                <div class="alert alert-info d-none" id="demoLoading">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm me-3" role="status">
+                            <span class="visually-hidden">Ladataan...</span>
+                        </div>
+                        <span>Analysoidaan asuntoa... Tämä voi kestää hetken.</span>
+                    </div>
+                </div>
+                
+                <div class="alert alert-danger d-none" id="demoError">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span id="errorMessage">Virhe analysoitaessa asuntoa. Tarkista URL ja yritä uudelleen.</span>
+                </div>
             </div>
             <div class="col-lg-6 d-none d-lg-block text-center">
                 <img src="{{ url_for('static', filename='img/hero-image.svg') }}" alt="Asuntoanalyysi sovelluksen demo" class="img-fluid mt-4" style="max-height: 350px;">
+                
+                <div class="demo-result d-none mt-4" id="demoResult">
+                    <h4 class="mb-3" id="demoTitle">Analyysi kohteesta</h4>
+                    <div class="demo-preview" id="demoPreview">
+                        <div class="markdown-content"></div>
+                        <div class="fade-overlay">
+                            <p class="mb-3 text-center">Näet koko analyysin rekisteröitymällä palveluun</p>
+                            <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Rekisteröidy nyt</a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -271,53 +309,6 @@
         </div>
         <div class="col-lg-6 mt-5 mt-lg-0">
             <img src="{{ url_for('static', filename='img/analysis-example.svg') }}" alt="Analyysin esimerkki" class="img-fluid demo-screenshot">
-        </div>
-    </div>
-</section>
-
-<!-- Demo Section - Uusi osio -->
-<section class="demo-section">
-    <div class="container">
-        <h2 class="text-center mb-5 section-title">Kokeile Asuntoanalyysiä</h2>
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="demo-form">
-                    <h4 class="mb-4">Testaa palvelua ilmaiseksi</h4>
-                    <p class="mb-4">Syötä Oikotie-asuntoilmoituksen URL alle nähdäksesi, miten Asuntoanalyysi toimii:</p>
-                    <form id="demoForm" class="mb-4">
-                        <div class="input-group">
-                            <input type="url" id="demoUrl" class="form-control" placeholder="https://asunnot.oikotie.fi/..." required>
-                            <button type="submit" class="btn btn-primary">Analysoi</button>
-                        </div>
-                        <small class="form-text text-muted">Esim: https://asunnot.oikotie.fi/myytavat-asunnot/helsinki/16675455</small>
-                    </form>
-                </div>
-                
-                <div class="demo-result d-none" id="demoResult">
-                    <h4 class="mb-4" id="demoTitle">Analyysi kohteesta</h4>
-                    <div class="demo-preview" id="demoPreview">
-                        <div class="markdown-content"></div>
-                        <div class="fade-overlay">
-                            <p class="mb-4 text-center">Näet koko analyysin rekisteröitymällä palveluun</p>
-                            <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Rekisteröidy nyt</a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="alert alert-info d-none" id="demoLoading">
-                    <div class="d-flex align-items-center">
-                        <div class="spinner-border spinner-border-sm me-3" role="status">
-                            <span class="visually-hidden">Ladataan...</span>
-                        </div>
-                        <span>Analysoidaan asuntoa... Tämä voi kestää hetken.</span>
-                    </div>
-                </div>
-                
-                <div class="alert alert-danger d-none" id="demoError">
-                    <i class="fas fa-exclamation-circle me-2"></i>
-                    <span id="errorMessage">Virhe analysoitaessa asuntoa. Tarkista URL ja yritä uudelleen.</span>
-                </div>
-            </div>
         </div>
     </div>
 </section>
