@@ -163,7 +163,7 @@
     
     .demo-preview {
         position: relative;
-        max-height: 100px;
+        max-height: 150px;
         overflow: hidden;
     }
     
@@ -187,22 +187,6 @@
 <!-- Hero Section -->
 <section class="hero-section">
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-12 text-center mb-4">
-                <h1 class="hero-title">Tee fiksumpia asuntopäätöksiä tekoälyn avulla</h1>
-                <p class="hero-subtitle">Asuntoanalyysi auttaa sinua analysoimaan potentiaalisia asuntokohteita syvällisesti ja tunnistamaan piilevät riskit ja mahdollisuudet.</p>
-                <div class="d-flex flex-wrap gap-3 justify-content-center">
-                    {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('index') }}" class="btn hero-cta">Analysoi asunto</a>
-                    <a href="{{ url_for('list_analyses') }}" class="btn btn-outline-light">Katso analyysejäsi</a>
-                    {% else %}
-                    <a href="{{ url_for('auth.login') }}" class="btn hero-cta">Kirjaudu sisään</a>
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light">Rekisteröidy</a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <!-- Demo form moved into hero section -->
@@ -254,8 +238,20 @@
                 </div>
             </div>
             
-            <div class="col-12 text-center mt-4">
-                <img src="{{ url_for('static', filename='img/hero-image.svg') }}" alt="Asuntoanalyysi sovelluksen demo" class="img-fluid" style="max-height: 200px;">
+        </div>
+        <div class="row align-items-center">
+            <div class="col-lg-12 text-center mb-4">
+                <h1 class="hero-title">Tee fiksumpia asuntopäätöksiä tekoälyn avulla</h1>
+                <p class="hero-subtitle">Asuntoanalyysi auttaa sinua analysoimaan potentiaalisia asuntokohteita syvällisesti ja tunnistamaan piilevät riskit ja mahdollisuudet.</p>
+                <div class="d-flex flex-wrap gap-3 justify-content-center">
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('index') }}" class="btn hero-cta">Analysoi asunto</a>
+                    <a href="{{ url_for('list_analyses') }}" class="btn btn-outline-light">Katso analyysejäsi</a>
+                    {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn hero-cta">Kirjaudu sisään</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light">Rekisteröidy</a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
