@@ -4,8 +4,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (urlInput) {
         urlInput.addEventListener('blur', function() {
             const url = this.value.trim();
-            if (url && !url.includes('oikotie.fi') && !url.includes('etuovi.com')) {
-                this.setCustomValidity('Syötä kelvollinen Oikotie- tai Etuovi-asuntolinkin URL');
+            if (url && !url.includes('oikotie.fi')) {
+                this.setCustomValidity('Syötä kelvollinen Oikotie-asuntolinkin URL');
             } else {
                 this.setCustomValidity('');
             }

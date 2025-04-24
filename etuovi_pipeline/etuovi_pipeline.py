@@ -266,162 +266,85 @@ def download_pdf(url, output_filename=None, headless=False):
 
 def convert_pdf_to_markdown(pdf_path, output_markdown=None):
     """
-    Convert a PDF to markdown format using docling's DocumentConverter.
+    Convert a PDF file to markdown format using docling.
     
     Args:
-        pdf_path (str): Path to the PDF file to convert.
-        output_markdown (str, optional): The filename to save the markdown as.
-            If not provided, it will only return the markdown content.
+        pdf_path (str): Path to the PDF file.
+        output_markdown (str, optional): Filename to save the markdown as.
+            If not provided, a default name will be generated.
     
     Returns:
-        str: The markdown content of the converted PDF.
+        str: The path to the markdown file.
     """
-    try:
-        print(f"Converting {pdf_path} to markdown")
-        converter = DocumentConverter()
-        result = converter.convert(pdf_path)
-        
-        if not result:
-            print("Conversion returned no result")
-            return None
-        
-        markdown_content = result.document.export_to_markdown()
-        
-        # Save to file if output_markdown is provided
-        if output_markdown:
-            with open(output_markdown, 'w', encoding='utf-8') as f:
-                f.write(markdown_content)
-            print(f"Markdown saved to {output_markdown}")
-        
-        return markdown_content
+    print(f"Converting PDF to markdown: {pdf_path}")
     
-    except Exception as e:
-        print(f"Error converting PDF to markdown: {str(e)}")
-        return None
+    # Create default output filename if not provided
+    if not output_markdown:
+        output_markdown = os.path.splitext(os.path.basename(pdf_path))[0] + ".md"
+    
+    # Get absolute path for the output file
+    output_path = os.path.join(os.getcwd(), output_markdown)
+    
+    # Convert the PDF to markdown using our improved dockling module
+    from etuovi_pipeline.etuovi_dockling import convert_pdf_to_markdown as convert_pdf
+    markdown_content = convert_pdf(pdf_path)
+    
+    if not markdown_content:
+        raise Exception("Failed to convert PDF to markdown")
+    
+    # Save the markdown content to a file
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(markdown_content)
+    
+    print(f"Markdown saved as {output_path}")
+    return os.path.abspath(output_path)
 
-def process_etuovi_listing(url, output_markdown=None, headless=True):
+def process_etuovi_listing(url, output_markdown=None, headless=True, cleanup=True):
     """
-    Process an Etuovi.com property listing URL: download the PDF, convert to markdown,
-    and optionally save the markdown to a file.
+    Process an Etuovi listing: download PDF and convert to markdown.
     
     Args:
-        url (str): The URL of the Etuovi property listing.
-        output_markdown (str, optional): The filename to save the markdown as.
-            If not provided, it will only return the markdown content.
-        headless (bool): Whether to run in headless mode. Set to False if having trouble.
+        url (str): URL of the Etuovi listing.
+        output_markdown (str, optional): Output markdown filename.
+        headless (bool): Whether to run browser in headless mode.
+        cleanup (bool): Whether to clean up temporary files after processing.
     
     Returns:
-        str: The markdown content of the processed listing.
+        str: Absolute path to the output markdown file.
     """
     try:
-        # Extract property ID for default filenames
-        property_id = url.split('/')[-1].split('?')[0]
-        property_id = sanitize_filename(property_id)
-        
-        # Set default output filenames
+        print(f"Processing Etuovi listing from URL: {url}")
+        # Generate default output filename if not provided
         if not output_markdown:
-            # If no output filename is provided, we'll still create a temporary file
-            # but the user will only get the content returned, not the file
-            temp_output_markdown = f"etuovi_{property_id}.md"
+            property_id = url.split('/')[-1].split('?')[0]
+            property_id = sanitize_filename(property_id)
+            output_markdown = f"etuovi_{property_id}.md"
         else:
-            temp_output_markdown = output_markdown
+            # Ensure the provided filename is safe
+            output_markdown = sanitize_filename(output_markdown)
         
-        # Full pipeline: URL -> PDF -> Markdown
-        pdf_path = download_pdf(url, f"etuovi_{property_id}.pdf", headless=headless)
-        if not pdf_path:
-            print(f"Failed to download PDF from {url}")
-            return None
+        # Download the PDF
+        pdf_path = download_pdf(url, headless=headless)
         
-        markdown_content = convert_pdf_to_markdown(pdf_path, temp_output_markdown)
-        if not markdown_content:
-            print(f"Failed to convert PDF {pdf_path} to markdown")
-            return None
+        if not pdf_path or not os.path.exists(pdf_path):
+            raise Exception(f"PDF download failed or file not found: {pdf_path}")
+            
+        # Convert the PDF to markdown
+        markdown_path = convert_pdf_to_markdown(pdf_path, output_markdown)
         
-        # Format the markdown content to match the expected structure
-        formatted_markdown = format_etuovi_markdown(markdown_content, url)
+        # Clean up the PDF file if requested
+        if cleanup and pdf_path and os.path.exists(pdf_path):
+            try:
+                os.remove(pdf_path)
+                print(f"Removed temporary PDF file: {pdf_path}")
+            except Exception as e:
+                print(f"Warning: Could not remove temporary PDF file {pdf_path}: {e}")
         
-        # If an output filename was specified, save the formatted content
-        if output_markdown:
-            with open(output_markdown, 'w', encoding='utf-8') as f:
-                f.write(formatted_markdown)
-            print(f"Formatted markdown saved to {output_markdown}")
-        
-        # Cleanup temporary PDF if it was not the requested output
-        if os.path.exists(pdf_path) and "temp_" in pdf_path:
-            os.remove(pdf_path)
-            print(f"Temporary PDF {pdf_path} removed")
-        
-        return formatted_markdown
-    
+        # Return the absolute path to the markdown file
+        return os.path.abspath(markdown_path)
     except Exception as e:
-        print(f"Error processing Etuovi listing: {str(e)}")
-        return None
-
-def format_etuovi_markdown(markdown_content, url):
-    """
-    Format the raw markdown content from Etuovi to match the expected structure
-    for the analysis API.
-    
-    Args:
-        markdown_content (str): The raw markdown content from the PDF conversion.
-        url (str): The URL of the Etuovi property listing.
-    
-    Returns:
-        str: Formatted markdown content.
-    """
-    # Add header with source information
-    header = f"# Asuntokohde Etuovi.com\n\n**Lähde:** {url}\n\n"
-    
-    # Extract basic information from the content
-    basic_info = "## Perustiedot\n\n"
-    
-    # Extract property type, address and other key information using regex
-    address_match = re.search(r"([A-ZÄÖÅa-zäöå]+\s+\d+.*?)[,\n]", markdown_content)
-    if address_match:
-        basic_info += f"**Osoite:** {address_match.group(1).strip()}\n\n"
-    
-    price_match = re.search(r"(\d{1,3}(?:\s?\d{3})*(?:,\d+)?)\s*€", markdown_content)
-    if price_match:
-        # Remove spaces from price and format it
-        price = price_match.group(1).replace(" ", "")
-        basic_info += f"**Hinta:** {price} €\n\n"
-    
-    size_match = re.search(r"(\d+(?:,\d+)?)\s*m²", markdown_content)
-    if size_match:
-        basic_info += f"**Koko:** {size_match.group(1)} m²\n\n"
-    
-    rooms_match = re.search(r"(\d+(?:\+\d+)?)\s*[hH]", markdown_content)
-    if rooms_match:
-        basic_info += f"**Huoneet:** {rooms_match.group(1)} h\n\n"
-    
-    # Add property description section
-    description_section = "## Kohteen kuvaus\n\n"
-    
-    # Try to extract property description using heuristics
-    # In Etuovi PDFs, the description is often in a dedicated section
-    description_match = re.search(r"(?:Kohteen|Asunnon)\s+(?:kuvaus|tiedot)(?:[:\n])(.*?)(?:\n\n|\n##)", markdown_content, re.DOTALL)
-    if description_match:
-        description = description_match.group(1).strip()
-        description_section += f"{description}\n\n"
-    else:
-        # Fallback: Use a chunk of text from the beginning as description
-        lines = markdown_content.split('\n')
-        description_lines = [line for line in lines[5:15] if line.strip() and not line.startswith('#')]
-        description_section += '\n'.join(description_lines) + "\n\n"
-    
-    # Add additional details section
-    details_section = "## Lisätiedot\n\n"
-    details_section += "Kohteen lisätiedot on haettu Etuovi.com PDF-esitteestä.\n\n"
-    
-    # Include cleaned main content without redundant information
-    # We'll use the original markdown but remove common headers and section markers
-    content_section = re.sub(r"^#.*$", "", markdown_content, flags=re.MULTILINE)  # Remove all headers
-    content_section = re.sub(r"\n{3,}", "\n\n", content_section)  # Replace multiple newlines with double newlines
-    
-    # Combine all sections
-    formatted_markdown = f"{header}{basic_info}{description_section}{details_section}{content_section}"
-    
-    return formatted_markdown
+        print(f"Error processing Etuovi listing: {e}")
+        raise
 
 def main():
     """Main function to parse arguments and process the Etuovi listing."""

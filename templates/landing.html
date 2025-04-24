@@ -204,7 +204,7 @@
                             <input type="url" id="demoUrl" class="form-control" placeholder="https://asunnot.oikotie.fi/... tai https://www.etuovi.com/..." required>
                             <button type="submit" class="btn btn-primary">Analysoi</button>
                         </div>
-                        <small class="form-text text-muted text-center d-block mt-2">Esim: https://asunnot.oikotie.fi/myytavat-asunnot/helsinki/16675455 tai https://www.etuovi.com/kohde/9625253</small>
+                        <small class="form-text text-muted text-center d-block mt-2">Esim: https://asunnot.oikotie.fi/myytavat-asunnot/helsinki/16675455 tai https://www.etuovi.com/kohde/12345</small>
                     </form>
                 </div>
                 
@@ -305,8 +305,8 @@
                 <div class="d-flex align-items-center mb-4">
                     <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; min-width: 50px;">1</div>
                     <div class="ms-3">
-                        <h4>Syötä asunnon linkki</h4>
-                        <p class="text-muted">Kopioi ja liitä asunnon Oikotie- tai Etuovi-osoite analysoitavaksi.</p>
+                        <h4>Syötä asunnon Oikotie-linkki</h4>
+                        <p class="text-muted">Kopioi ja liitä asunnon Oikotie-osoite analysoitavaksi.</p>
                     </div>
                 </div>
                 <div class="d-flex align-items-center mb-4">
@@ -338,7 +338,7 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="testimonial-card">
-                    <p class="testimonial-text">"Asuntoanalyysi auttoi minua huomaamaan useita tärkeitä yksityiskohtia asunnosta, joita en muuten olisi huomannut. Säästyin monella ongelmalta tulevaisuudessa."</p>
+                    <p class="testimonial-text">"Asuntoanalyysi auttoi minua huomaamaan useita tärkeitä yksityiskohtia asunnosta, joita en muuten olisi huomannut. Säästyin monelta ongelmalta tulevaisuudessa."</p>
                     <p class="testimonial-author">- Sanna K., Helsinki</p>
                 </div>
             </div>
@@ -418,38 +418,36 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const demoForm = document.getElementById('demoForm');
-        const demoUrl = document.getElementById('demoUrl');
+        const demoResult = document.getElementById('demoResult');
+        const demoPreview = document.getElementById('demoPreview');
         const demoLoading = document.getElementById('demoLoading');
         const demoError = document.getElementById('demoError');
-        const demoResult = document.getElementById('demoResult');
         const errorMessage = document.getElementById('errorMessage');
-        const demoPreview = document.getElementById('demoPreview');
         const demoTitle = document.getElementById('demoTitle');
         
         demoForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            const url = demoUrl.value.trim();
             
-            // Reset UI state
-            demoLoading.classList.remove('d-none');
-            demoError.classList.add('d-none');
-            demoResult.classList.add('d-none');
+            const demoUrl = document.getElementById('demoUrl').value;
             
-            if (!url) {
-                demoLoading.classList.add('d-none');
-                errorMessage.textContent = 'URL-osoite on pakollinen';
+            if (!demoUrl) {
+                errorMessage.textContent = 'Syötä URL-osoite';
                 demoError.classList.remove('d-none');
                 return;
             }
             
-            if (!url.includes('oikotie.fi') && !url.includes('etuovi.com')) {
-                demoLoading.classList.add('d-none');
+            if (!demoUrl.includes('oikotie.fi') && !demoUrl.includes('etuovi.com')) {
                 errorMessage.textContent = 'Syötä kelvollinen Oikotie- tai Etuovi-asuntolinkin URL';
                 demoError.classList.remove('d-none');
                 return;
             }
             
+            // Piilota virheilmoitus jos näkyvissä
+            demoError.classList.add('d-none');
+            demoResult.classList.add('d-none');
+            
             // Näytä latausanimaatio
+            demoLoading.classList.remove('d-none');
             demoLoading.innerHTML = `
                 <div class="text-center p-3">
                     <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
@@ -482,7 +480,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ url: url }),
+                body: JSON.stringify({ url: demoUrl }),
             })
             .then(response => {
                 clearInterval(progressInterval);
