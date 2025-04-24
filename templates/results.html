@@ -77,112 +77,112 @@
                         </span>
                         {% endif %}
                     </div>
-                    <div class="card-body">
-                        <div class="results-tabs">
-                            <button class="tab-btn active" data-tab="analysis">Analyysi</button>
-                            <button class="tab-btn" data-tab="risk-analysis">Riskianalyysi</button>
-                            <button class="tab-btn" data-tab="raw-data">Asunnon tiedot</button>
+        <div class="card-body">
+            <div class="results-tabs">
+                <button class="tab-btn active" data-tab="analysis">Analyysi</button>
+                <button class="tab-btn" data-tab="risk-analysis">Riskianalyysi</button>
+                <button class="tab-btn" data-tab="raw-data">Asunnon tiedot</button>
+            </div>
+            
+            <div class="tab-content active" id="analysis">
+                <div class="analysis-content markdown-content">
+                    <!-- Tähän tulee analyysi markdown-muodossa -->
+                </div>
+            </div>
+            
+            <div class="tab-content" id="risk-analysis">
+                {% if riski_data %}
+                <div class="risk-meter-container">
+                    <div class="risk-header">
+                        <div class="risk-header-value">{{ riski_data.kokonaisriskitaso }}</div>
+                        <div>
+                            <div class="risk-header-scale">/10</div>
+                            <div class="risk-header-label">Kokonaisriskitaso</div>
                         </div>
-                        
-                        <div class="tab-content active" id="analysis">
-                            <div class="analysis-content markdown-content">
-                                <!-- Tähän tulee analyysi markdown-muodossa -->
-                            </div>
-                        </div>
-                        
-                        <div class="tab-content" id="risk-analysis">
-                            {% if riski_data %}
-                            <div class="risk-meter-container">
-                                <div class="risk-header">
-                                    <div class="risk-header-value">{{ riski_data.kokonaisriskitaso }}</div>
-                                    <div>
-                                        <div class="risk-header-scale">/10</div>
-                                        <div class="risk-header-label">Kokonaisriskitaso</div>
-                                    </div>
+                    </div>
+                    
+                    <!-- Riskimittari -->
+                    <div class="risk-meter">
+                        <!-- Kokonaisriskin perusteella skaalattu sisäcontainer -->
+                        <div class="risk-meter-inner" style="width: {{ riski_data.kokonaisriskitaso * 10 }}%;">
+                            <!-- Riskin osa-alueet -->
+                            {% set colors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#d35400'] %}
+                            {% for riski in riski_data.riskimittari %}
+                                <div 
+                                    class="risk-area" 
+                                    style="width: {{ riski.osuus_prosenttia }}%; background-color: {{ colors[loop.index0 % colors|length] }};"
+                                    data-tooltip-id="tooltip-{{ loop.index }}">
                                 </div>
                                 
-                                <!-- Riskimittari -->
-                                <div class="risk-meter">
-                                    <!-- Kokonaisriskin perusteella skaalattu sisäcontainer -->
-                                    <div class="risk-meter-inner" style="width: {{ riski_data.kokonaisriskitaso * 10 }}%;">
-                                        <!-- Riskin osa-alueet -->
-                                        {% set colors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#d35400'] %}
-                                        {% for riski in riski_data.riskimittari %}
-                                            <div 
-                                                class="risk-area" 
-                                                style="width: {{ riski.osuus_prosenttia }}%; background-color: {{ colors[loop.index0 % colors|length] }};"
-                                                data-tooltip-id="tooltip-{{ loop.index }}">
-                                            </div>
-                                            
-                                            <!-- Tooltip kyseiselle riskialueelle -->
-                                            <div id="tooltip-{{ loop.index }}" class="risk-tooltip">
-                                                <div class="risk-tooltip-title">
-                                                    {{ riski.osa_alue }} 
-                                                    <span class="risk-tooltip-value">{{ riski.riski_taso }}/10</span>
-                                                </div>
-                                                <div class="risk-tooltip-description">
-                                                    {{ riski.kuvaus }}
-                                                </div>
-                                            </div>
-                                        {% endfor %}
+                                <!-- Tooltip kyseiselle riskialueelle -->
+                                <div id="tooltip-{{ loop.index }}" class="risk-tooltip">
+                                    <div class="risk-tooltip-title">
+                                        {{ riski.osa_alue }} 
+                                        <span class="risk-tooltip-value">{{ riski.riski_taso }}/10</span>
                                     </div>
-                                    
-                                    <!-- Kokonaisriskin merkki -->
-                                    <div class="risk-meter-marker" style="left: {{ riski_data.kokonaisriskitaso * 10 }}%;"></div>
-                                    <div class="risk-meter-value" style="left: {{ riski_data.kokonaisriskitaso * 10 }}%;">{{ riski_data.kokonaisriskitaso }}</div>
-                                </div>
-                                
-                                <!-- Asteikko -->
-                                <div class="risk-scale">
-                                    <div>Matala riski (0)</div>
-                                    <div>Normaali riski (5)</div>
-                                    <div>Kohonnut riski (10)</div>
-                                </div>
-                            </div>
-                            
-                            <div class="risk-detail-container">
-                                <h3>Riskiarvio osa-alueittain</h3>
-                                
-                                <div class="row">
-                                    {% for riski in riski_data.riskimittari %}
-                                    <div class="col-lg-6 mb-4">
-                                        <div class="risk-category">
-                                            <div class="risk-title">
-                                                <span class="risk-label">{{ riski.osa_alue }}</span>
-                                                <span class="risk-value">{{ riski.riski_taso }}/10</span>
-                                            </div>
-                                            <div class="progress risk-progress">
-                                                <div class="progress-bar 
-                                                    {% if riski.riski_taso < 4 %}bg-success
-                                                    {% elif riski.riski_taso < 7 %}bg-warning
-                                                    {% else %}bg-danger{% endif %}" 
-                                                    role="progressbar" 
-                                                    style="width: {{ riski.riski_taso * 10 }}%" 
-                                                    aria-valuenow="{{ riski.riski_taso }}" 
-                                                    aria-valuemin="0" 
-                                                    aria-valuemax="10">
-                                                </div>
-                                            </div>
-                                            <div class="risk-description">
-                                                {{ riski.kuvaus }}
-                                            </div>
-                                            <div class="text-muted">Painoarvo: {{ riski.osuus_prosenttia }}%</div>
-                                        </div>
+                                    <div class="risk-tooltip-description">
+                                        {{ riski.kuvaus }}
                                     </div>
-                                    {% endfor %}
                                 </div>
-                            </div>
-                            {% else %}
-                            <div class="alert alert-info">
-                                <h4 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Riskianalyysi ei saatavilla</h4>
-                                <p>Riskianalyysin laskemisessa tapahtui virhe tai dataa ei ole saatavilla.</p>
-                            </div>
-                            {% endif %}
+                            {% endfor %}
                         </div>
                         
-                        <div class="tab-content" id="raw-data">
-                            <div class="raw-data-content markdown-content">
-                                <!-- Tähän tulee raakatiedot markdown-muodossa -->
+                        <!-- Kokonaisriskin merkki -->
+                        <div class="risk-meter-marker" style="left: {{ riski_data.kokonaisriskitaso * 10 }}%;"></div>
+                        <div class="risk-meter-value" style="left: {{ riski_data.kokonaisriskitaso * 10 }}%;">{{ riski_data.kokonaisriskitaso }}</div>
+                    </div>
+                    
+                    <!-- Asteikko -->
+                    <div class="risk-scale">
+                        <div>Matala riski (0)</div>
+                        <div>Normaali riski (5)</div>
+                        <div>Kohonnut riski (10)</div>
+                    </div>
+                </div>
+                
+                <div class="risk-detail-container">
+                    <h3>Riskiarvio osa-alueittain</h3>
+                    
+                    <div class="row">
+                        {% for riski in riski_data.riskimittari %}
+                        <div class="col-lg-6 mb-4">
+                            <div class="risk-category">
+                                <div class="risk-title">
+                                    <span class="risk-label">{{ riski.osa_alue }}</span>
+                                    <span class="risk-value">{{ riski.riski_taso }}/10</span>
+                                </div>
+                                <div class="progress risk-progress">
+                                    <div class="progress-bar 
+                                        {% if riski.riski_taso < 4 %}bg-success
+                                        {% elif riski.riski_taso < 7 %}bg-warning
+                                        {% else %}bg-danger{% endif %}" 
+                                        role="progressbar" 
+                                        style="width: {{ riski.riski_taso * 10 }}%" 
+                                        aria-valuenow="{{ riski.riski_taso }}" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="10">
+                                    </div>
+                                </div>
+                                <div class="risk-description">
+                                    {{ riski.kuvaus }}
+                                </div>
+                                <div class="text-muted">Painoarvo: {{ riski.osuus_prosenttia }}%</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <h4 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Riskianalyysi ei saatavilla</h4>
+                    <p>Riskianalyysin laskemisessa tapahtui virhe tai dataa ei ole saatavilla.</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="tab-content" id="raw-data">
+                <div class="raw-data-content markdown-content">
+                    <!-- Tähän tulee raakatiedot markdown-muodossa -->
                             </div>
                         </div>
                     </div>

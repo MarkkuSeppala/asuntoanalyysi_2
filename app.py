@@ -1,7 +1,6 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
 import os
 import logging
-from real_estate_scraper import RealEstateScraper
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import api_call
 from flask_login import LoginManager, current_user, login_required
 from models import db, User, Analysis, RiskAnalysis
@@ -16,6 +15,7 @@ import re
 import traceback
 import time
 import etuovi_downloader  # Import the etuovi_downloader
+import oikotie_downloader  # Import the oikotie_downloader
 
 # Asetetaan lokitus
 logging.basicConfig(
@@ -119,7 +119,7 @@ def _sanitize_content(content):
 # Funktio joka päättelee URL-tyypin ja hakee asuntotiedot oikealla tavalla
 def get_property_data(url):
     """
-    Hakee asunnon tiedot URL:n perusteella joko käyttäen RealEstateScraper-luokkaa (Oikotie) 
+    Hakee asunnon tiedot URL:n perusteella joko käyttäen oikotie_downloader-moduulia (Oikotie) 
     tai etuovi_downloader-moduulia (Etuovi)
     
     Args:
@@ -133,16 +133,35 @@ def get_property_data(url):
     """
     # Tarkistetaan URL:n tyyppi
     if 'oikotie.fi' in url or 'asunnot.oikotie.fi' in url:
-        # Käytetään Oikotien scraperia
+        # Käytetään Oikotie-downloaderia
         logger.info(f"Oikotie URL havaittu: {url}")
-        scraper = RealEstateScraper(url)
-        success = scraper.run()
-        
-        if not success:
-            return False, None, 'oikotie'
+        try:
+            # Haetaan asunnon tiedot oikotie_downloader-moduulilla
+            logger.info("Haetaan tiedot oikotie_downloader-moduulilla...")
+            text_content = oikotie_downloader.get_property_info(url, verbose=False)
             
-        markdown_data = scraper.format_to_markdown()
-        return True, markdown_data, 'oikotie'
+            # Määritellään property_id
+            match = re.search(r'/(\d+)/?$', url)
+            property_id = match.group(1) if match else "unknown"
+            
+            # Muunnetaan teksti markdown-muotoon
+            logger.info("Muotoillaan teksti markdown-muotoon...")
+            markdown_data = f"""# Oikotie-asuntoilmoitus
+
+## Perustiedot
+URL: {url}
+Lähde: Oikotie.fi
+Ilmoitus-ID: {property_id}
+
+## Ilmoituksen sisältö
+{text_content}
+"""
+            return True, markdown_data, 'oikotie'
+            
+        except Exception as e:
+            logger.error(f"Virhe Oikotie-datan noutamisessa: {e}")
+            logger.error(traceback.format_exc())
+            return False, None, 'oikotie'
         
     elif 'etuovi.com' in url:
         # Käytetään Etuovi-downloaderia
@@ -260,7 +279,7 @@ def analyze():
             if analysis:
                 analysis_id = analysis.id
                 logger.info(f"Löydettiin juuri luotu analyysi ID: {analysis_id}")
-        
+
         # Tehdään riskianalyysi API-vastauksesta, jos analyysi on löydetty
         riski_data = None
         if analysis_id:
@@ -276,8 +295,8 @@ def analyze():
         
         # Renderöidään asunnon tiedot ja analyysi
         return render_template('results.html', 
-                              property_data=sanitized_markdown, 
-                              analysis=sanitized_analysis,
+                            property_data=sanitized_markdown, 
+                            analysis=sanitized_analysis,
                               riski_data=riski_data,
                               property_url=url,
                               analysis_id=analysis_id,
