@@ -31,6 +31,7 @@ except Exception as e:
 api_key = os.environ.get("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
 
+
 def riskianalyysi(kohde_teksti, analysis_id=None):
     """
     Analysoi asuntokohteen riskitason OpenAI API:n avulla ja tallentaa tuloksen tietokantaan.
@@ -42,6 +43,11 @@ def riskianalyysi(kohde_teksti, analysis_id=None):
     Returns:
     str: JSON-muotoinen analyysi riskeistä
     """
+    # Lataa promptin tiedostosta
+    prompt_tiedosto = "prompt_riski.txt"
+    with open(prompt_tiedosto, "r") as tiedosto:
+        prompt = tiedosto.read()
+
     try:
         logger.info("Tehdään riskianalyysi")
         response = client.responses.create(
@@ -52,31 +58,7 @@ def riskianalyysi(kohde_teksti, analysis_id=None):
                 "content": [
                     {
                     "type": "input_text",
-                    "text": """Olet kiinteistöalan asiantuntija.  
-Tehtävänäsi on arvioida alla esitellyn kiinteistön riskit ostajalle. 
-Näitä riskejä ovat:
-
-
-Laitteisiin ja rakenteisiin liittyvä riski - Ajanmukaisuus, kunto, korjausvelka 
-
-
-Jälleenmyyntiriski - Kohteen myyntipotentiaali, ostajakunnan laajuus, hintakehityksen epävarmuus.
-
-
-Sijainti- ja alueriski - Alueen kehittyneisyys, mahdolliset negatiiviset mielikuvat tai epävarmuustekijät, alueen kehitysnäkymät tulevaisuuteen.
-
-
-Taloyhtiöriski - Taloyhtiön koko ja koostumus, yhtiön taloudellinen tila, vuokralaisten osuus, hallintotavat.
-HUOMIO, OLE TARKKA, SEURAAVA OHJE ON TÄRKEÄ: JOS KYSEESSÄ ON OMAKOTITALO, JÄTÄ TALOYHTIÖRISKI POIS ARVIOSTA.
-
-
-Pisteytä jokainen osa-alue 0-10.
-TÄRKEÄÄ: Kokonaisriskitaso voi olla mikä tahansa arvo välillä 0-10 desimaalitarkkuudella, esim. 5.2, 7.8, jne.
-Anna vastaus JSON-muodossa.  <esimerkkivastaus> {  "kohde ":  ,  "kokonaisriskitaso ": 4.5,  "riskimittari ": [ {  "osa_alue ":  "Laitteisiin ja rakenteisiin liittyvä riski ",  "riski_taso ": 5.3,  "osuus_prosenttia ": 25,  "kuvaus ":  },
-{  "osa_alue ":  "Laitteisiin ja rakenteisiin liittyvä riski ",  "riski_taso ": 3.7,  "osuus_prosenttia ": 20,  "kuvaus ":  },
-{  "osa_alue ":  "Jälleenmyyntiriski  ",  "riski_taso ": 2.2,  "osuus_prosenttia ": 10,  "kuvaus ":   },
-{  "osa_alue ":  "Taloyhtiöriski ",  "riski_taso ": 4.8,  "osuus_prosenttia ": 15,  "kuvaus ":  },
-{  "osa_alue ":  "Sijainti- ja alueriski ",  "riski_taso ": 1.3,  "osuus_prosenttia ": 10,  "kuvaus ": } ] } </esimerkkivastaus>"""
+                    "text": prompt
 
                     }
                 ]

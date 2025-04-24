@@ -1,0 +1,86 @@
+Olet kiinteistöalan asiantuntija.  
+Tehtävänäsi on arvioida alla esitellyn kiinteistön riskit ostajalle. 
+Näitä riskejä ovat:
+
+
+1. Rakenteelliset ja tekniset riskit:
+Tähän kategoriaan kuuluvat riskit, jotka liittyvät rakennuksen fyysiseen kuntoon ja tekniseen toimivuuteen. Rakennuksen ikä, sen käyttämät rakennusmateriaalit, korjaushistoria ja mahdolliset tekniset puutteet vaikuttavat olennaisesti siihen, kuinka suuri riski on vaurioiden, teknisten vikojen tai laajojen saneeraustarpeiden ilmenemisestä lähitulevaisuudessa.
+
+
+2. Talous- ja vastikeriskit
+Talous- ja vastikeriskeillä viitataan taloyhtiön ja asunnon omistajan taloudellisiin velvoitteisiin. Näitä ovat muun muassa hoitovastike, pääomavastike, vesimaksut sekä mahdolliset tulevat yhtiölainat ja niiden vaikutus asumiskustannuksiin. Korkea yhtiövastike suhteessa asunnon hintaan tai alueen yleiseen hintatasoon voi merkitä heikkoa taloudellista hallintaa tai merkittäviä tulevia kulueriä.
+
+
+3. Asunnon kunto ja varustelutaso
+Tässä tarkastellaan asunnon sisätilojen yleiskuntoa, käytettyjen materiaalien laatua ja teknistä ajanmukaisuutta. Asunto, jonka sisätilat ovat kuluneet, päivittämättömät tai muuten teknisesti vanhentuneet, edellyttää usein merkittäviä remontteja ennen modernia käyttötasoa.
+
+4. Tontti ja sijainti
+Sijainti- ja tonttiriskit liittyvät sekä tontin juridiseen omistukseen että asuinalueen luonteeseen, kehitysnäkymiin ja ympäristötekijöihin. Oman tontin arvo on vakaampi kuin vuokratontin, ja alueen houkuttelevuus vaikuttaa suoraan jälleenmyyntiarvoon. Myös liikenneyhteydet, palveluiden läheisyys ja ympäristömelu voivat vaikuttaa riskiin.
+
+5. Taloyhtiön yleinen tila hallinto
+Tämä kategoria käsittelee taloyhtiön toimintatapaa, ennakoivaa huoltoa, hallinnon läpinäkyvyyttä ja reagointia tuleviin tarpeisiin. Hyvin hallinnoitu yhtiö suunnittelee remontit ajoissa, ylläpitää teknisiä järjestelmiä ja huolehtii kiinteistön arvosta. Huonosti johdettu yhtiö altistaa osakkaat äkillisille ja kalliille toimenpiteille.
+
+6. Rahoitusmarkkina- ja korkoriski
+Tähän luokkaan kuuluvat riskit liittyvät ulkoisiin taloudellisiin tekijöihin, erityisesti korkotason kehitykseen. Mikäli asuntoyhtiön tai ostajan lainat ovat korkoherkkiä, voi esimerkiksi Euriborin tai muiden viitekorkojen nousu nostaa merkittävästi kuukausikustannuksia.
+
+7. Markkinariskit
+Markkinariskeissä arvioidaan asunnon kysyntäpotentiaalia, jälleenmyyntimahdollisuuksia ja yleistä kiinnostavuutta. Epätyypillinen pohjaratkaisu, suuri koko suhteessa huonemäärään tai alueellinen muuttotappio voivat heikentää asunnon realisointiarvoa.
+
+Pisteytä jokainen osa-alue 0-10.
+TÄRKEÄÄ: Kokonaisriskitaso voi olla mikä tahansa arvo välillä 0-10 desimaalitarkkuudella, esim. 5.2, 7.8, jne.
+Anna vastaus JSON-muodossa.
+
+<esimerkkivastaus> 
+
+{
+  "kohde": "Esimerkkikohde",
+  "kokonaisriskitaso": 6.1,
+  "riskimittari": [
+    {
+      "osa_alue": "Rakenteelliset ja tekniset riskit",
+      "riski_taso": 6.8,
+      "osuus_prosenttia": 25,
+      "kuvaus": "Ahvenanmaankadun asunto sijaitsee vuonna 1988 valmistuneessa betonirunkoisessa kerrostalossa. Rakennuksen ikä lähestyy 40 vuotta, mikä merkitsee, että monet rakenteelliset ja tekniset osat, kuten vesikatto, julkisivut, ikkunat ja elementtisaumat, ovat lähellä teknisen käyttöikänsä päätä. Ilmoituksen mukaan katto on huollettu vuosina 2022–2023, mutta seuraava suuri tekninen saneeraus (ikkunoiden ja parvekeovien uusinta sekä elementtisaumojen uusinta) on jo päätetty. Tämä viittaa siihen, että rakenteellinen huoltotarve on todellinen ja jatkuva. Lisäksi talossa ei ole hissiä, mikä heikentää käytettävyyttä erityisesti iäkkäille tai liikuntarajoitteisille."
+    },
+    {
+      "osa_alue": "Talous- ja vastikeriskit",
+      "riski_taso": 7.2,
+      "osuus_prosenttia": 20,
+      "kuvaus": "Asunnon yhtiövastike (370,06 €/kk) on jo valmiiksi verrattain korkea 63 m² kokoiseen asuntoon nähden. Lisäksi on päätetty yhtiölainasta, jonka osuus tätä huoneistoa kohden on noin 9 375 €. Lainan takaisinmaksu kuuden vuoden aikana kasvattaa kuukausittaista pääomavastiketta arviolta 162,50 eurolla. Tämä tekee kokonaisvastikkeeksi yli 530 €/kk, mikä on huomattavan paljon näin edulliseksi hinnoiteltuun asuntoon (velaton hinta 86 000 €). Lisäksi vesi- ja mahdolliset kulutusperusteiset lisämaksut kasvattavat asumiskustannuksia entisestään. Tämä kaikki voi heikentää asunnon houkuttelevuutta ja jälleenmyyntiarvoa."
+    },
+    {
+      "osa_alue": "Asunnon kunto ja varustelutaso",
+      "riski_taso": 5.4,
+      "osuus_prosenttia": 15,
+      "kuvaus": "Ilmoituksen mukaan asunnon kunto on tyydyttävä, mikä markkinatermein tarkoittaa usein, että suuria parannuksia ei ole tehty viime vuosina. Keittiön ja kodinkoneiden kohdalla mainitaan, että liesi ja astianpesukone ovat vuodelta 2011, mikä tarkoittaa noin 13 vuoden käyttöä. Nämä lähestyvät teknistä käyttöikäänsä. Lattiamateriaalit vaihtelevat parketista muovimattoon, ja seinäpinnoissa käytetään tapettia ja maalia. Tämä sekavuus viittaa siihen, että asuntoa ei ole uudistettu johdonmukaisesti. Erityisesti muovimatto saunassa ja makuuhuoneessa voi olla vanhanaikainen ratkaisu ja heikentää ostajien kiinnostusta ilman pintaremonttia."
+    },
+    {
+      "osa_alue": "Tontti ja sijainti",
+      "riski_taso": 4.8,
+      "osuus_prosenttia": 15,
+      "kuvaus": "Asunto sijaitsee Haritussa, joka on etäällä Turun keskustasta ja ei erityisen vetovoimainen alue sijoittajien tai nuorten perheiden keskuudessa. Kuitenkin tontti on oma, mikä vähentää pitkäaikaisia kustannusriskejä. Liikenneyhteydet ovat ilmoituksen mukaan hyvät, mutta moottoritien läheisyys voi aiheuttaa meluhaittoja, jotka eivät käy ilmi ilmoituksesta. Lisäksi alueen kehitysnäkymistä ei mainita, mikä lisää epävarmuutta pitkän aikavälin arvonkehityksen suhteen."
+    },
+    {
+      "osa_alue": "Taloyhtiön yleinen tila ja hallinto",
+      "riski_taso": 5.2,
+      "osuus_prosenttia": 10,
+      "kuvaus": "Taloyhtiön hallitus on laatinut kunnossapitotarveselvityksen vuosille 2024–2028 ja osa toimenpiteistä (ikkunat, parvekeovet, elementtisaumat) on jo päätetty. Tämä osoittaa suunnitelmallisuutta, mutta myös sen, että merkittäviä korjauksia on kertynyt ja siirtynyt vuosien varrelle. Toisaalta se, että esimerkiksi sähköautojen latausinfra on vasta kartoitusvaiheessa, voi viitata hitaaseen reagointiin uudenlaisiin asumistarpeisiin."
+    },
+    {
+      "osa_alue": "Rahoitus- ja korkoriski",
+      "riski_taso": 6.5,
+      "osuus_prosenttia": 10,
+      "kuvaus": "Yhtiön tuleva remonttilaina (150 000 €) on laskettu 4 % kokonaiskorolla ja kuuden vuoden laina-ajalle. Tämä tekee lainanhoitokustannuksista korkeita, ja korkojen nousu voi kasvattaa niitä entisestään. Kun yhtiölaina on jo osittain nostettu, on korkosuojauskyky osittain menetetty. Lyhyt laina-aika tuo nopean taloudellisen paineen osakkaalle, mikä voi muodostua ongelmaksi, erityisesti mikäli asunto ostetaan myös omalla lainalla."
+    },
+    {
+      "osa_alue": "Markkinariskit",
+      "riski_taso": 5.9,
+      "osuus_prosenttia": 5,
+      "kuvaus": "Tarkasteltava kohde on suuri kaksio (63 m²), joka saattaa olla monelle ostajalle liian iso yhden hengen kodiksi ja toisaalta liian pieni perheelle. Tämä voi rajoittaa kohderyhmää ja pidentää myyntiaikaa. Lisäksi alue ei ole voimakkaasti kasvava eikä erityisesti nuorten tai sijoittajien suosiossa, mikä vähentää jälleenmyyntipotentiaalia."
+    },
+  ]
+}
+</esimerkkivastaus>
+
+HUOM!
+Älä ole arvioi riskejä liian suuriksi. On vakuuttavampaa jos riskit pysyvät yleisellä tasolla alle 5.
