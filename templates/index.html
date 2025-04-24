@@ -278,12 +278,12 @@
                     <form id="analyzeForm" action="/analyze" method="POST">
                         <div class="mb-4">
                             <label for="url" class="form-label fw-bold">Asuntoilmoituksen URL</label>
-                            <input type="url" id="url" name="url" class="form-control url-input" placeholder="https://asunnot.oikotie.fi/myytavat-asunnot/..." required>
+                            <input type="url" id="url" name="url" class="form-control url-input" placeholder="https://asunnot.oikotie.fi/... tai https://www.etuovi.com/..." required>
                             <div class="form-text mt-2">
-                                <i class="fas fa-info-circle me-1"></i> Kopioi ja liitä Oikotien asuntoilmoituksen osoite
+                                <i class="fas fa-info-circle me-1"></i> Kopioi ja liitä Oikotien tai Etuoven asuntoilmoituksen osoite
                             </div>
                             <div class="url-error" id="urlError">
-                                <i class="fas fa-exclamation-circle me-1"></i> URL-osoitteen täytyy olla Oikotie-palvelusta (oikotie.fi tai asunnot.oikotie.fi)
+                                <i class="fas fa-exclamation-circle me-1"></i> URL-osoitteen täytyy olla Oikotie- tai Etuovi-palvelusta (oikotie.fi, asunnot.oikotie.fi tai etuovi.com)
                             </div>
                         </div>
                         
@@ -325,7 +325,7 @@
                 </div>
                 <div class="info-body">
                     <ul class="steps-list">
-                        <li class="step-item">Syötä Oikotien asuntoilmoituksen URL-osoite lomakkeeseen</li>
+                        <li class="step-item">Syötä Oikotien tai Etuoven asuntoilmoituksen URL-osoite lomakkeeseen</li>
                         <li class="step-item">Järjestelmämme hakee asuntoilmoituksen tiedot automaattisesti</li>
                         <li class="step-item">Tekoäly analysoi asunnon tiedot ja tuottaa syvällisen analyysin</li>
                         <li class="step-item">Saat kattavan raportin asunnosta, sen arvosta ja mahdollisista riskitekijöistä</li>
@@ -383,13 +383,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const urlError = document.getElementById('urlError');
     
     // URL validointi
-    function validateOikotieUrl(url) {
+    function validatePropertyUrl(url) {
         if (!url) return false;
         
         try {
             const parsedUrl = new URL(url);
             const hostname = parsedUrl.hostname;
-            return hostname.includes('oikotie.fi') || hostname.includes('asunnot.oikotie.fi');
+            return hostname.includes('oikotie.fi') || hostname.includes('asunnot.oikotie.fi') || hostname.includes('etuovi.com');
         } catch (e) {
             return false;
         }
@@ -407,7 +407,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const url = urlInput.value.trim();
         
         // Tarkista URL ennen lähetystä
-        if (!validateOikotieUrl(url)) {
+        if (!validatePropertyUrl(url)) {
             e.preventDefault(); // Estä lomakkeen lähetys
             
             // Näytä virhe
