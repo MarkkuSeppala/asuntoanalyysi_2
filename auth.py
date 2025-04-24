@@ -12,7 +12,7 @@ def login():
     """Kirjautumissivu"""
     # Jos käyttäjä on jo kirjautunut, ohjataan etusivulle
     if current_user.is_authenticated:
-        return redirect(url_for('welcome'))
+        return redirect(url_for('index'))
     
     form = LoginForm()
     if form.validate_on_submit():
@@ -23,8 +23,8 @@ def login():
             login_user(user, remember=form.remember.data)
             next_page = request.args.get('next')
             
-            # Ohjataan käyttäjä sinne mihin hän oli menossa, tai tervetulosivulle
-            return redirect(next_page or url_for('welcome'))
+            # Ohjataan käyttäjä sinne mihin hän oli menossa, tai etusivulle
+            return redirect(next_page or url_for('index'))
         else:
             flash('Kirjautuminen epäonnistui. Tarkista käyttäjätunnus ja salasana.', 'danger')
     
@@ -35,7 +35,7 @@ def register():
     """Rekisteröitymissivu"""
     # Jos käyttäjä on jo kirjautunut, ohjataan etusivulle
     if current_user.is_authenticated:
-        return redirect(url_for('welcome'))
+        return redirect(url_for('index'))
     
     form = RegistrationForm()
     if form.validate_on_submit():
@@ -54,7 +54,7 @@ def register():
         login_user(user)
         
         flash('Rekisteröityminen onnistui! Tervetuloa käyttämään sovellusta.', 'success')
-        return redirect(url_for('welcome'))
+        return redirect(url_for('index'))
     
     return render_template('register.html', form=form)
 

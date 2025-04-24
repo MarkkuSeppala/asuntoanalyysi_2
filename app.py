@@ -87,12 +87,6 @@ with app.app_context():
 def inject_now():
     return {'now': datetime.now()}
 
-@app.route('/welcome')
-@login_required
-def welcome():
-    """Tervetulosivu kirjautuneille käyttäjille"""
-    return render_template('welcome.html')
-
 @app.route('/landing')
 def landing():
     """Landing page - sovelluksen markkinointisivu"""
@@ -102,7 +96,9 @@ def landing():
 def index():
     """Etusivu, jossa käyttäjä voi syöttää asuntolinkin tai näkee landing-sivun"""
     if current_user.is_authenticated:
-        return render_template('index.html')
+        # Haetaan käyttäjän viimeisimmät analyysit
+        analyses = Analysis.query.filter_by(user_id=current_user.id).order_by(Analysis.created_at.desc()).limit(5).all()
+        return render_template('index.html', analyses=analyses)
     else:
         return render_template('landing.html')
 
