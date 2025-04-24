@@ -26,6 +26,12 @@ Tähän luokkaan kuuluvat riskit liittyvät ulkoisiin taloudellisiin tekijöihin
 7. Markkinariskit
 Markkinariskeissä arvioidaan asunnon kysyntäpotentiaalia, jälleenmyyntimahdollisuuksia ja yleistä kiinnostavuutta. Epätyypillinen pohjaratkaisu, suuri koko suhteessa huonemäärään tai alueellinen muuttotappio voivat heikentää asunnon realisointiarvoa.
 
+8. Energialuokka
+Tämä kategoria kattaa riskit, jotka liittyvät kiinteistön energiatehokkuuteen. Huono energialuokka nostaa lämmitys- ja asumiskustannuksia sekä heikentää kiinteistön ympäristöprofiilia ja kilpailukykyä markkinoilla. Lisäksi tulevaisuuden sääntely saattaa pakottaa matalan energialuokan kohteet remonttikohteiksi.
+
+9. Lämmitysmuoto
+Tämä kategoria arvioi riskiä, joka liittyy käytettyyn lämmitysjärjestelmään. Se ottaa huomioon lämmitystavan kustannustehokkuuden, ylläpidon, ekologisuuden ja markkina-aseman tulevaisuudessa. Riskit ovat korkeampia öljy- tai suorassa sähkölämmityksessä kuin esimerkiksi maalämmössä tai kaukolämmössä.
+
 Pisteytä jokainen osa-alue 0-10.
 TÄRKEÄÄ: Kokonaisriskitaso voi olla mikä tahansa arvo välillä 0-10 desimaalitarkkuudella, esim. 5.2, 7.8, jne.
 Anna vastaus JSON-muodossa.
@@ -39,37 +45,37 @@ Anna vastaus JSON-muodossa.
     {
       "osa_alue": "Rakenteelliset ja tekniset riskit",
       "riski_taso": 6.8,
-      "osuus_prosenttia": 25,
+      "osuus_prosenttia": 22,
       "kuvaus": "Ahvenanmaankadun asunto sijaitsee vuonna 1988 valmistuneessa betonirunkoisessa kerrostalossa. Rakennuksen ikä lähestyy 40 vuotta, mikä merkitsee, että monet rakenteelliset ja tekniset osat, kuten vesikatto, julkisivut, ikkunat ja elementtisaumat, ovat lähellä teknisen käyttöikänsä päätä. Ilmoituksen mukaan katto on huollettu vuosina 2022–2023, mutta seuraava suuri tekninen saneeraus (ikkunoiden ja parvekeovien uusinta sekä elementtisaumojen uusinta) on jo päätetty. Tämä viittaa siihen, että rakenteellinen huoltotarve on todellinen ja jatkuva. Lisäksi talossa ei ole hissiä, mikä heikentää käytettävyyttä erityisesti iäkkäille tai liikuntarajoitteisille."
     },
     {
       "osa_alue": "Talous- ja vastikeriskit",
       "riski_taso": 7.2,
-      "osuus_prosenttia": 20,
+      "osuus_prosenttia": 18,
       "kuvaus": "Asunnon yhtiövastike (370,06 €/kk) on jo valmiiksi verrattain korkea 63 m² kokoiseen asuntoon nähden. Lisäksi on päätetty yhtiölainasta, jonka osuus tätä huoneistoa kohden on noin 9 375 €. Lainan takaisinmaksu kuuden vuoden aikana kasvattaa kuukausittaista pääomavastiketta arviolta 162,50 eurolla. Tämä tekee kokonaisvastikkeeksi yli 530 €/kk, mikä on huomattavan paljon näin edulliseksi hinnoiteltuun asuntoon (velaton hinta 86 000 €). Lisäksi vesi- ja mahdolliset kulutusperusteiset lisämaksut kasvattavat asumiskustannuksia entisestään. Tämä kaikki voi heikentää asunnon houkuttelevuutta ja jälleenmyyntiarvoa."
     },
     {
       "osa_alue": "Asunnon kunto ja varustelutaso",
       "riski_taso": 5.4,
-      "osuus_prosenttia": 15,
+      "osuus_prosenttia": 13,
       "kuvaus": "Ilmoituksen mukaan asunnon kunto on tyydyttävä, mikä markkinatermein tarkoittaa usein, että suuria parannuksia ei ole tehty viime vuosina. Keittiön ja kodinkoneiden kohdalla mainitaan, että liesi ja astianpesukone ovat vuodelta 2011, mikä tarkoittaa noin 13 vuoden käyttöä. Nämä lähestyvät teknistä käyttöikäänsä. Lattiamateriaalit vaihtelevat parketista muovimattoon, ja seinäpinnoissa käytetään tapettia ja maalia. Tämä sekavuus viittaa siihen, että asuntoa ei ole uudistettu johdonmukaisesti. Erityisesti muovimatto saunassa ja makuuhuoneessa voi olla vanhanaikainen ratkaisu ja heikentää ostajien kiinnostusta ilman pintaremonttia."
     },
     {
       "osa_alue": "Tontti ja sijainti",
       "riski_taso": 4.8,
-      "osuus_prosenttia": 15,
+      "osuus_prosenttia": 13,
       "kuvaus": "Asunto sijaitsee Haritussa, joka on etäällä Turun keskustasta ja ei erityisen vetovoimainen alue sijoittajien tai nuorten perheiden keskuudessa. Kuitenkin tontti on oma, mikä vähentää pitkäaikaisia kustannusriskejä. Liikenneyhteydet ovat ilmoituksen mukaan hyvät, mutta moottoritien läheisyys voi aiheuttaa meluhaittoja, jotka eivät käy ilmi ilmoituksesta. Lisäksi alueen kehitysnäkymistä ei mainita, mikä lisää epävarmuutta pitkän aikavälin arvonkehityksen suhteen."
     },
     {
       "osa_alue": "Taloyhtiön yleinen tila ja hallinto",
       "riski_taso": 5.2,
-      "osuus_prosenttia": 10,
+      "osuus_prosenttia": 9,
       "kuvaus": "Taloyhtiön hallitus on laatinut kunnossapitotarveselvityksen vuosille 2024–2028 ja osa toimenpiteistä (ikkunat, parvekeovet, elementtisaumat) on jo päätetty. Tämä osoittaa suunnitelmallisuutta, mutta myös sen, että merkittäviä korjauksia on kertynyt ja siirtynyt vuosien varrelle. Toisaalta se, että esimerkiksi sähköautojen latausinfra on vasta kartoitusvaiheessa, voi viitata hitaaseen reagointiin uudenlaisiin asumistarpeisiin."
     },
     {
       "osa_alue": "Rahoitus- ja korkoriski",
       "riski_taso": 6.5,
-      "osuus_prosenttia": 10,
+      "osuus_prosenttia": 9,
       "kuvaus": "Yhtiön tuleva remonttilaina (150 000 €) on laskettu 4 % kokonaiskorolla ja kuuden vuoden laina-ajalle. Tämä tekee lainanhoitokustannuksista korkeita, ja korkojen nousu voi kasvattaa niitä entisestään. Kun yhtiölaina on jo osittain nostettu, on korkosuojauskyky osittain menetetty. Lyhyt laina-aika tuo nopean taloudellisen paineen osakkaalle, mikä voi muodostua ongelmaksi, erityisesti mikäli asunto ostetaan myös omalla lainalla."
     },
     {
@@ -78,9 +84,18 @@ Anna vastaus JSON-muodossa.
       "osuus_prosenttia": 5,
       "kuvaus": "Tarkasteltava kohde on suuri kaksio (63 m²), joka saattaa olla monelle ostajalle liian iso yhden hengen kodiksi ja toisaalta liian pieni perheelle. Tämä voi rajoittaa kohderyhmää ja pidentää myyntiaikaa. Lisäksi alue ei ole voimakkaasti kasvava eikä erityisesti nuorten tai sijoittajien suosiossa, mikä vähentää jälleenmyyntipotentiaalia."
     },
+    {
+      "osa_alue": "Energialuokka",
+      "riski_taso": 4.3,
+      "osuus_prosenttia": 6,
+      "kuvaus": "Asunnon energialuokka on C (2018), mikä on nykymittareilla keskitasoa – ei erityisen huono, mutta ei myöskään erinomainen. Tämä ei aiheuta välitöntä riskiä, mutta ei suojaa säännösten kiristymiseltä pitkällä aikavälillä."
+    },
+    {
+      "osa_alue": "Lämmitysmuoto",
+      "riski_taso": 3.2,
+      "osuus_prosenttia": 5,
+      "kuvaus": "Asunnon lämmitysmuotona on kaukolämpö, joka Turun kaltaisessa kaupungissa on edelleen vakaa, yleisesti hyväksytty ja melko kustannustehokas ratkaisu. Vaikka ei ole täysin uusiutuvaa energiaa, se ei ole erityisen riskialtis."
+    },
   ]
 }
 </esimerkkivastaus>
-
-HUOM!
-Älä ole arvioi riskejä liian suuriksi. On vakuuttavampaa jos riskit pysyvät yleisellä tasolla alle 5.
