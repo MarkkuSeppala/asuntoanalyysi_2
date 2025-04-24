@@ -153,8 +153,9 @@
                                 </div>
                                 <div class="progress risk-progress">
                                     <div class="progress-bar 
-                                        {% if riski.riski_taso < 4 %}bg-success
-                                        {% elif riski.riski_taso < 7 %}bg-warning
+                                        {% if riski.riski_taso <= 3.4 %}bg-success
+                                        {% elif riski.riski_taso <= 5.5 %}bg-green
+                                        {% elif riski.riski_taso <= 6.9 %}bg-warning
                                         {% else %}bg-danger{% endif %}" 
                                         role="progressbar" 
                                         style="width: {{ riski.riski_taso * 10 }}%" 

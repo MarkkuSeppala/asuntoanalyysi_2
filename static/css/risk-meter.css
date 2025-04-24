@@ -178,15 +178,19 @@
 }
 
 .risk-progress .bg-success {
-    background: linear-gradient(to right, #7154f3, #8bc34a) !important;
+    background: linear-gradient(to right, #3498db, #64b5f6) !important; /* Bluish gradient */
+}
+
+.risk-progress .bg-green {
+    background: linear-gradient(to right, #4caf50, #8bc34a) !important; /* Greenish gradient */
 }
 
 .risk-progress .bg-warning {
-    background: linear-gradient(to right, #ff9800, #ffb74d) !important;
+    background: linear-gradient(to right, #ffc107, #ffeb3b) !important; /* Yellowish gradient */
 }
 
 .risk-progress .bg-danger {
-    background: linear-gradient(to right, #f44336, #e57373) !important;
+    background: linear-gradient(to right, #f44336, #e57373) !important; /* Reddish gradient */
 }
 
 .risk-title {
