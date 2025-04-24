@@ -1,16 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
   <style>
-    .building { fill: #4568dc; }
-    .window { fill: #ffffff; }
-    .roof { fill: #6a82fb; }
-    .background { fill: #e6eefb; }
-    .chart-line { stroke: #4568dc; stroke-width: 3; fill: none; }
-    .chart-dot { fill: #6a82fb; }
-    .chart-area { fill: rgba(106, 130, 251, 0.2); }
-    .document { fill: #ffffff; stroke: #4568dc; stroke-width: 2; }
-    .document-line { stroke: #4568dc; stroke-width: 2; }
-    .magnify { fill: none; stroke: #4568dc; stroke-width: 3; }
-    .magnify-handle { stroke: #4568dc; stroke-width: 3; }
+    .building { fill: #123458; }
+    .window { fill: #F1EFEC; }
+    .roof { fill: #D4C9BE; }
+    .background { fill: #F1EFEC; }
+    .chart-line { stroke: #123458; stroke-width: 3; fill: none; }
+    .chart-dot { fill: #123458; }
+    .chart-area { fill: rgba(18, 52, 88, 0.2); }
+    .document { fill: #F1EFEC; stroke: #123458; stroke-width: 2; }
+    .document-line { stroke: #123458; stroke-width: 2; }
+    .magnify { fill: none; stroke: #123458; stroke-width: 3; }
+    .magnify-handle { stroke: #123458; stroke-width: 3; }
   </style>
   
   <!-- Tausta -->

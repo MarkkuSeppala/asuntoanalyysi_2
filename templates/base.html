@@ -10,6 +10,40 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        :root {
+            --primary-color: #F1EFEC;
+            --secondary-color: #D4C9BE;
+            --accent-color: #123458;
+            --neutral-color: #030303;
+        }
+        
+        .navbar-dark.bg-primary {
+            background-color: var(--accent-color) !important;
+        }
+        
+        .bg-light {
+            background-color: var(--primary-color) !important;
+        }
+        
+        .btn-primary {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #1a4b7c;
+            border-color: #1a4b7c;
+        }
+        
+        .btn-outline-light:hover {
+            color: var(--accent-color);
+        }
+        
+        .text-primary {
+            color: var(--accent-color) !important;
+        }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>

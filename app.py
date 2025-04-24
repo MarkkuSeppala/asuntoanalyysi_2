@@ -473,44 +473,6 @@ def download_analysis(analysis_id):
         logger.exception(f"Virhe analyysin lataamisessa: {e}")
         return jsonify({'error': f'Virhe analyysin lataamisessa: {str(e)}'}), 500
 
-@app.route('/api/demo-analyze', methods=['POST'])
-def api_demo_analyze():
-    """API-pääte demoanalyysiä varten (landing page)"""
-    try:
-        data = request.get_json()
-        url = data.get('url')
-        
-        if not url:
-            return jsonify({'error': 'URL-osoite puuttuu'}), 400
-        
-        # Tarkistetaan, että URL on hyväksytty URL (Oikotie tai Etuovi)
-        if ('oikotie.fi' not in url and 'asunnot.oikotie.fi' not in url and 
-            'etuovi.com' not in url):
-            return jsonify({'error': 'Syötä kelvollinen Oikotie- tai Etuovi-asuntolinkin URL'}), 400
-        
-        # Haetaan asunnon tiedot URL:n perusteella
-        success, markdown_data, source = get_property_data(url)
-        
-        if not success or not markdown_data:
-            return jsonify({'error': 'Asunnon tietojen hakeminen epäonnistui'}), 500
-        
-        # Käytetään OpenAI API:a analyysin tekemiseen
-        analysis_response = api_call.get_analysis(markdown_data, url)
-        
-        # Varmistetaan että vastaus on puhdistettu
-        analysis_response = api_call.sanitize_markdown_response(analysis_response)
-        
-        # Palautetaan analyysi JSON-muodossa
-        return jsonify({
-            'property_data': markdown_data,
-            'analysis': analysis_response,
-            'source': source
-        })
-        
-    except Exception as e:
-        logger.error(f"Virhe demo-analyysin teossa: {e}")
-        return jsonify({'error': f'Virhe: {str(e)}'}), 500
-
 if __name__ == '__main__':
     # Luodaan templates-kansio, jos sitä ei ole
     os.makedirs('templates', exist_ok=True)

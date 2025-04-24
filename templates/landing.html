@@ -4,73 +4,173 @@
 
 {% block extra_css %}
 <style>
+    :root {
+        --primary-color: #F1EFEC;
+        --secondary-color: #D4C9BE;
+        --accent-color: #123458;
+        --neutral-color: #030303;
+    }
+    
+    body {
+        font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+        color: var(--neutral-color);
+        background-color: var(--primary-color);
+    }
+    
     .hero-section {
-        background: linear-gradient(135deg, #4568dc, #6a82fb);
-        padding: 100px 0;
-        margin-bottom: 50px;
-        color: white;
-        border-radius: 0 0 15px 15px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        background-color: var(--primary-color);
+        background-image: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+        padding: 120px 0 100px;
+        margin-bottom: 80px;
+        color: var(--neutral-color);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-section::after {
+        content: '';
+        position: absolute;
+        bottom: -50px;
+        left: 0;
+        width: 100%;
+        height: 100px;
+        background-color: var(--primary-color);
+        transform: skewY(-3deg);
+        z-index: 1;
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 2;
     }
     
     .hero-title {
-        font-size: 3rem;
-        font-weight: 700;
-        margin-bottom: 20px;
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 25px;
+        line-height: 1.2;
     }
     
     .hero-subtitle {
-        font-size: 1.4rem;
-        font-weight: 300;
-        margin-bottom: 30px;
+        font-size: 1.5rem;
+        font-weight: 400;
+        margin-bottom: 40px;
         opacity: 0.9;
+        max-width: 700px;
     }
     
-    .hero-cta {
-        background-color: #ffffff;
-        color: #4568dc;
+    .accent-text {
+        color: var(--accent-color);
+    }
+    
+    .btn-accent {
+        background-color: var(--accent-color);
+        color: white;
         padding: 12px 30px;
-        border-radius: 50px;
+        border-radius: 8px;
         font-weight: 600;
         transition: all 0.3s ease;
+        border: none;
     }
     
-    .hero-cta:hover {
-        background-color: #f8f9fa;
+    .btn-accent:hover {
+        background-color: #1a4b7c;
+        color: white;
         transform: translateY(-3px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 20px rgba(18, 52, 88, 0.15);
+    }
+    
+    .btn-outline {
+        background-color: transparent;
+        color: var(--accent-color);
+        border: 2px solid var(--accent-color);
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        margin-left: 15px;
+    }
+    
+    .btn-outline:hover {
+        background-color: var(--accent-color);
+        color: white;
+    }
+    
+    .feature-section {
+        padding: 100px 0;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: var(--neutral-color);
+        position: relative;
+        display: inline-block;
+    }
+    
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+        width: 60px;
+        height: 4px;
+        background-color: var(--accent-color);
+    }
+    
+    .section-subtitle {
+        font-size: 1.2rem;
+        margin-bottom: 60px;
+        max-width: 700px;
     }
     
     .feature-card {
-        padding: 30px;
-        border-radius: 15px;
+        background-color: white;
+        padding: 40px 30px;
+        border-radius: 12px;
         margin-bottom: 30px;
         transition: all 0.3s ease;
-        border: 1px solid #eaeaea;
         height: 100%;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        border-bottom: 4px solid transparent;
     }
     
     .feature-card:hover {
-        transform: translateY(-5px);
+        transform: translateY(-10px);
         box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        border-bottom: 4px solid var(--accent-color);
     }
     
     .feature-icon {
         font-size: 2.5rem;
-        margin-bottom: 20px;
-        color: #4568dc;
+        margin-bottom: 25px;
+        color: var(--accent-color);
+        display: inline-block;
+        padding: 20px;
+        background-color: rgba(18, 52, 88, 0.1);
+        border-radius: 12px;
+    }
+    
+    .feature-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+        color: var(--neutral-color);
     }
     
     .testimonial-section {
-        background-color: #f8f9fa;
-        padding: 80px 0;
-        margin: 50px 0;
-        border-radius: 15px;
+        background-color: var(--secondary-color);
+        padding: 100px 0;
+        margin: 80px 0;
+        position: relative;
     }
     
     .testimonial-card {
         background-color: white;
-        border-radius: 15px;
+        border-radius: 12px;
         padding: 30px;
         margin-bottom: 30px;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
@@ -79,54 +179,82 @@
     .testimonial-text {
         font-style: italic;
         margin-bottom: 20px;
+        font-size: 1.1rem;
+        line-height: 1.7;
     }
     
     .testimonial-author {
         font-weight: 600;
     }
     
+    .testimonial-role {
+        font-size: 0.9rem;
+        color: #777;
+    }
+    
     .cta-section {
-        background: linear-gradient(135deg, #4568dc, #6a82fb);
+        background-color: var(--accent-color);
         padding: 80px 0;
         color: white;
         border-radius: 15px;
-        margin-bottom: 50px;
+        margin-bottom: 80px;
+    }
+    
+    .cta-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 25px;
+    }
+    
+    .cta-subtitle {
+        font-size: 1.2rem;
+        margin-bottom: 40px;
+        opacity: 0.9;
+        max-width: 600px;
+    }
+    
+    .btn-light {
+        background-color: white;
+        color: var(--accent-color);
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-light:hover {
+        background-color: #f8f9fa;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
     }
     
     .footer {
-        margin-top: 50px;
+        margin-top: 80px;
         padding-top: 50px;
         padding-bottom: 30px;
         border-top: 1px solid #eaeaea;
     }
     
-    .section-title {
-        margin-bottom: 50px;
-        position: relative;
-        display: inline-block;
-    }
-    
-    .section-title:after {
-        content: '';
-        position: absolute;
-        bottom: -10px;
-        left: 0;
-        width: 50px;
-        height: 3px;
-        background: #4568dc;
-    }
-    
-    .demo-screenshot {
-        border-radius: 10px;
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-    }
-    
-    .demo-screenshot:hover {
-        transform: scale(1.02);
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+        .hero-title {
+            font-size: 2.8rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.3rem;
+        }
+        
+        .section-title {
+            font-size: 2.2rem;
+        }
     }
     
     @media (max-width: 768px) {
+        .hero-section {
+            padding: 80px 0 60px;
+        }
+        
         .hero-title {
             font-size: 2.2rem;
         }
@@ -134,51 +262,27 @@
         .hero-subtitle {
             font-size: 1.1rem;
         }
+        
+        .section-title {
+            font-size: 2rem;
+        }
+        
+        .cta-title {
+            font-size: 2rem;
+        }
+        
+        .btn-outline {
+            margin-left: 0;
+            margin-top: 15px;
+        }
     }
     
-    /* Demo-osio */
-    .demo-section {
-        background-color: #f8f9fa;
-        padding: 80px 0;
-        margin: 50px 0;
-        border-radius: 15px;
+    .navbar-dark.bg-primary {
+        background-color: var(--accent-color) !important;
     }
     
-    .demo-form {
-        background-color: white;
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        margin-bottom: 30px;
-    }
-    
-    .demo-result {
-        background-color: white;
-        border-radius: 15px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        padding: 30px;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .demo-preview {
-        position: relative;
-        max-height: 150px;
-        overflow: hidden;
-    }
-    
-    .fade-overlay {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 100px;
-        background: linear-gradient(transparent, rgba(255, 255, 255, 0.8) 30%, white);
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        align-items: center;
-        padding-bottom: 20px;
+    .bg-light {
+        background-color: var(--primary-color) !important;
     }
 </style>
 {% endblock %}
@@ -187,171 +291,128 @@
 <!-- Hero Section -->
 <section class="hero-section">
     <div class="container">
-        <div class="row">
-            <div class="col-lg-12 text-center mb-4">
-                <h1 class="hero-title">Tee fiksumpia asuntopäätöksiä tekoälyn avulla</h1>
-            </div>
-        </div>
-        
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <!-- Demo form moved into hero section -->
-                <div class="demo-form mt-4 position-relative">
-                    <h4 class="mb-3 text-center" style="color: #333; font-weight: 700;">Testaa palvelua nyt</h4>
-                    <p class="mb-3 text-center">Syötä Oikotie- tai Etuovi-asuntoilmoituksen URL alle:</p>
-                    <form id="demoForm" class="mb-2">
-                        <div class="input-group">
-                            <input type="url" id="demoUrl" class="form-control" placeholder="https://asunnot.oikotie.fi/... tai https://www.etuovi.com/kohde/..." required>
-                            <button type="submit" class="btn btn-primary">Analysoi</button>
-                        </div>
-                        <small class="form-text text-muted text-center d-block mt-2">Esim: https://asunnot.oikotie.fi/myytavat-asunnot/helsinki/16675455 tai https://www.etuovi.com/kohde/w67778</small>
-                    </form>
-                </div>
-                
-                <div class="alert alert-info d-none" id="demoLoading">
-                    <div class="d-flex align-items-center">
-                        <div class="spinner-border spinner-border-sm me-3" role="status">
-                            <span class="visually-hidden">Ladataan...</span>
-                        </div>
-                        <span>Analysoidaan asuntoa... Tämä voi kestää hetken.</span>
-                    </div>
-                </div>
-                
-                <div class="alert alert-danger d-none" id="demoError">
-                    <i class="fas fa-exclamation-circle me-2"></i>
-                    <span id="errorMessage">Virhe analysoitaessa asuntoa. Tarkista URL ja yritä uudelleen.</span>
-                </div>
-                
-                <div class="demo-result d-none mt-4" id="demoResult">
-                    <h4 class="mb-3" id="demoTitle" style="color: #333; font-weight: 700;">Analyysi kohteesta</h4>
-                    
-                    <!-- Riskiarvio numerona -->
-                    <div class="mb-4 text-center">
-                        <h5 style="color: #333; font-weight: 600;">Kohteen riskiarvio</h5>
-                        <div class="d-inline-block p-3 rounded-circle bg-light border border-2 border-primary" style="width: 80px; height: 80px;">
-                            <div class="fs-1 fw-bold text-primary" style="line-height: 1.1;">45%</div>
-                        </div>
-                        <p class="mt-2" style="color: #333; font-weight: 500;">Kohtalainen riski</p>
-                    </div>
-                    
-                    <div class="demo-preview" id="demoPreview" style="max-height: 150px; overflow: hidden; position: relative;">
-                        <div class="markdown-content" style="color: #222;"></div>
-                        <div class="fade-overlay" style="height: 150px; bottom: 0; position: absolute; background: linear-gradient(transparent, rgba(255, 255, 255, 0.8) 30%, white);">
-                            <p class="mb-3 text-center" style="color: #333; font-weight: 500; margin-top: 30px;">Näet koko analyysin rekisteröitymällä palveluun</p>
-                            <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Rekisteröidy nyt</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="row align-items-center">
-            <div class="col-lg-12 text-center mb-4">
+        <div class="row align-items-center hero-content">
+            <div class="col-lg-7">
+                <h1 class="hero-title">Tee <span class="accent-text">fiksumpia asuntopäätöksiä</span> tekoälyn avulla</h1>
                 <p class="hero-subtitle">Asuntoanalyysi auttaa sinua analysoimaan potentiaalisia asuntokohteita syvällisesti ja tunnistamaan piilevät riskit ja mahdollisuudet.</p>
-                <div class="d-flex flex-wrap gap-3 justify-content-center">
-                    {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('index') }}" class="btn hero-cta">Analysoi asunto</a>
-                    <a href="{{ url_for('list_analyses') }}" class="btn btn-outline-light">Katso analyysejäsi</a>
-                    {% else %}
-                    <a href="{{ url_for('auth.login') }}" class="btn hero-cta">Kirjaudu sisään</a>
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light">Rekisteröidy</a>
-                    {% endif %}
+                <div class="d-flex flex-wrap">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-accent">Rekisteröidy nyt</a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline d-inline-block">Kirjaudu sisään</a>
                 </div>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block">
+                <img src="{{ url_for('static', filename='img/hero-image.svg') }}" alt="Asuntoanalyysi" class="img-fluid" onerror="this.style.display='none'">
             </div>
         </div>
     </div>
 </section>
 
 <!-- Features Section -->
-<section class="container">
-    <h2 class="text-center mb-5 section-title">Miksi valita Asuntoanalyysi?</h2>
-    <div class="row">
-        <div class="col-md-4">
-            <div class="feature-card text-center">
-                <div class="feature-icon">
-                    <i class="fas fa-robot"></i>
-                </div>
-                <h3>Tekoälyanalyysi</h3>
-                <p>Kehittynyt tekoäly analysoi asunnon tiedot ja tuottaa ammattimaisen analyysin potentiaalisesta kodistasi.</p>
+<section class="feature-section">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-lg-12">
+                <h2 class="section-title mx-auto">Ominaisuudet</h2>
+                <p class="section-subtitle mx-auto">Asuntoanalyysi tarjoaa kattavan työkalupaketin, joka auttaa sinua tekemään parempia sijoituspäätöksiä.</p>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="feature-card text-center">
-                <div class="feature-icon">
-                    <i class="fas fa-search-dollar"></i>
+        
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-magnifying-glass-chart"></i>
+                    </div>
+                    <h3 class="feature-title">Syvällinen analyysi</h3>
+                    <p>Tekoäly analysoi asuntoilmoituksen ja tuottaa yksityiskohtaisen raportin kohteen vahvuuksista ja heikkouksista.</p>
                 </div>
-                <h3>Hinta-arvio</h3>
-                <p>Saat tarkan arvion asunnon hinnoittelusta verrattuna vastaaviin kohteisiin samalla alueella.</p>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="feature-card text-center">
-                <div class="feature-icon">
-                    <i class="fas fa-exclamation-triangle"></i>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="feature-title">Riskianalyysi</h3>
+                    <p>Tunnista kohteeseen liittyvät riskit jo ennen ostopäätöstä. Saat tarkan riskiprofiilin jokaisesta kohteesta.</p>
                 </div>
-                <h3>Riskien tunnistus</h3>
-                <p>Tunnista mahdolliset piilevät ongelmat ja riskit ennen ostopäätöksen tekemistä.</p>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bullseye"></i>
+                    </div>
+                    <h3 class="feature-title">Sijoituspotentiaali</h3>
+                    <p>Arvioimme kohteen potentiaalin sijoituksena ja tunnistamme mahdolliset kehityskohteet arvonnousun maksimoimiseksi.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h3 class="feature-title">Kattavat raportit</h3>
+                    <p>Saat selkeät ja kattavat raportit, jotka voit ladata tai tarkastella verkossa milloin tahansa.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3 class="feature-title">Nopeat tulokset</h3>
+                    <p>Tekoäly analysoi kohteen muutamassa sekunnissa, joten saat tulokset nopeasti ja voit reagoida markkinoilla välittömästi.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h3 class="feature-title">Historiallinen data</h3>
+                    <p>Tallenna ja vertaile analyyseja ajan myötä. Rakenna oma tietokantasi analysoiduista kohteista.</p>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- How it works -->
-<section class="container mt-5 pt-5">
-    <h2 class="text-center mb-5 section-title">Miten se toimii?</h2>
-    <div class="row align-items-center">
-        <div class="col-lg-6">
-            <div class="pe-lg-5">
-                <div class="d-flex align-items-center mb-4">
-                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; min-width: 50px;">1</div>
-                    <div class="ms-3">
-                        <h4>Syötä asunnon URL</h4>
-                        <p class="text-muted">Kopioi ja liitä asunnon Oikotie- tai Etuovi-osoite analysoitavaksi.</p>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center mb-4">
-                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; min-width: 50px;">2</div>
-                    <div class="ms-3">
-                        <h4>AI hakee ja analysoi tiedot</h4>
-                        <p class="text-muted">Tekoäly käy läpi kaikki asunnon tiedot ja vertailee niitä alueen trendeihin.</p>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center">
-                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; min-width: 50px;">3</div>
-                    <div class="ms-3">
-                        <h4>Tarkastele kattavaa analyysia</h4>
-                        <p class="text-muted">Saat selkeän ja yksityiskohtaisen analyysin sekä tärkeimmät kysymykset välittäjälle.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-6 mt-5 mt-lg-0">
-            <img src="{{ url_for('static', filename='img/analysis-example.svg') }}" alt="Analyysin esimerkki" class="img-fluid demo-screenshot">
-        </div>
-    </div>
-</section>
-
-<!-- Testimonials -->
+<!-- Testimonials Section -->
 <section class="testimonial-section">
     <div class="container">
-        <h2 class="text-center mb-5 section-title">Mitä asiakkaamme sanovat</h2>
+        <div class="row text-center mb-5">
+            <div class="col-lg-12">
+                <h2 class="section-title mx-auto" style="color: var(--neutral-color);">Asiakkaidemme kokemuksia</h2>
+                <p class="section-subtitle mx-auto" style="color: var(--neutral-color);">Lue mitä asiakkaamme sanovat palvelustamme ja miten se on auttanut heitä tekemään parempia asuntopäätöksiä.</p>
+            </div>
+        </div>
+        
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-lg-4 col-md-6">
                 <div class="testimonial-card">
-                    <p class="testimonial-text">"Asuntoanalyysi auttoi minua huomaamaan useita tärkeitä yksityiskohtia asunnosta, joita en muuten olisi huomannut. Säästyin monella ongelmalta tulevaisuudessa."</p>
-                    <p class="testimonial-author">- Sanna K., Helsinki</p>
+                    <p class="testimonial-text">"Asuntoanalyysi auttoi minua tunnistamaan piilevät ongelmat asunnossa, jota olin ostamassa. Säästin tuhansia euroja välttämällä huonon sijoituksen."</p>
+                    <p class="testimonial-author">Matti Meikäläinen</p>
+                    <p class="testimonial-role">Ensiasunnon ostaja, Helsinki</p>
                 </div>
             </div>
-            <div class="col-md-4">
+            
+            <div class="col-lg-4 col-md-6">
                 <div class="testimonial-card">
-                    <p class="testimonial-text">"Sovelluksen avulla tein järkevän tarjouksen uudesta kodistani. Analyysi auttoi myös neuvottelutilanteessa, kun pystyin paremmin perustelemaan tarjoukseni."</p>
-                    <p class="testimonial-author">- Mikko T., Tampere</p>
+                    <p class="testimonial-text">"Käytän Asuntoanalyysiä säännöllisesti sijoitusasuntojen arviointiin. Se on nopeuttanut päätöksentekoprosessia merkittävästi ja parantanut sijoitustuottojani."</p>
+                    <p class="testimonial-author">Liisa Virtanen</p>
+                    <p class="testimonial-role">Asuntosijoittaja, Tampere</p>
                 </div>
             </div>
-            <div class="col-md-4">
+            
+            <div class="col-lg-4 col-md-6">
                 <div class="testimonial-card">
-                    <p class="testimonial-text">"Tekoälyn lista kysymyksistä välittäjälle oli kultaakin kalliimpi. Olisin muuten unohtanut kysyä monia oleellisia asioita asuntonäytössä."</p>
-                    <p class="testimonial-author">- Liisa R., Turku</p>
+                    <p class="testimonial-text">"Riskianalyysi on erityisen hyödyllinen. Se huomioi tekijöitä, joita en olisi itse osannut ajatella. Nyt kaikki asuntokauppani perustuvat dataan eikä vain tunteeseen."</p>
+                    <p class="testimonial-author">Johanna Korhonen</p>
+                    <p class="testimonial-role">Kiinteistönvälittäjä, Turku</p>
                 </div>
             </div>
         </div>
@@ -361,130 +422,75 @@
 <!-- CTA Section -->
 <section class="cta-section">
     <div class="container text-center">
-        <h2 class="mb-4">Aloita fiksumpi asunnonhaku tänään</h2>
-        <p class="mb-5">Liity satojen tyytyväisten käyttäjien joukkoon ja tee varma asuntopäätös.</p>
-        {% if current_user.is_authenticated %}
-        <a href="{{ url_for('index') }}" class="btn hero-cta btn-lg">Analysoi asunto nyt</a>
-        {% else %}
-        <a href="{{ url_for('auth.register') }}" class="btn hero-cta btn-lg">Rekisteröidy ilmaiseksi</a>
-        {% endif %}
+        <h2 class="cta-title">Aloita asuntojen älykäs analysointi tänään</h2>
+        <p class="cta-subtitle mx-auto">Rekisteröidy nyt ja saat käyttöösi tekoälyavusteisen asuntoanalyysityökalun, joka auttaa sinua tekemään parempia asuntopäätöksiä.</p>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg">Rekisteröidy ilmaiseksi</a>
     </div>
 </section>
 
-<!-- Footer -->
-<footer class="footer">
+<!-- How It Works Section -->
+<section class="feature-section">
     <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-lg-12">
+                <h2 class="section-title mx-auto">Näin se toimii</h2>
+                <p class="section-subtitle mx-auto">Asuntoanalyysi on suunniteltu helppokäyttöiseksi. Näin pääset alkuun:</p>
+            </div>
+        </div>
+        
         <div class="row">
-            <div class="col-md-4 mb-4 mb-md-0">
-                <h5>Asuntoanalyysi</h5>
-                <p>Tekoälyä hyödyntävä työkalu asunnonostajille. Analyysimme auttavat sinua tekemään parempia asuntopäätöksiä.</p>
+            <div class="col-lg-3 col-md-6 text-center">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <h3 class="feature-title">1. Rekisteröidy</h3>
+                    <p>Luo tili muutamassa sekunnissa ja kirjaudu sisään palveluun.</p>
+                </div>
             </div>
-            <div class="col-md-2 mb-4 mb-md-0">
-                <h5>Linkit</h5>
-                <ul class="list-unstyled">
-                    <li><a href="{{ url_for('index') }}">Etusivu</a></li>
-                    <li><a href="#">Tietoa meistä</a></li>
-                    <li><a href="#">Palvelut</a></li>
-                    <li><a href="#">Blogi</a></li>
-                </ul>
+            
+            <div class="col-lg-3 col-md-6 text-center">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-paste"></i>
+                    </div>
+                    <h3 class="feature-title">2. Liitä URL</h3>
+                    <p>Kopioi Oikotie- tai Etuovi-asuntoilmoituksen linkki ja liitä se analyysityökaluun.</p>
+                </div>
             </div>
-            <div class="col-md-3 mb-4 mb-md-0">
-                <h5>Yhteystiedot</h5>
-                <ul class="list-unstyled">
-                    <li><i class="fas fa-envelope me-2"></i> info@asuntoanalyysi.fi</li>
-                    <li><i class="fas fa-phone me-2"></i> +358 40 123 4567</li>
-                    <li><i class="fas fa-map-marker-alt me-2"></i> Helsinki, Suomi</li>
-                </ul>
+            
+            <div class="col-lg-3 col-md-6 text-center">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3 class="feature-title">3. Odota analyysia</h3>
+                    <p>Tekoäly analysoi kohteen ja tuottaa kattavan raportin muutamassa sekunnissa.</p>
+                </div>
             </div>
-            <div class="col-md-3">
-                <h5>Seuraa meitä</h5>
-                <div class="d-flex gap-3 mt-3">
-                    <a href="#" class="text-dark fs-4"><i class="fab fa-facebook"></i></a>
-                    <a href="#" class="text-dark fs-4"><i class="fab fa-twitter"></i></a>
-                    <a href="#" class="text-dark fs-4"><i class="fab fa-instagram"></i></a>
-                    <a href="#" class="text-dark fs-4"><i class="fab fa-linkedin"></i></a>
+            
+            <div class="col-lg-3 col-md-6 text-center">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="feature-title">4. Tee päätös</h3>
+                    <p>Käytä analyysia päätöksenteon tukena ja tee fiksumpia asuntokauppoja.</p>
                 </div>
             </div>
         </div>
-        <hr>
-        <div class="text-center">
-            <p>&copy; {{ now.year }} Asuntoanalyysi. Kaikki oikeudet pidätetään.</p>
-        </div>
     </div>
-</footer>
+</section>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const demoForm = document.getElementById('demoForm');
-        const demoUrlInput = document.getElementById('demoUrl');
-        const demoLoading = document.getElementById('demoLoading');
-        const demoResult = document.getElementById('demoResult');
-        const demoError = document.getElementById('demoError');
-        const errorMessage = document.getElementById('errorMessage');
-        const demoAnalysisContent = document.getElementById('demoAnalysisContent');
-        
-        demoForm.addEventListener('submit', function(e) {
+    // Add smooth scrolling
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
             e.preventDefault();
-            
-            // Validoi URL
-            const demoUrl = demoUrlInput.value.trim();
-            if (!demoUrl) {
-                errorMessage.textContent = 'URL-osoite puuttuu';
-                demoError.classList.remove('d-none');
-                return;
-            }
-            
-            if (!demoUrl.includes('oikotie.fi') && !demoUrl.includes('etuovi.com')) {
-                errorMessage.textContent = 'Syötä kelvollinen Oikotie- tai Etuovi-asuntolinkin URL';
-                demoError.classList.remove('d-none');
-                return;
-            }
-            
-            // Piilota virheviesti ja näytä latausanimaatio
-            demoError.classList.add('d-none');
-            demoLoading.classList.remove('d-none');
-            
-            // Lähetä pyyntö API:lle
-            fetch('/api/demo-analyze', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    url: demoUrl
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Piilota latausanimaatio
-                demoLoading.classList.add('d-none');
-                
-                if (data.error) {
-                    // Näytä virheviesti
-                    errorMessage.textContent = data.error;
-                    demoError.classList.remove('d-none');
-                    return;
-                }
-                
-                // Näytä tulos
-                const analysisText = data.analysis || "Ei analyysituloksia.";
-                demoAnalysisContent.innerHTML = marked.parse(analysisText);
-                
-                demoResult.classList.remove('d-none');
-                
-                // Vieritä tulos näkyviin
-                demoResult.scrollIntoView({behavior: 'smooth'});
-            })
-            .catch(error => {
-                // Piilota latausanimaatio
-                demoLoading.classList.add('d-none');
-                
-                // Näytä virheviesti
-                errorMessage.textContent = 'Verkkovirhe. Tarkista yhteytesi ja yritä uudelleen.';
-                demoError.classList.remove('d-none');
-                console.error('Error:', error);
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
             });
         });
     });
