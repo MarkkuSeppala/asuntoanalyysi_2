@@ -116,21 +116,42 @@ def analyze():
         if not url:
             return jsonify({'error': 'URL-osoite puuttuu'}), 400
         
-        # Tarkistetaan, että URL on Oikotien asunto-URL
-        if 'oikotie.fi' not in url and 'asunnot.oikotie.fi' not in url:
-            return jsonify({'error': 'Syötä kelvollinen Oikotie-asuntolinkin URL'}), 400
+        # Tarkistetaan, että URL on joko Oikotien tai Etuoven asunto-URL
+        if 'oikotie.fi' not in url and 'asunnot.oikotie.fi' not in url and 'etuovi.com' not in url:
+            return jsonify({'error': 'Syötä kelvollinen Oikotie- tai Etuovi-asuntolinkin URL'}), 400
         
-        # Käytetään scraperia hakemaan asuntotiedot
-        logger.info(f"Haetaan tietoja URL:sta: {url}")
-        scraper = RealEstateScraper(url)
-        success = scraper.run()
+        markdown_data = None
+        success = False
         
-        if not success:
+        # Tarkistetaan onko kyseessä Etuovi-URL
+        if 'etuovi.com' in url:
+            logger.info(f"Käsitellään Etuovi URL: {url}")
+            from etuovi_pipeline.etuovi_pipeline import process_etuovi_listing
+            
+            try:
+                # Käytetään Etuovi-pipelinea markdownin luomiseen
+                markdown_data = process_etuovi_listing(url)
+                if markdown_data:
+                    success = True
+                    logger.info("Etuovi-kohteen tiedot haettu onnistuneesti")
+                else:
+                    logger.error("Etuovi-kohteen tietojen hakeminen epäonnistui - tyhjä tulos")
+            except Exception as e:
+                logger.exception(f"Virhe Etuovi-pipelinen käytössä: {e}")
+                return jsonify({'error': f'Etuovi-kohteen tietojen hakeminen epäonnistui: {str(e)}'}), 500
+        else:
+            # Oikotie-URL:n käsittely
+            logger.info(f"Haetaan tietoja Oikotie URL:sta: {url}")
+            scraper = RealEstateScraper(url)
+            success = scraper.run()
+            
+            if success:
+                # Haetaan asunnon tiedot markdown-muodossa
+                logger.info("Muunnetaan tiedot markdown-muotoon")
+                markdown_data = scraper.format_to_markdown()
+        
+        if not success or not markdown_data:
             return jsonify({'error': 'Asunnon tietojen hakeminen epäonnistui'}), 500
-        
-        # Haetaan asunnon tiedot markdown-muodossa
-        logger.info("Muunnetaan tiedot markdown-muotoon")
-        markdown_data = scraper.format_to_markdown()
         
         if not markdown_data:
             logger.error("Markdown-datan luominen epäonnistui - tyhjä tulos")
@@ -214,19 +235,42 @@ def api_analyze():
         if not url:
             return jsonify({'error': 'URL-osoite puuttuu'}), 400
         
-        # Tarkistetaan, että URL on Oikotien asunto-URL
-        if 'oikotie.fi' not in url and 'asunnot.oikotie.fi' not in url:
-            return jsonify({'error': 'Syötä kelvollinen Oikotie-asuntolinkin URL'}), 400
+        # Tarkistetaan, että URL on Oikotien tai Etuoven asunto-URL
+        if 'oikotie.fi' not in url and 'asunnot.oikotie.fi' not in url and 'etuovi.com' not in url:
+            return jsonify({'error': 'Syötä kelvollinen Oikotie- tai Etuovi-asuntolinkin URL'}), 400
         
-        # Käytetään scraperia hakemaan asuntotiedot
-        scraper = RealEstateScraper(url)
-        success = scraper.run()
+        markdown_data = None
+        success = False
         
-        if not success:
+        # Tarkistetaan onko kyseessä Etuovi-URL
+        if 'etuovi.com' in url:
+            logger.info(f"Käsitellään Etuovi URL: {url}")
+            from etuovi_pipeline.etuovi_pipeline import process_etuovi_listing
+            
+            try:
+                # Käytetään Etuovi-pipelinea markdownin luomiseen
+                markdown_data = process_etuovi_listing(url)
+                if markdown_data:
+                    success = True
+                    logger.info("Etuovi-kohteen tiedot haettu onnistuneesti")
+                else:
+                    logger.error("Etuovi-kohteen tietojen hakeminen epäonnistui - tyhjä tulos")
+            except Exception as e:
+                logger.exception(f"Virhe Etuovi-pipelinen käytössä: {e}")
+                return jsonify({'error': f'Etuovi-kohteen tietojen hakeminen epäonnistui: {str(e)}'}), 500
+        else:
+            # Oikotie-URL:n käsittely
+            logger.info(f"Haetaan tietoja Oikotie URL:sta: {url}")
+            # Käytetään scraperia hakemaan asuntotiedot
+            scraper = RealEstateScraper(url)
+            success = scraper.run()
+            
+            if success:
+                # Haetaan asunnon tiedot markdown-muodossa
+                markdown_data = scraper.format_to_markdown()
+        
+        if not success or not markdown_data:
             return jsonify({'error': 'Asunnon tietojen hakeminen epäonnistui'}), 500
-        
-        # Haetaan asunnon tiedot markdown-muodossa
-        markdown_data = scraper.format_to_markdown()
         
         if not markdown_data:
             return jsonify({'error': 'Markdown-muotoisen datan luominen epäonnistui'}), 500
@@ -249,37 +293,40 @@ def api_analyze():
         if analysis:
             # Käytetään olemassa olevaa analyysiä
             analysis_id = analysis.id
-            logger.info(f"API: Käytetään olemassa olevaa analyysiä ID: {analysis_id}")
+            logger.info(f"Käytetään olemassa olevaa analyysiä ID: {analysis_id}")
+            
+            # Haetaan riskianalyysi jos sellainen on jo olemassa
+            risk_analysis = RiskAnalysis.query.filter_by(analysis_id=analysis_id).first()
+            if risk_analysis:
+                riski_data = json.loads(risk_analysis.risk_data)
+                logger.info(f"Käytetään olemassa olevaa riskianalyysiä")
         else:
             # Tätä voi tapahtua, koska api_call.get_analysis tallentaa analyysin tietokantaan
             # Yritetään hakea juuri luotu analyysi URL:n perusteella
             analysis = Analysis.query.filter_by(property_url=url, user_id=current_user.id).first()
             if analysis:
                 analysis_id = analysis.id
-                logger.info(f"API: Löydettiin juuri luotu analyysi ID: {analysis_id}")
-                
-        # Tehdään riskianalyysi API-vastauksesta, jos analyysi on löydetty
-        if analysis_id:
-            try:
-                logger.info("API: Tehdään riskianalyysi kohteesta")
-                riski_data_json = riskianalyysi(analysis_response, analysis_id)
-                logger.info(f"API: Saatiin riskianalyysin JSON vastaus pituudella: {len(riski_data_json)}")
-                riski_data = json.loads(riski_data_json)
-                logger.info(f"API: Riskianalyysi valmis: {riski_data.get('kokonaisriskitaso', 'N/A')}/10")
-            except Exception as e:
-                logger.error(f"API: Virhe riskianalyysissä: {e}")
-                riski_data = None
+                logger.info(f"Löydettiin juuri luotu analyysi ID: {analysis_id}")
         
-        # Palautetaan analyysi, raakatiedot ja riskianalyysi JSON-muodossa
+        # Jos riskidataa ei ole vielä olemassa, luodaan se
+        if not riski_data and analysis_id:
+            try:
+                logger.info("Tehdään riskianalyysi kohteesta")
+                riski_data_json = riskianalyysi(analysis_response, analysis_id)
+                riski_data = json.loads(riski_data_json)
+                logger.info(f"Riskianalyysi valmis: {riski_data.get('kokonaisriskitaso', 'N/A')}/10")
+            except Exception as e:
+                logger.error(f"Virhe riskianalyysissä: {e}")
+                # Ei palauteta virhettä käyttäjälle, jos riskianalyysi epäonnistuu
+        
+        # Kootaan API-vastaus
         response_data = {
+            'status': 'success',
             'property_data': markdown_data,
-            'analysis': analysis_response
+            'analysis': analysis_response,
+            'risk_analysis': riski_data
         }
         
-        # Lisätään riskianalyysi vastaukseen, jos se on saatavilla
-        if riski_data:
-            response_data['risk_analysis'] = riski_data
-            
         return jsonify(response_data)
         
     except Exception as e:
@@ -367,7 +414,7 @@ def download_analysis(analysis_id):
 
 @app.route('/api/demo-analyze', methods=['POST'])
 def api_demo_analyze():
-    """API-pääte demoanalyysiä varten (landing page)"""
+    """Rajoitettu API-pääte demokäyttöön, joka ottaa vastaan URL:n ja palauttaa analyysin JSON-muodossa"""
     try:
         data = request.get_json()
         url = data.get('url')
@@ -375,37 +422,57 @@ def api_demo_analyze():
         if not url:
             return jsonify({'error': 'URL-osoite puuttuu'}), 400
         
-        # Tarkistetaan, että URL on Oikotien asunto-URL
-        if 'oikotie.fi' not in url and 'asunnot.oikotie.fi' not in url:
-            return jsonify({'error': 'Syötä kelvollinen Oikotie-asuntolinkin URL'}), 400
+        # Tarkistetaan, että URL on Oikotien tai Etuoven asunto-URL
+        if 'oikotie.fi' not in url and 'asunnot.oikotie.fi' not in url and 'etuovi.com' not in url:
+            return jsonify({'error': 'Syötä kelvollinen Oikotie- tai Etuovi-asuntolinkin URL'}), 400
         
-        # Käytetään scraperia hakemaan asuntotiedot
-        scraper = RealEstateScraper(url)
-        success = scraper.run()
+        markdown_data = None
+        success = False
         
-        if not success:
+        # Tarkistetaan onko kyseessä Etuovi-URL
+        if 'etuovi.com' in url:
+            logger.info(f"Käsitellään Etuovi URL: {url}")
+            from etuovi_pipeline.etuovi_pipeline import process_etuovi_listing
+            
+            try:
+                # Käytetään Etuovi-pipelinea markdownin luomiseen
+                markdown_data = process_etuovi_listing(url)
+                if markdown_data:
+                    success = True
+                    logger.info("Etuovi-kohteen tiedot haettu onnistuneesti")
+                else:
+                    logger.error("Etuovi-kohteen tietojen hakeminen epäonnistui - tyhjä tulos")
+            except Exception as e:
+                logger.exception(f"Virhe Etuovi-pipelinen käytössä: {e}")
+                return jsonify({'error': f'Etuovi-kohteen tietojen hakeminen epäonnistui: {str(e)}'}), 500
+        else:
+            # Oikotie-URL:n käsittely
+            logger.info(f"Haetaan tietoja Oikotie URL:sta: {url}")
+            # Käytetään scraperia hakemaan asuntotiedot
+            scraper = RealEstateScraper(url)
+            success = scraper.run()
+            
+            if success:
+                # Haetaan asunnon tiedot markdown-muodossa
+                markdown_data = scraper.format_to_markdown()
+        
+        if not success or not markdown_data:
             return jsonify({'error': 'Asunnon tietojen hakeminen epäonnistui'}), 500
-        
-        # Haetaan asunnon tiedot markdown-muodossa
-        markdown_data = scraper.format_to_markdown()
         
         if not markdown_data:
             return jsonify({'error': 'Markdown-muotoisen datan luominen epäonnistui'}), 500
         
-        # Käytetään OpenAI API:a analyysin tekemiseen
-        analysis_response = api_call.get_analysis(markdown_data, url)
-        
-        # Varmistetaan että vastaus on puhdistettu
-        analysis_response = api_call.sanitize_markdown_response(analysis_response)
-        
-        # Palautetaan analyysi JSON-muodossa
-        return jsonify({
+        # Demo-versiossa palautetaan vain raakatiedot ilman API-analyysiä
+        response_data = {
+            'status': 'success',
             'property_data': markdown_data,
-            'analysis': analysis_response
-        })
+            'note': 'Demo-version rajoitettu vastaus. Täysi analyysi on saatavilla rekisteröityneille käyttäjille.'
+        }
+        
+        return jsonify(response_data)
         
     except Exception as e:
-        logger.error(f"Virhe demo-analyysin teossa: {e}")
+        logger.exception(f"Odottamaton virhe demo-analyysissä: {e}")
         return jsonify({'error': f'Virhe: {str(e)}'}), 500
 
 def _sanitize_content(content):

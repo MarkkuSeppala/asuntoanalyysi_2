@@ -11,4 +11,7 @@ Flask-Login==0.6.3
 Flask-WTF==1.2.1
 email-validator==2.2.0
 # Varmistetaan että gunicorn on asennettu
-gunicorn>=21.2.0 
+gunicorn>=21.2.0
+# Etuovi pipeline requirements
+selenium>=4.10.0
+docling>=0.7.0 
