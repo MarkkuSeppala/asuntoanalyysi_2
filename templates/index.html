@@ -278,12 +278,12 @@
                     <form id="analyzeForm" action="/analyze" method="POST">
                         <div class="mb-4">
                             <label for="url" class="form-label fw-bold">Asuntoilmoituksen URL</label>
-                            <input type="url" id="url" name="url" class="form-control url-input" placeholder="https://asunnot.oikotie.fi/... tai https://www.etuovi.com/..." required>
+                            <input type="url" id="url" name="url" class="form-control url-input" placeholder="https://asunnot.oikotie.fi/myytavat-asunnot/... tai https://www.etuovi.com/kohde/..." required>
                             <div class="form-text mt-2">
-                                <i class="fas fa-info-circle me-1"></i> Kopioi ja liitä Oikotien tai Etuoven asuntoilmoituksen osoite
+                                <i class="fas fa-info-circle me-1"></i> Kopioi ja liitä Oikotien tai Etuovin asuntoilmoituksen osoite
                             </div>
                             <div class="url-error" id="urlError">
-                                <i class="fas fa-exclamation-circle me-1"></i> URL-osoitteen täytyy olla Oikotie- tai Etuovi-palvelusta (oikotie.fi, asunnot.oikotie.fi tai etuovi.com)
+                                <i class="fas fa-exclamation-circle me-1"></i> URL-osoitteen täytyy olla Oikotie-palvelusta (oikotie.fi) tai Etuovi-palvelusta (etuovi.com)
                             </div>
                         </div>
                         
@@ -325,7 +325,7 @@
                 </div>
                 <div class="info-body">
                     <ul class="steps-list">
-                        <li class="step-item">Syötä Oikotien tai Etuoven asuntoilmoituksen URL-osoite lomakkeeseen</li>
+                        <li class="step-item">Syötä Oikotien tai Etuovin asuntoilmoituksen URL-osoite lomakkeeseen</li>
                         <li class="step-item">Järjestelmämme hakee asuntoilmoituksen tiedot automaattisesti</li>
                         <li class="step-item">Tekoäly analysoi asunnon tiedot ja tuottaa syvällisen analyysin</li>
                         <li class="step-item">Saat kattavan raportin asunnosta, sen arvosta ja mahdollisista riskitekijöistä</li>
@@ -383,7 +383,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const urlError = document.getElementById('urlError');
     
     // URL validointi
-    function validatePropertyUrl(url) {
+    function validateUrl(url) {
         if (!url) return false;
         
         try {
@@ -407,7 +407,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const url = urlInput.value.trim();
         
         // Tarkista URL ennen lähetystä
-        if (!validatePropertyUrl(url)) {
+        if (!validateUrl(url)) {
             e.preventDefault(); // Estä lomakkeen lähetys
             
             // Näytä virhe

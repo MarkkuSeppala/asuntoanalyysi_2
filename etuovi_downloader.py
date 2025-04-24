@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
-Etuovi Pipeline
+Etuovi PDF Downloader
 
-This script takes an Etuovi.com property listing URL, downloads the PDF,
-and converts it to markdown format.
+This script downloads a PDF file from an Etuovi.com property listing.
+It navigates to the given URL, finds the "TULOSTA PDF" button, clicks it,
+and downloads the resulting PDF file. It then converts the PDF to text format.
 
 Usage:
-    python etuovi_pipeline.py <url> [output_markdown_filename]
+    python etuovi_pdf_downloader.py <url> [output_filename]
 
 Example:
-    python etuovi_pipeline.py https://www.etuovi.com/kohde/w67778 property_listing.md
+    python etuovi_pdf_downloader.py https://www.etuovi.com/kohde/w67778 property_listing.pdf
 """
 
 import os
@@ -19,28 +20,13 @@ import argparse
 import requests
 import glob
 import shutil
-import re
+import PyPDF2
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from docling.document_converter import DocumentConverter
-
-def sanitize_filename(filename):
-    """
-    Remove invalid characters from a filename.
-    
-    Args:
-        filename (str): The filename to sanitize.
-    
-    Returns:
-        str: A sanitized filename safe for file system operations.
-    """
-    # Remove invalid filename characters
-    sanitized = re.sub(r'[\\/*?:"<>|]', "", filename)
-    return sanitized
 
 def setup_driver(headless=True, download_dir=None):
     """Set up and return a configured Chrome WebDriver.
@@ -86,13 +72,9 @@ def download_pdf(url, output_filename=None, headless=False):
         str: The path to the downloaded PDF file.
     """
     if not output_filename:
-        # Extract property ID from URL for default filename, removing any query parameters
-        property_id = url.split('/')[-1].split('?')[0]
-        property_id = sanitize_filename(property_id)
+        # Extract property ID from URL for default filename
+        property_id = url.split('/')[-1]
         output_filename = f"etuovi_{property_id}.pdf"
-    else:
-        # Ensure the provided filename is safe
-        output_filename = sanitize_filename(output_filename)
     
     # Create a temporary download directory
     temp_download_dir = os.path.join(os.getcwd(), "temp_downloads")
@@ -174,16 +156,8 @@ def download_pdf(url, output_filename=None, headless=False):
                 
                 # Copy the file to the desired output location
                 output_path = os.path.join(os.getcwd(), output_filename)
-                try:
-                    shutil.copy2(downloaded_file, output_path)
-                    print(f"PDF saved as {output_path}")
-                except Exception as e:
-                    print(f"Error copying file: {str(e)}")
-                    # Try with a safe alternative approach
-                    with open(downloaded_file, 'rb') as src_file:
-                        with open(output_path, 'wb') as dst_file:
-                            dst_file.write(src_file.read())
-                    print(f"PDF saved as {output_path} using alternative method")
+                shutil.copy2(downloaded_file, output_path)
+                print(f"PDF saved as {output_path}")
                 
                 return os.path.abspath(output_path)
             
@@ -264,102 +238,65 @@ def download_pdf(url, output_filename=None, headless=False):
         except Exception as e:
             print(f"Warning: Could not remove temporary directory: {str(e)}")
 
-def convert_pdf_to_markdown(pdf_path, output_markdown=None):
+def convert_pdf_to_text(pdf_path):
     """
-    Convert a PDF file to markdown format using docling.
+    Convert a PDF file to text format.
     
     Args:
         pdf_path (str): Path to the PDF file.
-        output_markdown (str, optional): Filename to save the markdown as.
-            If not provided, a default name will be generated.
     
     Returns:
-        str: The path to the markdown file.
-    """
-    print(f"Converting PDF to markdown: {pdf_path}")
-    
-    # Create default output filename if not provided
-    if not output_markdown:
-        output_markdown = os.path.splitext(os.path.basename(pdf_path))[0] + ".md"
-    
-    # Get absolute path for the output file
-    output_path = os.path.join(os.getcwd(), output_markdown)
-    
-    # Convert the PDF to markdown using our improved dockling module
-    from etuovi_pipeline.etuovi_dockling import convert_pdf_to_markdown as convert_pdf
-    markdown_content = convert_pdf(pdf_path)
-    
-    if not markdown_content:
-        raise Exception("Failed to convert PDF to markdown")
-    
-    # Save the markdown content to a file
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write(markdown_content)
-    
-    print(f"Markdown saved as {output_path}")
-    return os.path.abspath(output_path)
-
-def process_etuovi_listing(url, output_markdown=None, headless=True, cleanup=True):
-    """
-    Process an Etuovi listing: download PDF and convert to markdown.
-    
-    Args:
-        url (str): URL of the Etuovi listing.
-        output_markdown (str, optional): Output markdown filename.
-        headless (bool): Whether to run browser in headless mode.
-        cleanup (bool): Whether to clean up temporary files after processing.
-    
-    Returns:
-        str: Absolute path to the output markdown file.
+        str: Path to the created text file.
     """
     try:
-        print(f"Processing Etuovi listing from URL: {url}")
-        # Generate default output filename if not provided
-        if not output_markdown:
-            property_id = url.split('/')[-1].split('?')[0]
-            property_id = sanitize_filename(property_id)
-            output_markdown = f"etuovi_{property_id}.md"
-        else:
-            # Ensure the provided filename is safe
-            output_markdown = sanitize_filename(output_markdown)
+        print(f"Converting PDF to text: {pdf_path}")
+        # Create output text file path by changing extension
+        text_path = os.path.splitext(pdf_path)[0] + '.txt'
         
-        # Download the PDF
-        pdf_path = download_pdf(url, headless=headless)
-        
-        if not pdf_path or not os.path.exists(pdf_path):
-            raise Exception(f"PDF download failed or file not found: {pdf_path}")
+        # Open the PDF file
+        with open(pdf_path, 'rb') as pdf_file:
+            # Create a PDF reader object
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
             
-        # Convert the PDF to markdown
-        markdown_path = convert_pdf_to_markdown(pdf_path, output_markdown)
+            # Open text file for writing
+            with open(text_path, 'w', encoding='utf-8') as text_file:
+                # Extract text from each page and write to text file
+                for page_num in range(len(pdf_reader.pages)):
+                    page = pdf_reader.pages[page_num]
+                    text = page.extract_text()
+                    text_file.write(f"--- Page {page_num + 1} ---\n")
+                    text_file.write(text)
+                    text_file.write('\n\n')
         
-        # Clean up the PDF file if requested
-        if cleanup and pdf_path and os.path.exists(pdf_path):
-            try:
-                os.remove(pdf_path)
-                print(f"Removed temporary PDF file: {pdf_path}")
-            except Exception as e:
-                print(f"Warning: Could not remove temporary PDF file {pdf_path}: {e}")
-        
-        # Return the absolute path to the markdown file
-        return os.path.abspath(markdown_path)
+        print(f"PDF successfully converted to text: {text_path}")
+        return text_path
+    
     except Exception as e:
-        print(f"Error processing Etuovi listing: {e}")
+        print(f"Error converting PDF to text: {str(e)}")
         raise
 
 def main():
-    """Main function to parse arguments and process the Etuovi listing."""
-    parser = argparse.ArgumentParser(description="Download Etuovi listing and convert to markdown")
-    parser.add_argument("url", help="URL of the Etuovi property listing")
-    parser.add_argument("output", nargs="?", help="Output markdown filename (optional)")
+    """Main function to parse arguments and download the PDF."""
+    parser = argparse.ArgumentParser(description="Download PDF from Etuovi.com property listing and convert to text")
+    parser.add_argument("url", help="URL of the property listing")
+    parser.add_argument("output", nargs="?", help="Output filename (optional)")
     parser.add_argument("--no-headless", action="store_true", help="Run in non-headless mode (shows browser UI)")
+    parser.add_argument("--no-text", action="store_true", help="Skip converting PDF to text")
     args = parser.parse_args()
     
     try:
-        markdown_path = process_etuovi_listing(args.url, args.output, headless=not args.no_headless)
-        print(f"Process completed successfully. Markdown file: {markdown_path}")
+        pdf_path = download_pdf(args.url, args.output, headless=not args.no_headless)
+        print(f"PDF downloaded successfully: {pdf_path}")
+        
+        # Convert PDF to text unless --no-text flag is used
+        if not args.no_text:
+            text_path = convert_pdf_to_text(pdf_path)
+            print(f"Text file created: {text_path}")
+        
+        return 0
     except Exception as e:
-        print(f"Error processing Etuovi listing: {str(e)}")
-        sys.exit(1)
+        print(f"Failed to download PDF or convert to text: {str(e)}")
+        return 1
 
 if __name__ == "__main__":
-    main() 
+    sys.exit(main())

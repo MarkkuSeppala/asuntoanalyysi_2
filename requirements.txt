@@ -1,6 +1,6 @@
 flask==2.3.3
-requests==2.32.2
-beautifulsoup4==4.12.3
+requests==2.31.0
+beautifulsoup4==4.12.2
 openai==1.75.0
 Werkzeug==2.3.7
 Jinja2==3.1.2
@@ -10,8 +10,7 @@ Flask-SQLAlchemy==3.1.1
 Flask-Login==0.6.3
 Flask-WTF==1.2.1
 email-validator==2.2.0
+selenium==4.18.1
+PyPDF2==3.0.1
 # Varmistetaan että gunicorn on asennettu
-gunicorn>=21.2.0
-# Etuovi pipeline requirements
-selenium==4.15.2
-docling==2.30.0 
+gunicorn>=21.2.0 

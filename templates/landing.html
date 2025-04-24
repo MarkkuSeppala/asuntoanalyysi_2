@@ -201,10 +201,10 @@
                     <p class="mb-3 text-center">Syötä Oikotie- tai Etuovi-asuntoilmoituksen URL alle:</p>
                     <form id="demoForm" class="mb-2">
                         <div class="input-group">
-                            <input type="url" id="demoUrl" class="form-control" placeholder="https://asunnot.oikotie.fi/... tai https://www.etuovi.com/..." required>
+                            <input type="url" id="demoUrl" class="form-control" placeholder="https://asunnot.oikotie.fi/... tai https://www.etuovi.com/kohde/..." required>
                             <button type="submit" class="btn btn-primary">Analysoi</button>
                         </div>
-                        <small class="form-text text-muted text-center d-block mt-2">Esim: https://asunnot.oikotie.fi/myytavat-asunnot/helsinki/16675455 tai https://www.etuovi.com/kohde/12345</small>
+                        <small class="form-text text-muted text-center d-block mt-2">Esim: https://asunnot.oikotie.fi/myytavat-asunnot/helsinki/16675455 tai https://www.etuovi.com/kohde/w67778</small>
                     </form>
                 </div>
                 
@@ -418,20 +418,20 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const demoForm = document.getElementById('demoForm');
-        const demoResult = document.getElementById('demoResult');
-        const demoPreview = document.getElementById('demoPreview');
+        const demoUrlInput = document.getElementById('demoUrl');
         const demoLoading = document.getElementById('demoLoading');
+        const demoResult = document.getElementById('demoResult');
         const demoError = document.getElementById('demoError');
         const errorMessage = document.getElementById('errorMessage');
-        const demoTitle = document.getElementById('demoTitle');
+        const demoAnalysisContent = document.getElementById('demoAnalysisContent');
         
         demoForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const demoUrl = document.getElementById('demoUrl').value;
-            
+            // Validoi URL
+            const demoUrl = demoUrlInput.value.trim();
             if (!demoUrl) {
-                errorMessage.textContent = 'Syötä URL-osoite';
+                errorMessage.textContent = 'URL-osoite puuttuu';
                 demoError.classList.remove('d-none');
                 return;
             }
@@ -442,88 +442,49 @@
                 return;
             }
             
-            // Piilota virheilmoitus jos näkyvissä
+            // Piilota virheviesti ja näytä latausanimaatio
             demoError.classList.add('d-none');
-            demoResult.classList.add('d-none');
-            
-            // Näytä latausanimaatio
             demoLoading.classList.remove('d-none');
-            demoLoading.innerHTML = `
-                <div class="text-center p-3">
-                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
-                        <span class="visually-hidden">Ladataan...</span>
-                    </div>
-                    <h5 class="mb-2">Analysointi käynnissä</h5>
-                    <p class="mb-1">Tekoäly analysoi nyt asuntoa ja sen tietoja...</p>
-                    <p class="mb-0"><strong>Arvioitu kesto: noin 40 sekuntia</strong></p>
-                    <div class="progress mt-3">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
-                    </div>
-                </div>
-            `;
             
-            // Simuloidaan latauspalkkia
-            const progressBar = demoLoading.querySelector('.progress-bar');
-            let progress = 0;
-            const progressInterval = setInterval(() => {
-                progress += 2.5;
-                if (progress > 100) {
-                    clearInterval(progressInterval);
-                } else {
-                    progressBar.style.width = progress + '%';
-                }
-            }, 1000);
-            
-            // Tee API-kutsu
+            // Lähetä pyyntö API:lle
             fetch('/api/demo-analyze', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ url: demoUrl }),
+                body: JSON.stringify({
+                    url: demoUrl
+                })
             })
-            .then(response => {
-                clearInterval(progressInterval);
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.error || 'Virhe analysoinnissa');
-                    });
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
                 // Piilota latausanimaatio
                 demoLoading.classList.add('d-none');
                 
-                // Näytä tulos
-                demoResult.classList.remove('d-none');
-                
-                // Aseta otsikko, jos saatavilla
-                let title = '';
-                
-                // Etsi otsikko analyysistä (ensimmäinen rivi joka alkaa #-merkillä)
-                const lines = data.analysis.split('\n');
-                for (let line of lines) {
-                    if (line.startsWith('# ')) {
-                        title = line.replace('# ', '');
-                        break;
-                    }
+                if (data.error) {
+                    // Näytä virheviesti
+                    errorMessage.textContent = data.error;
+                    demoError.classList.remove('d-none');
+                    return;
                 }
                 
-                demoTitle.textContent = title;
+                // Näytä tulos
+                const analysisText = data.analysis || "Ei analyysituloksia.";
+                demoAnalysisContent.innerHTML = marked.parse(analysisText);
                 
-                // Aseta sisältö
-                const contentContainer = demoPreview.querySelector('.markdown-content');
-                contentContainer.innerHTML = marked.parse(data.analysis);
+                demoResult.classList.remove('d-none');
+                
+                // Vieritä tulos näkyviin
+                demoResult.scrollIntoView({behavior: 'smooth'});
             })
             .catch(error => {
-                clearInterval(progressInterval);
                 // Piilota latausanimaatio
                 demoLoading.classList.add('d-none');
                 
-                // Näytä virheilmoitus
-                errorMessage.textContent = error.message || 'Virhe analysoinnissa';
+                // Näytä virheviesti
+                errorMessage.textContent = 'Verkkovirhe. Tarkista yhteytesi ja yritä uudelleen.';
                 demoError.classList.remove('d-none');
+                console.error('Error:', error);
             });
         });
     });
