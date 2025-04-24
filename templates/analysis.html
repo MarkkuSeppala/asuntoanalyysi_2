@@ -6,45 +6,112 @@
 <!-- Lisätään Markdown-tuen kirjasto -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
-    .analysis-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
+    :root {
+        --primary-color: #F1EFEC;
+        --secondary-color: #D4C9BE;
+        --accent-color: #123458;
+        --neutral-color: #030303;
     }
     
-    .analysis-header h2 {
-        margin: 0;
+    body {
+        background-color: var(--primary-color);
     }
     
-    .actions {
-        display: flex;
-        gap: 10px;
+    .container-narrow {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    .page-title {
+        color: var(--accent-color);
+        font-weight: 700;
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .btn-accent {
+        background-color: var(--accent-color);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+    }
+    
+    .btn-accent:hover {
+        background-color: #1a4b7c;
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(18, 52, 88, 0.15);
+    }
+    
+    .btn-outline-accent {
+        background-color: transparent;
+        color: var(--accent-color);
+        border: 1px solid var(--accent-color);
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-outline-accent:hover {
+        background-color: var(--accent-color);
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(18, 52, 88, 0.15);
+    }
+    
+    .analysis-card {
+        background-color: white;
+        border-radius: 12px;
+        border: none;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        margin-bottom: 30px;
+        border-bottom: 4px solid transparent;
+    }
+    
+    .analysis-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        border-bottom: 4px solid var(--accent-color);
+    }
+    
+    .card-header-custom {
+        background-color: white;
+        color: var(--accent-color);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 20px 30px;
+        font-weight: 600;
     }
     
     .analysis-content {
         background-color: white;
         padding: 25px;
-        border-radius: 10px;
         line-height: 1.6;
+        font-size: 1.05rem;
     }
     
     .analysis-content h1 {
         font-size: 2rem;
         margin-top: 0;
         margin-bottom: 20px;
-        color: #0d6efd;
+        color: var(--accent-color);
     }
     
     .analysis-content h2 {
         font-size: 1.6rem;
         margin-top: 25px;
-        color: #0d6efd;
+        color: var(--accent-color);
     }
     
     .analysis-content h3 {
         font-size: 1.3rem;
         margin-top: 20px;
+        color: var(--neutral-color);
     }
     
     .analysis-content p {
@@ -84,10 +151,12 @@
     
     .risk-meter {
         width: 100%;
-        height: 5px;
-        background-color: #eee;
+        height: 8px;
+        background-color: var(--primary-color);
         margin: 10px 0;
         position: relative;
+        border-radius: 4px;
+        overflow: hidden;
     }
     
     .risk-meter-fill {
@@ -96,12 +165,14 @@
         position: absolute;
         top: 0;
         left: 0;
+        transition: width 1s ease-in-out;
     }
     
     .risk-score {
         font-size: 32px;
         font-weight: bold;
-        margin-right: 10px;
+        margin-right: 15px;
+        color: var(--accent-color);
     }
     
     .risk-label {
@@ -109,6 +180,7 @@
         padding: 2px 6px;
         border-radius: 4px;
         margin-left: 5px;
+        font-weight: 600;
     }
     
     .risk-level-low {
@@ -127,34 +199,54 @@
     }
     
     .risk-area-row {
-        padding: 10px 15px;
+        padding: 15px 20px;
         border-bottom: 1px solid #dee2e6;
     }
     
     .risk-area-row:last-child {
         border-bottom: none;
     }
+    
+    .risk-area-title {
+        font-weight: 600;
+        color: var(--accent-color);
+        margin-bottom: 5px;
+    }
+    
+    @media (max-width: 768px) {
+        .container-narrow {
+            padding: 0 15px;
+        }
+        
+        .card-header-custom {
+            padding: 15px 20px;
+        }
+        
+        .analysis-content {
+            padding: 20px 15px;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container container-narrow mt-5 mb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-3">{{ analysis.title or 'Nimetön analyysi' }}</h1>
+        <h1 class="page-title">{{ analysis.title or 'Nimetön analyysi' }}</h1>
         <div>
-            <a href="{{ url_for('download_analysis', analysis_id=analysis.id) }}" class="btn btn-outline-primary me-2">
+            <a href="{{ url_for('download_analysis', analysis_id=analysis.id) }}" class="btn btn-outline-accent me-2">
                 <i class="fas fa-download"></i> Lataa
             </a>
-            <a href="{{ url_for('list_analyses') }}" class="btn btn-outline-secondary">
+            <a href="{{ url_for('list_analyses') }}" class="btn btn-outline-accent">
                 <i class="fas fa-arrow-left"></i> Takaisin
             </a>
         </div>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+    <div class="analysis-card shadow">
+        <div class="card-header-custom d-flex justify-content-between align-items-center">
             <div>
-                <strong>Kohde:</strong> {{ analysis.property_url }}
+                <strong>Kohde:</strong> <a href="{{ analysis.property_url }}" target="_blank" class="text-decoration-none">{{ analysis.property_url }}</a>
             </div>
             <small>Luotu: {{ analysis.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
         </div>
@@ -165,19 +257,19 @@
     </div>
     
     {% if risk_analysis %}
-    <div class="card shadow mb-4">
-        <div class="card-header bg-light">
+    <div class="analysis-card shadow">
+        <div class="card-header-custom">
             <h3 class="mb-0">Riskianalyysi</h3>
         </div>
         <div class="card-body">
             <div class="d-flex align-items-center mb-4">
                 <div class="risk-score">{{ risk_analysis.kokonaisriskitaso }}</div>
                 <div class="flex-grow-1">
-                    <div>Kokonaisriskitaso</div>
+                    <div class="fw-bold">Kokonaisriskitaso</div>
                     <div class="risk-meter">
                         <div class="risk-meter-fill" style="width: {{ risk_analysis.kokonaisriskitaso * 10 }}%;"></div>
                     </div>
-                    <div class="text-muted small">
+                    <div class="text-muted small mt-1">
                         {% if risk_analysis.kokonaisriskitaso <= 3 %}
                             <span class="risk-label risk-level-low">Matala riski</span>
                         {% elif risk_analysis.kokonaisriskitaso <= 6 %}
@@ -194,14 +286,14 @@
                 <div class="list-group-item risk-area-row">
                     <div class="d-flex align-items-center">
                         <div class="flex-grow-1">
-                            <h5>{{ riski.osa_alue }}</h5>
+                            <h5 class="risk-area-title">{{ riski.osa_alue }}</h5>
                             {% if riski.kuvaus %}
                             <p class="mb-1">{{ riski.kuvaus }}</p>
                             {% endif %}
                             <div class="risk-meter mt-2">
                                 <div class="risk-meter-fill" style="width: {{ riski.riski_taso * 10 }}%;"></div>
                             </div>
-                            <div class="d-flex justify-content-between">
+                            <div class="d-flex justify-content-between mt-1">
                                 <div class="text-muted small">
                                     {% if riski.riski_taso <= 3 %}
                                         <span class="risk-label risk-level-low">Matala ({{ riski.riski_taso }})</span>
