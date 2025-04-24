@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Asuntoanalyysi{% endblock %}</title>
+    <title>{% block title %}Kotolyysi{% endblock %}</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
@@ -15,7 +19,18 @@
             --primary-color: #F1EFEC;
             --secondary-color: #D4C9BE;
             --accent-color: #123458;
+            --accent-light: #2a4d77;
             --neutral-color: #030303;
+        }
+        
+        body {
+            font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        .navbar {
+            padding: 15px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
         
         .navbar-dark.bg-primary {
@@ -26,22 +41,93 @@
             background-color: var(--primary-color) !important;
         }
         
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.6rem;
+            letter-spacing: -0.5px;
+        }
+        
+        .navbar-brand .brand-accent {
+            color: var(--secondary-color);
+        }
+        
+        .nav-link {
+            font-weight: 500;
+            padding: 8px 16px !important;
+            transition: all 0.2s ease;
+            border-radius: 6px;
+            margin: 0 3px;
+        }
+        
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .navbar-nav .nav-item.active .nav-link {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        .navbar .btn {
+            padding: 8px 16px;
+            font-weight: 600;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .dropdown-item {
+            padding: 8px 15px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        .dropdown-item:hover {
+            background-color: rgba(18, 52, 88, 0.1);
+        }
+        
         .btn-primary {
             background-color: var(--accent-color);
             border-color: var(--accent-color);
         }
         
         .btn-primary:hover {
-            background-color: #1a4b7c;
-            border-color: #1a4b7c;
+            background-color: var(--accent-light);
+            border-color: var(--accent-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(18, 52, 88, 0.2);
+        }
+        
+        .btn-outline-light {
+            border-width: 2px;
         }
         
         .btn-outline-light:hover {
             color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(255, 255, 255, 0.2);
         }
         
         .text-primary {
             color: var(--accent-color) !important;
+        }
+        
+        @media (max-width: 992px) {
+            .navbar-collapse {
+                background-color: var(--accent-color);
+                padding: 20px;
+                border-radius: 8px;
+                margin-top: 10px;
+            }
+            
+            .nav-item {
+                margin-bottom: 5px;
+            }
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -50,24 +136,24 @@
     <!-- Navigaatiopalkki -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">Asuntoanalyysi</a>
+            <a class="navbar-brand" href="{{ url_for('index') }}">Koto<span class="brand-accent">lyysi</span></a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 {% if current_user.is_authenticated %}
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}"><i class="fas fa-home"></i> Etusivu</a>
+                    <li class="nav-item {{ 'active' if request.path == url_for('index') else '' }}">
+                        <a class="nav-link" href="{{ url_for('index') }}"><i class="fas fa-home me-1"></i> Etusivu</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('list_analyses') }}"><i class="fas fa-list"></i> Analyysit</a>
+                    <li class="nav-item {{ 'active' if request.path == url_for('list_analyses') else '' }}">
+                        <a class="nav-link" href="{{ url_for('list_analyses') }}"><i class="fas fa-list me-1"></i> Analyysit</a>
                     </li>
                 </ul>
                 {% else %}
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.login') }}"><i class="fas fa-info-circle"></i> Kirjaudu sisään käyttääksesi sovellusta</a>
+                        <a class="nav-link" href="{{ url_for('auth.login') }}"><i class="fas fa-info-circle me-1"></i> Kirjaudu sisään käyttääksesi sovellusta</a>
                     </li>
                 </ul>
                 {% endif %}
@@ -75,20 +161,20 @@
                     {% if current_user.is_authenticated %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user"></i> {{ current_user.username }}
+                            <i class="fas fa-user-circle me-1"></i> {{ current_user.username }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i class="fas fa-id-card"></i> Profiili</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i class="fas fa-id-card me-2"></i> Profiili</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Kirjaudu ulos</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-2"></i> Kirjaudu ulos</a></li>
                         </ul>
                     </li>
                     {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link btn btn-outline-light btn-sm me-2" href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> Kirjaudu</a>
+                    <li class="nav-item me-2">
+                        <a class="nav-link btn btn-outline-light" href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt me-1"></i> Kirjaudu</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link btn btn-light btn-sm text-primary" href="{{ url_for('auth.register') }}"><i class="fas fa-user-plus"></i> Rekisteröidy</a>
+                        <a class="nav-link btn btn-light text-primary" href="{{ url_for('auth.register') }}"><i class="fas fa-user-plus me-1"></i> Rekisteröidy</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -101,7 +187,7 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                    <div class="alert alert-{{ category }} shadow-sm">{{ message }}</div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
@@ -115,7 +201,7 @@
     <!-- Footer -->
     <footer class="bg-light py-4 mt-5">
         <div class="container text-center">
-            <p class="mb-0">&copy; {{ now.year if now else 2023 }} Asuntoanalyysi - Kiinteistöanalyysi tekoälyn avulla</p>
+            <p class="mb-0">&copy; {{ now.year if now else 2023 }} Kotolyysi - Kiinteistöanalyysi tekoälyn avulla</p>
         </div>
     </footer>
 
