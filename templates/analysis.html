@@ -161,11 +161,27 @@
     
     .risk-meter-fill {
         height: 100%;
-        background-color: #dc3545;
         position: absolute;
         top: 0;
         left: 0;
         transition: width 1s ease-in-out;
+    }
+    
+    /* Risk color classes based on score */
+    .risk-low {
+        background: linear-gradient(to right, #3498db, #64b5f6) !important; /* Bluish gradient */
+    }
+    
+    .risk-medium {
+        background: linear-gradient(to right, #4caf50, #8bc34a) !important; /* Greenish gradient */
+    }
+    
+    .risk-high {
+        background: linear-gradient(to right, #ffc107, #ffeb3b) !important; /* Yellowish gradient */
+    }
+    
+    .risk-critical {
+        background: linear-gradient(to right, #f44336, #e57373) !important; /* Reddish gradient */
     }
     
     .risk-score {
@@ -259,21 +275,22 @@
     {% if risk_analysis %}
     <div class="analysis-card shadow">
         <div class="card-header-custom">
-            <h3 class="mb-0">Riskianalyysi</h3>
+            <h3 class="mb-0 d-flex align-items-center">Riskianalyysi <span class="ms-2 risk-score">{{ risk_analysis.kokonaisriskitaso }}</span><span class="ms-1 text-muted">/10</span></h3>
         </div>
         <div class="card-body">
             <div class="d-flex align-items-center mb-4">
-                <div class="risk-score">{{ risk_analysis.kokonaisriskitaso }}</div>
                 <div class="flex-grow-1">
                     <div class="fw-bold">Kokonaisriskitaso</div>
                     <div class="risk-meter">
-                        <div class="risk-meter-fill" style="width: {{ risk_analysis.kokonaisriskitaso * 10 }}%;"></div>
+                        <div class="risk-meter-fill {% if risk_analysis.kokonaisriskitaso <= 3.4 %}risk-low{% elif risk_analysis.kokonaisriskitaso <= 5.5 %}risk-medium{% elif risk_analysis.kokonaisriskitaso <= 6.9 %}risk-high{% else %}risk-critical{% endif %}" style="width: {{ risk_analysis.kokonaisriskitaso * 10 }}%;"></div>
                     </div>
                     <div class="text-muted small mt-1">
-                        {% if risk_analysis.kokonaisriskitaso <= 3 %}
+                        {% if risk_analysis.kokonaisriskitaso <= 3.4 %}
                             <span class="risk-label risk-level-low">Matala riski</span>
-                        {% elif risk_analysis.kokonaisriskitaso <= 6 %}
+                        {% elif risk_analysis.kokonaisriskitaso <= 5.5 %}
                             <span class="risk-label risk-level-medium">Keskitason riski</span>
+                        {% elif risk_analysis.kokonaisriskitaso <= 6.9 %}
+                            <span class="risk-label risk-level-medium">Kohonnut riski</span>
                         {% else %}
                             <span class="risk-label risk-level-high">Korkea riski</span>
                         {% endif %}
@@ -291,14 +308,16 @@
                             <p class="mb-1">{{ riski.kuvaus }}</p>
                             {% endif %}
                             <div class="risk-meter mt-2">
-                                <div class="risk-meter-fill" style="width: {{ riski.riski_taso * 10 }}%;"></div>
+                                <div class="risk-meter-fill {% if riski.riski_taso <= 3.4 %}risk-low{% elif riski.riski_taso <= 5.5 %}risk-medium{% elif riski.riski_taso <= 6.9 %}risk-high{% else %}risk-critical{% endif %}" style="width: {{ riski.riski_taso * 10 }}%;"></div>
                             </div>
                             <div class="d-flex justify-content-between mt-1">
                                 <div class="text-muted small">
-                                    {% if riski.riski_taso <= 3 %}
+                                    {% if riski.riski_taso <= 3.4 %}
                                         <span class="risk-label risk-level-low">Matala ({{ riski.riski_taso }})</span>
-                                    {% elif riski.riski_taso <= 6 %}
+                                    {% elif riski.riski_taso <= 5.5 %}
                                         <span class="risk-label risk-level-medium">Keskitaso ({{ riski.riski_taso }})</span>
+                                    {% elif riski.riski_taso <= 6.9 %}
+                                        <span class="risk-label risk-level-medium">Kohonnut ({{ riski.riski_taso }})</span>
                                     {% else %}
                                         <span class="risk-label risk-level-high">Korkea ({{ riski.riski_taso }})</span>
                                     {% endif %}
