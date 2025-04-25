@@ -325,6 +325,82 @@
             padding-left: 50px;
         }
     }
+    
+    /* Drag and drop area styles */
+    .drag-drop-area {
+        border: 2px dashed #d4c9be;
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+        margin-top: 20px;
+        background-color: #f9f8f7;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .drag-drop-area.dragover {
+        background-color: rgba(18, 52, 88, 0.05);
+        border-color: var(--accent-color);
+    }
+    
+    .drag-drop-icon {
+        font-size: 2.5rem;
+        color: var(--accent-color);
+        margin-bottom: 15px;
+    }
+    
+    .drag-drop-text {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+        color: var(--neutral-color);
+    }
+    
+    .drag-drop-subtext {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+    
+    .file-preview {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        background-color: #e9ecef;
+        border-radius: 6px;
+        margin-top: 15px;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .file-preview-icon {
+        font-size: 1.25rem;
+        color: var(--accent-color);
+        margin-right: 10px;
+    }
+    
+    .file-preview-info {
+        flex-grow: 1;
+    }
+    
+    .file-preview-name {
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+    
+    .file-preview-size {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .file-preview-remove {
+        color: #dc3545;
+        cursor: pointer;
+        font-size: 1.25rem;
+        transition: all 0.2s ease;
+    }
+    
+    .file-preview-remove:hover {
+        color: #bd2130;
+    }
 </style>
 {% endblock %}
 
@@ -370,6 +446,27 @@
                             <p class="small text-muted mb-0">Tuemme tällä hetkellä Oikotien ja Etuovin asuntoilmoituksia.</p>
                         </div>
                     </form>
+                    
+                    <div class="mt-4 pt-3 border-top">
+                        <h5>Tai pudota PDF-tiedosto suoraan tähän</h5>
+                        <div id="drag-drop-area" class="drag-drop-area">
+                            <input type="file" id="file-input" accept=".pdf" style="display: none;">
+                            <div class="drag-drop-icon">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <p class="drag-drop-text">Raahaa ja pudota PDF-tiedosto tähän</p>
+                            <p class="drag-drop-subtext">tai <span class="text-primary">selaa tiedostoja</span></p>
+                            <p class="drag-drop-subtext mt-2">Hyväksytään Etuovi ja Oikotie PDF-esitteet</p>
+                        </div>
+                        <div id="file-preview" style="display: none;" class="file-preview">
+                            <span class="file-preview-icon"><i class="fas fa-file-pdf"></i></span>
+                            <div class="file-preview-info">
+                                <p class="file-preview-name" id="file-name"></p>
+                                <p class="file-preview-size" id="file-size"></p>
+                            </div>
+                            <span class="file-preview-remove" id="file-remove"><i class="fas fa-times"></i></span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -477,6 +574,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = document.getElementById('submit-btn');
     const loadingOverlay = document.getElementById('loading-overlay');
     
+    // Drag and drop elements
+    const dragDropArea = document.getElementById('drag-drop-area');
+    const fileInput = document.getElementById('file-input');
+    const filePreview = document.getElementById('file-preview');
+    const fileName = document.getElementById('file-name');
+    const fileSize = document.getElementById('file-size');
+    const fileRemove = document.getElementById('file-remove');
+    let selectedFile = null;
+    
+    // Handle form submission
     form.addEventListener('submit', function(e) {
         // Validate URL format
         const url = urlInput.value.trim();
@@ -498,6 +605,89 @@ document.addEventListener('DOMContentLoaded', function() {
         urlInput.classList.remove('is-invalid');
         urlError.classList.remove('show');
     });
+    
+    // Drag and drop functionality
+    dragDropArea.addEventListener('click', function() {
+        fileInput.click();
+    });
+    
+    fileInput.addEventListener('change', function(e) {
+        handleFileSelect(e.target.files);
+    });
+    
+    // Drag and drop events
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dragDropArea.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dragDropArea.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        dragDropArea.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight() {
+        dragDropArea.classList.add('dragover');
+    }
+    
+    function unhighlight() {
+        dragDropArea.classList.remove('dragover');
+    }
+    
+    // Handle file drop
+    dragDropArea.addEventListener('drop', function(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        handleFileSelect(files);
+    });
+    
+    // Process the selected file
+    function handleFileSelect(files) {
+        if (files.length === 0) return;
+        
+        const file = files[0];
+        
+        // Check if it's a PDF
+        if (file.type !== 'application/pdf') {
+            alert('Ole hyvä ja valitse PDF-tiedosto.');
+            return;
+        }
+        
+        selectedFile = file;
+        
+        // Update the file preview
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        filePreview.style.display = 'flex';
+        
+        // Here you would typically send the file to the server
+        // For now, we're just showing a preview as requested
+    }
+    
+    // Handle file removal
+    fileRemove.addEventListener('click', function() {
+        selectedFile = null;
+        fileInput.value = '';
+        filePreview.style.display = 'none';
+    });
+    
+    // Helper function to format file size
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
 });
 </script>
 {% endblock %} 
