@@ -97,7 +97,7 @@
     }
     
     .feature-section {
-        padding: 100px 0;
+        padding: 0;
         position: relative;
         z-index: 2;
     }
@@ -306,6 +306,12 @@
         </div>
     </div>
 </section>
+
+<!-- Logo Section -->
+<div style="height: 100px; display: flex; justify-content: center; align-items: center; gap: 40px; margin-bottom: 30px;">
+    <img src="{{ url_for('static', filename='img/Etuovi_Logo.png') }}" alt="Etuovi Logo" style="max-height: 50px;">
+    <img src="{{ url_for('static', filename='img/Oikotie_Logo.png') }}" alt="Oikotie Logo" style="max-height: 50px;">
+</div>
 
 <!-- Features Section -->
 <section class="feature-section">
