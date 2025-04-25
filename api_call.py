@@ -266,6 +266,11 @@ def save_analysis_to_file(analysis: str, markdown_data: str, property_url: str =
         str: Tallennetun tiedoston polku
     """
     try:
+        # Tarkistetaan että analyysi on oikeasti tekstiä eikä tyhjä
+        if not analysis or not isinstance(analysis, str) or not analysis.strip():
+            logger.error("Analyysi on tyhjä tai ei ole tekstimuodossa - ei tallenneta tietokantaan")
+            return ""
+            
         # Luodaan yksilöllinen tiedostonimi aikaleiman ja datan tiivisteen avulla
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         
@@ -311,11 +316,32 @@ def save_analysis_to_file(analysis: str, markdown_data: str, property_url: str =
                     user_id=current_user.id
                 )
                 
-                # Lisätään tietokantaan
-                db.session.add(db_analysis)
-                db.session.commit()
+                # Varmistetaan että content-kentässä on sisältöä
+                if not db_analysis.content or len(db_analysis.content.strip()) == 0:
+                    logger.error(f"Virhe: content-kenttä on tyhjä. Alkuperäisen analyysin pituus: {len(analysis)} merkkiä.")
+                    db_analysis.content = "Tämä on virheellisesti tallennettu analyysi. Pyydä ylläpitäjää tarkistamaan järjestelmän toiminta."
+                    
+                # Tarkistetaan onko URL:lla jo olemassa analyysiä
+                existing_analysis = None
+                if property_url:
+                    existing_analysis = Analysis.query.filter_by(
+                        property_url=property_url, 
+                        user_id=current_user.id
+                    ).first()
                 
-                logger.info(f"Analyysi tallennettu tietokantaan käyttäjälle {current_user.username}")
+                if existing_analysis:
+                    # Päivitetään olemassa oleva analyysi
+                    existing_analysis.content = analysis
+                    existing_analysis.filename = filename
+                    if address_or_title:
+                        existing_analysis.title = address_or_title
+                    db.session.commit()
+                    logger.info(f"Analyysi päivitetty tietokantaan ID:llä {existing_analysis.id}, sisällön pituus: {len(analysis)} merkkiä")
+                else:
+                    # Lisätään uusi analyysi tietokantaan
+                    db.session.add(db_analysis)
+                    db.session.commit()
+                    logger.info(f"Analyysi tallennettu tietokantaan ID:llä {db_analysis.id}, sisällön pituus: {len(analysis)} merkkiä")
             except Exception as db_err:
                 logger.error(f"Virhe analyysin tallentamisessa tietokantaan: {db_err}")
                 # Jatketaan, vaikka tietokantaan tallennus epäonnistuisi

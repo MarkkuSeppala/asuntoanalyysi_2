@@ -252,6 +252,11 @@ def analyze():
         # Varmistetaan että vastaus on puhdistettu (API:ssa puhdistus tehdään jo, tämä on varmuuden vuoksi)
         analysis_response = api_call.sanitize_markdown_response(analysis_response)
         
+        # Tarkistetaan että analyysivastaus on oikeasti tekstiä eikä tyhjä
+        if not analysis_response or not isinstance(analysis_response, str) or not analysis_response.strip():
+            logger.error("Analyysivastauksessa ei ole tekstiä")
+            return jsonify({'error': 'API-analyysi palautti tyhjän vastauksen'}), 500
+        
         # Sanitoidaan sisältö ennen template-renderöintiä_
         sanitized_markdown = _sanitize_content(markdown_data)
         sanitized_analysis = _sanitize_content(analysis_response)
@@ -268,6 +273,13 @@ def analyze():
             # Käytetään olemassa olevaa analyysiä
             analysis_id = analysis.id
             logger.info(f"Käytetään olemassa olevaa analyysiä ID: {analysis_id}")
+            
+            # Varmistetaan että analyysin sisältö on päivitetty
+            if not analysis.content or len(analysis.content.strip()) == 0:
+                logger.warning(f"Analyysissä ID {analysis_id} ei ole sisältöä, päivitetään se")
+                analysis.content = sanitized_analysis
+                db.session.commit()
+                logger.info(f"Analyysin sisältö päivitetty, uusi pituus: {len(analysis.content)} merkkiä")
         else:
             # Tätä voi tapahtua, koska api_call.get_analysis tallentaa analyysin tietokantaan
             # Yritetään hakea juuri luotu analyysi URL:n perusteella
@@ -426,6 +438,11 @@ def view_analysis(analysis_id):
                 logger.info(f"Riskianalyysi löydetty analyysille {analysis_id}")
         except Exception as e:
             logger.error(f"Virhe riskianalyysin hakemisessa: {e}")
+        
+        # Debug-lokitus: Tarkistetaan analyysin sisältö
+        content_length = len(analysis.content) if analysis.content else 0
+        content_preview = analysis.content[:100] if analysis.content else "None"
+        logger.info(f"Analyysi ID {analysis_id}: sisällön pituus {content_length} merkkiä, alku: {content_preview}")
             
         return render_template('analysis.html', 
                                analysis=analysis, 

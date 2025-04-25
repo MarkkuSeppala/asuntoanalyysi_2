@@ -400,6 +400,8 @@
         }
     }
 </style>
+<!-- Lisätään Markdown-tuen kirjasto -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -554,17 +556,40 @@
         const analysisContent = document.getElementById('analysisContent');
         
         try {
+            // Näytetään analysisRawContent-elementin olemassaolo
+            console.log('analysisRawContent exists:', !!document.getElementById('analysisRawContent'));
+            
             // Haetaan sisältö elementistä datasetinä
-            const content = document.getElementById('analysisRawContent').dataset.content;
+            const rawContentElement = document.getElementById('analysisRawContent');
+            
+            // Tarkistetaan onko elementti olemassa
+            if (!rawContentElement) {
+                console.error('analysisRawContent element not found');
+                analysisContent.innerHTML = '<p class="error-message">Analyysin sisältöelementtiä ei löytynyt.</p>';
+                return;
+            }
+            
+            // Lokitetaan dataset
+            console.log('Dataset:', rawContentElement.dataset);
+            
+            const content = rawContentElement.dataset.content;
+            
+            // Lokitetaan sisältö ja sen pituus
+            console.log('Content length:', content ? content.length : 0);
+            console.log('Content first 100 chars:', content ? content.substring(0, 100) : 'null or empty');
             
             if (content && content.trim()) {
+                // Merkitään että sisältöä käsitellään
+                console.log('Processing content with marked.js');
                 analysisContent.innerHTML = marked.parse(content);
+                console.log('Content rendered successfully');
             } else {
-                analysisContent.innerHTML = '<p class="error-message">Analyysin sisältöä ei voitu ladata.</p>';
+                console.error('Content is empty or only whitespace');
+                analysisContent.innerHTML = '<p class="error-message">Analyysin sisältöä ei voitu ladata. Sisältö puuttuu.</p>';
             }
         } catch (error) {
             console.error('Virhe markdown-käsittelyssä:', error);
-            analysisContent.innerHTML = '<p class="error-message">Virhe sisällön käsittelyssä.</p>';
+            analysisContent.innerHTML = '<p class="error-message">Virhe sisällön käsittelyssä: ' + error.message + '</p>';
         }
     });
 </script>
