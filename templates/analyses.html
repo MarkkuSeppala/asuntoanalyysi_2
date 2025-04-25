@@ -99,10 +99,6 @@
         font-weight: 600;
     }
     
-    a:hover .analysis-title {
-        text-decoration: underline;
-    }
-    
     .analysis-date {
         color: #6c757d;
         font-size: 0.9rem;
@@ -117,21 +113,8 @@
         white-space: nowrap;
     }
     
-    a:hover .analysis-url {
-        opacity: 1;
-        text-decoration: underline;
-    }
-    
     .analysis-actions {
         margin-top: 15px;
-        display: flex;
-        justify-content: flex-end;
-    }
-    
-    .analysis-actions a {
-        text-decoration: none;
-        z-index: 10;
-        position: relative;
     }
     
     .empty-state {
@@ -177,28 +160,21 @@
         <div class="analyses-list">
             {% for analysis in analyses %}
                 <div class="analysis-item">
-                    <div class="analysis-link">
+                    <a href="{{ url_for('view_analysis', analysis_id=analysis.id) }}" class="analysis-link">
                         <div class="d-flex justify-content-between align-items-center">
-                            <a href="{{ url_for('view_analysis', analysis_id=analysis.id) }}" class="text-decoration-none">
-                                <h5 class="analysis-title mb-0">{{ analysis.title or 'Nimetön analyysi' }}</h5>
-                            </a>
+                            <h5 class="analysis-title mb-0">{{ analysis.title or 'Nimetön analyysi' }}</h5>
                             <span class="analysis-date">{{ analysis.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
                         </div>
-                        <a href="{{ analysis.property_url }}" target="_blank" class="text-decoration-none">
-                            <p class="analysis-url mb-2">{{ analysis.property_url }}</p>
-                        </a>
-                        <div class="analysis-actions mt-3">
+                        <p class="analysis-url mb-2">{{ analysis.property_url }}</p>
+                        <div class="d-flex justify-content-end mt-3">
                             <a href="{{ url_for('download_analysis', analysis_id=analysis.id) }}" class="btn btn-sm btn-outline-accent me-2">
                                 <i class="fas fa-download"></i> Lataa
                             </a>
-                            <a href="{{ url_for('view_analysis', analysis_id=analysis.id) }}" class="btn btn-sm btn-accent me-2">
+                            <a href="{{ url_for('view_analysis', analysis_id=analysis.id) }}" class="btn btn-sm btn-accent">
                                 <i class="fas fa-eye"></i> Näytä analyysi
                             </a>
-                            <a href="{{ url_for('analyze', url=analysis.property_url|urlencode) }}" class="btn btn-sm btn-outline-accent">
-                                <i class="fas fa-chart-line"></i> Analyze sivu
-                            </a>
                         </div>
-                    </div>
+                    </a>
                 </div>
             {% endfor %}
         </div>
