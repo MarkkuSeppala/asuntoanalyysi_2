@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for, flash, send_file, abort
 import api_call
 from flask_login import LoginManager, current_user, login_required
 from models import db, User, Analysis, RiskAnalysis
@@ -16,6 +16,7 @@ import traceback
 import time
 import etuovi_downloader  # Import the etuovi_downloader
 import oikotie_downloader  # Import the oikotie_downloader
+import tempfile
 
 # Asetetaan lokitus
 logging.basicConfig(
@@ -476,6 +477,144 @@ def download_analysis(analysis_id):
     except Exception as e:
         logger.exception(f"Virhe analyysin lataamisessa: {e}")
         return jsonify({'error': f'Virhe analyysin lataamisessa: {str(e)}'}), 500
+
+@app.route('/upload-pdf', methods=['POST'])
+@login_required
+def upload_pdf():
+    """Handle PDF uploads and process them using the same pipeline as Oikotie downloader"""
+    try:
+        # Check if the user is allowed to make API calls
+        if not current_user.can_make_api_call():
+            return render_template('error.html', 
+                                error_title="API-kutsujen rajoitus", 
+                                error_message="Olet käyttänyt kaikki API-kutsusi (2). Päivitä tilisi admin-tasoon jatkaaksesi käyttöä."), 403
+        
+        # Check if the post request has the file part
+        if 'pdf_file' not in request.files:
+            return jsonify({'error': 'PDF-tiedosto puuttuu'}), 400
+            
+        pdf_file = request.files['pdf_file']
+        
+        # If user does not select file, browser also
+        # submit an empty part without filename
+        if pdf_file.filename == '':
+            return jsonify({'error': 'PDF-tiedostoa ei valittu'}), 400
+            
+        if pdf_file:
+            # Create a temporary file to save the uploaded PDF
+            with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as temp:
+                pdf_path = temp.name
+                pdf_file.save(pdf_path)
+                
+            logger.info(f"PDF-tiedosto tallennettu väliaikaisesti: {pdf_path}")
+            
+            try:
+                # Extract text from PDF using the same function as in oikotie_downloader
+                logger.info("Puretaan tekstiä PDF-tiedostosta...")
+                text_content = oikotie_downloader.extract_text_from_pdf(pdf_path)
+                
+                # Create property ID based on the file name and timestamp
+                file_stem = os.path.splitext(pdf_file.filename)[0]
+                property_id = f"{file_stem}_{int(time.time())}"
+                
+                # Format text into markdown
+                logger.info("Muotoillaan teksti markdown-muotoon...")
+                markdown_data = f"""# PDF-asuntoilmoitus
+
+## Perustiedot
+Lähde: Ladattu PDF
+Tiedostonimi: {pdf_file.filename}
+ID: {property_id}
+
+## Ilmoituksen sisältö
+{text_content}
+"""
+                
+                # Use OpenAI API to analyze the data
+                logger.info("Tehdään OpenAI API -kutsu analyysia varten")
+                analysis_response = api_call.get_analysis(markdown_data, property_id)
+                
+                if not analysis_response:
+                    logger.error("API-kutsu palautti tyhjän vastauksen")
+                    return jsonify({'error': 'API-analyysi epäonnistui'}), 500
+                    
+                # Ensure the response is sanitized
+                analysis_response = api_call.sanitize_markdown_response(analysis_response)
+                
+                # Sanitize content before template rendering
+                sanitized_markdown = _sanitize_content(markdown_data)
+                sanitized_analysis = _sanitize_content(analysis_response)
+                
+                # Increment API call count if user is not admin
+                if not current_user.is_admin:
+                    current_user.increment_api_call_count()
+                
+                # Get the analysis from database or create a new one
+                analysis = Analysis.query.filter_by(property_url=property_id, user_id=current_user.id).first()
+                analysis_id = None
+
+                if analysis:
+                    # Use existing analysis
+                    analysis_id = analysis.id
+                    logger.info(f"Käytetään olemassa olevaa analyysiä ID: {analysis_id}")
+                else:
+                    # This can happen because api_call.get_analysis saves the analysis to database
+                    # Try to get the just created analysis by URL
+                    analysis = Analysis.query.filter_by(property_url=property_id, user_id=current_user.id).first()
+                    if analysis:
+                        analysis_id = analysis.id
+                        logger.info(f"Löydettiin juuri luotu analyysi ID: {analysis_id}")
+
+                # Perform risk analysis from API response if analysis was found
+                riski_data = None
+                if analysis_id:
+                    try:
+                        logger.info("Tehdään riskianalyysi kohteesta")
+                        riski_data_json = riskianalyysi(analysis_response, analysis_id)
+                        logger.info(f"Saatiin riskianalyysin JSON vastaus pituudella: {len(riski_data_json)}")
+                        riski_data = json.loads(riski_data_json)
+                        logger.info(f"Riskianalyysi valmis: {riski_data.get('kokonaisriskitaso', 'N/A')}/10")
+                    except Exception as e:
+                        logger.error(f"Virhe riskianalyysissä: {e}")
+                        logger.error(traceback.format_exc())
+                
+                # Remove the temporary file
+                try:
+                    os.remove(pdf_path)
+                    logger.info("Tilapäinen PDF-tiedosto poistettu")
+                except Exception as e:
+                    logger.warning(f"Tilapäisen PDF-tiedoston poistaminen epäonnistui: {e}")
+                
+                # Render the results
+                return render_template('results.html', 
+                                    property_data=sanitized_markdown, 
+                                    analysis=sanitized_analysis,
+                                    riski_data=riski_data,
+                                    property_url=property_id,
+                                    analysis_id=analysis_id,
+                                    source='pdf_upload')
+                
+            except Exception as e:
+                logger.error(f"Virhe PDF:n käsittelyssä: {e}")
+                logger.error(traceback.format_exc())
+                
+                # Clean up temporary file if it exists
+                if os.path.exists(pdf_path):
+                    try:
+                        os.remove(pdf_path)
+                    except:
+                        pass
+                
+                return render_template('error.html', 
+                                    error_title="Virhe PDF-tiedoston käsittelyssä", 
+                                    error_message=f"PDF-tiedoston käsittelyssä tapahtui virhe: {str(e)}"), 500
+    
+    except Exception as e:
+        logger.error(f"Virhe PDF-latauksessa: {e}")
+        logger.error(traceback.format_exc())
+        return render_template('error.html', 
+                            error_title="Virhe PDF-latauksessa", 
+                            error_message=f"PDF-tiedoston lataamisessa tapahtui virhe: {str(e)}"), 500
 
 if __name__ == '__main__':
     # Luodaan templates-kansio, jos sitä ei ole

@@ -289,6 +289,82 @@
         to { opacity: 1; }
     }
     
+    /* Drag and drop styles */
+    .drag-drop-area {
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        padding: 30px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background-color: #f9f9f9;
+        margin-top: 10px;
+    }
+    
+    .drag-drop-area.dragover {
+        border-color: var(--accent-color);
+        background-color: rgba(18, 52, 88, 0.05);
+    }
+    
+    .drag-drop-icon {
+        font-size: 2rem;
+        color: #888;
+        margin-bottom: 10px;
+    }
+    
+    .drag-drop-text {
+        font-weight: 600;
+        color: #444;
+        margin-bottom: 5px;
+    }
+    
+    .drag-drop-subtext {
+        color: #777;
+        margin-bottom: 0;
+    }
+    
+    .file-preview {
+        display: flex;
+        align-items: center;
+        background-color: #f5f5f5;
+        border-radius: 8px;
+        padding: 12px 15px;
+        margin-top: 15px;
+    }
+    
+    .file-preview-icon {
+        font-size: 1.5rem;
+        color: var(--accent-color);
+        margin-right: 15px;
+    }
+    
+    .file-preview-info {
+        flex-grow: 1;
+    }
+    
+    .file-preview-name {
+        font-weight: 600;
+        margin-bottom: 3px;
+        color: #444;
+    }
+    
+    .file-preview-size {
+        color: #777;
+        font-size: 0.85rem;
+        margin-bottom: 0;
+    }
+    
+    .file-preview-remove {
+        color: #777;
+        cursor: pointer;
+        transition: color 0.2s ease;
+        padding: 5px;
+    }
+    
+    .file-preview-remove:hover {
+        color: #dc3545;
+    }
+    
     /* Responsive adjustments */
     @media (max-width: 992px) {
         .hero-title {
@@ -324,82 +400,6 @@
         .step-item {
             padding-left: 50px;
         }
-    }
-    
-    /* Drag and drop area styles */
-    .drag-drop-area {
-        border: 2px dashed #d4c9be;
-        border-radius: 8px;
-        padding: 30px;
-        text-align: center;
-        margin-top: 20px;
-        background-color: #f9f8f7;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-    
-    .drag-drop-area.dragover {
-        background-color: rgba(18, 52, 88, 0.05);
-        border-color: var(--accent-color);
-    }
-    
-    .drag-drop-icon {
-        font-size: 2.5rem;
-        color: var(--accent-color);
-        margin-bottom: 15px;
-    }
-    
-    .drag-drop-text {
-        font-size: 1.1rem;
-        margin-bottom: 10px;
-        color: var(--neutral-color);
-    }
-    
-    .drag-drop-subtext {
-        font-size: 0.9rem;
-        color: #6c757d;
-        margin-bottom: 0;
-    }
-    
-    .file-preview {
-        display: flex;
-        align-items: center;
-        padding: 10px;
-        background-color: #e9ecef;
-        border-radius: 6px;
-        margin-top: 15px;
-        animation: fadeIn 0.3s ease;
-    }
-    
-    .file-preview-icon {
-        font-size: 1.25rem;
-        color: var(--accent-color);
-        margin-right: 10px;
-    }
-    
-    .file-preview-info {
-        flex-grow: 1;
-    }
-    
-    .file-preview-name {
-        font-weight: 600;
-        margin-bottom: 0;
-    }
-    
-    .file-preview-size {
-        font-size: 0.8rem;
-        color: #6c757d;
-    }
-    
-    .file-preview-remove {
-        color: #dc3545;
-        cursor: pointer;
-        font-size: 1.25rem;
-        transition: all 0.2s ease;
-    }
-    
-    .file-preview-remove:hover {
-        color: #bd2130;
     }
 </style>
 {% endblock %}
@@ -667,8 +667,39 @@ document.addEventListener('DOMContentLoaded', function() {
         fileSize.textContent = formatFileSize(file.size);
         filePreview.style.display = 'flex';
         
-        // Here you would typically send the file to the server
-        // For now, we're just showing a preview as requested
+        // Create a form data object to send to the server
+        const formData = new FormData();
+        formData.append('pdf_file', file);
+        
+        // Show loading overlay
+        loadingOverlay.classList.add('show');
+        
+        // Submit the file to the server
+        fetch('{{ url_for("upload_pdf") }}', {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            // If we get a redirect, follow it
+            if (response.redirected) {
+                window.location.href = response.url;
+                return;
+            }
+            
+            // Otherwise, check for errors
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.error || 'Virhe tiedoston latauksessa');
+                });
+            }
+            
+            return response.text();
+        })
+        .catch(error => {
+            loadingOverlay.classList.remove('show');
+            alert('Virhe: ' + error.message);
+        });
     }
     
     // Handle file removal
