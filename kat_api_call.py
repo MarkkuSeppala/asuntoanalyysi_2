@@ -42,7 +42,33 @@ def get_property_data(markdown_data: str) -> str:
                     "content": [
                         {
                             "type": "input_text",
-                            "text": "Tehtävänäsi on poimia syötetystä kiinteistön myynti-ilmoituksesta seuraavat tiedot:\n\n- osoite (katu, kadunnumero ja kaupunki)\n- tyyppi (omakotitalo, kerrostalo, rivitalo, erillistalo, paritalo)\n- hinta (velaton myyntihinta)\n- rakennusvuosi\n\nLähetä tieto JSON-muodossa\n<esimerkki>\n{\n\"osoite\": {\n\"katu\": \"Esimerkkikatu 1\",\n\"kaupunki\": \"Helsinki\",\n\"postinumero\": \"00100\"\n},\n\"rakennustyyppi\": \"kerrostalo\",\n\"hinta\": \"145000\",\n\"rakennusvuosi\": \"2005\"\n}\n</esimerkki>"
+                            "text": """Tehtävänäsi on poimia syötetystä kiinteistön myynti-ilmoituksesta seuraavat tiedot:
+
+- osoite (katu, kadunnumero ja kaupunki)
+- tyyppi (asunnon tyyppi, joka PITÄÄ palauttaa avainsanalla "rakennustyyppi")
+- hinta (velaton myyntihinta)
+- rakennusvuosi
+
+Rakennustyypin tulee olla jokin seuraavista: "omakotitalo", "kerrostalo", "rivitalo", "erillistalo", "paritalo"
+Käytä aina samaa avainta "rakennustyyppi" tyypin määrittämiseen.
+
+Lähetä tieto JSON-muodossa
+
+<esimerkki>
+{
+  "osoite": {
+    "katu": "Esimerkkikatu 1",
+    "kaupunki": "Helsinki",
+    "postinumero": "00100"
+  },
+  "rakennustyyppi": "kerrostalo",
+  "hinta": "145000",
+  "rakennusvuosi": "2005"
+}
+</esimerkki>
+
+Käytä AINA rakennustyyppi-avainta (ei tyyppi, talotyyppi tai muita variaatioita).
+"""
                         },
                         {
                             "type": "input_text",
@@ -92,7 +118,7 @@ def save_property_data_to_db(property_data: str, analysis_id: int = None) -> int
         # Muunnetaan JSON-merkkijono sanakirjaksi
         try:
             data_dict = json.loads(property_data)
-            logger.info(f"JSON-merkkijono muunnettu sanakirjaksi onnistuneesti")
+            logger.info(f"JSON-merkkijono muunnettu sanakirjaksi onnistuneesti: {data_dict}")
         except json.JSONDecodeError as e:
             logger.error(f"Virhe JSON-merkkijonon muuntamisessa sanakirjaksi: {e}")
             return None
@@ -117,13 +143,76 @@ def save_property_data_to_db(property_data: str, analysis_id: int = None) -> int
             logger.warning(f"Hintaa ei voitu muuntaa numeeriseksi: {hinta_str}")
             hinta = None
         
-        # Haetaan rakennustyyppi
-        tyyppi = data_dict.get("rakennustyyppi", None)
+        # Haetaan rakennustyyppi eri mahdollisista avaimista
+        tyyppi = None
+        possible_type_keys = ["rakennustyyppi", "tyyppi", "talotyyppi", "asuntotyyppi", "type", "building_type"]
+        
+        for key in possible_type_keys:
+            if key in data_dict and data_dict[key]:
+                tyyppi = data_dict[key]
+                logger.info(f"Rakennustyyppi löytyi avaimella '{key}': {tyyppi}")
+                break
+                
+        if not tyyppi:
+            logger.warning(f"Rakennustyyppiä ei löytynyt JSON-datasta. Saatavilla olevat avaimet: {', '.join(data_dict.keys())}")
+        
+        # Normalisoidaan rakennustyyppi
+        if tyyppi:
+            # Muunnetaan kaikki pieniksi kirjaimiksi
+            tyyppi = tyyppi.lower()
+            
+            # Standardoi yleisimmät variaatiot
+            type_mapping = {
+                'kerrostaloasunto': 'kerrostalo',
+                'kerrostalo-osake': 'kerrostalo',
+                'kt': 'kerrostalo',
+                'kerros': 'kerrostalo',
+                'apartment': 'kerrostalo',
+                
+                'rivitaloasunto': 'rivitalo',
+                'rt': 'rivitalo',
+                'rivi': 'rivitalo',
+                'row house': 'rivitalo',
+                
+                'omakotitaloasunto': 'omakotitalo',
+                'omakotitalo-osake': 'omakotitalo',
+                'okt': 'omakotitalo',
+                'ok-talo': 'omakotitalo',
+                'detached house': 'omakotitalo',
+                
+                'erillistalo': 'erillistalo',
+                'erillinen': 'erillistalo',
+                'et': 'erillistalo',
+                
+                'paritalo': 'paritalo',
+                'pt': 'paritalo',
+                'semi-detached': 'paritalo'
+            }
+            
+            # Tarkistetaan täsmälliset vastaavuudet
+            if tyyppi in type_mapping:
+                tyyppi = type_mapping[tyyppi]
+            # Tarkistetaan osittaiset vastaavuudet
+            else:
+                for key, value in type_mapping.items():
+                    if key in tyyppi:
+                        tyyppi = value
+                        break
+            
+            # Varmistetaan, että tyyppi on joku sallituista arvoista
+            valid_types = ['omakotitalo', 'kerrostalo', 'rivitalo', 'erillistalo', 'paritalo']
+            if tyyppi not in valid_types:
+                logger.warning(f"Tyyppi '{tyyppi}' ei ole sallittu arvo. Käytetään 'tuntematon'.")
+                tyyppi = 'tuntematon'
+                
+            logger.info(f"Lopullinen normalisoitu rakennustyyppi: {tyyppi}")
         
         # Haetaan rakennusvuosi
         rakennusvuosi_str = data_dict.get("rakennusvuosi", None)
         try:
             rakennusvuosi = int(rakennusvuosi_str) if rakennusvuosi_str else None
+            if rakennusvuosi:
+                logger.info(f"Rakennusvuosi: {rakennusvuosi}")
         except:
             logger.warning(f"Rakennusvuotta ei voitu muuntaa kokonaisluvuksi: {rakennusvuosi_str}")
             rakennusvuosi = None
@@ -137,6 +226,8 @@ def save_property_data_to_db(property_data: str, analysis_id: int = None) -> int
             analysis_id=analysis_id
         )
         
+        logger.info(f"Luotu kohde: osoite={osoite}, tyyppi={tyyppi}, hinta={hinta}, rakennusvuosi={rakennusvuosi}")
+        
         # Lisätään tietokantaan
         db.session.add(kohde)
         db.session.commit()
@@ -146,5 +237,6 @@ def save_property_data_to_db(property_data: str, analysis_id: int = None) -> int
         
     except Exception as e:
         logger.error(f"Virhe kohteen tallentamisessa tietokantaan: {e}")
+        logger.error(f"Property data: {property_data}")
         db.session.rollback()
         return None

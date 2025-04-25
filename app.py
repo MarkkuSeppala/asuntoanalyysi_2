@@ -558,7 +558,14 @@ def view_analysis(analysis_id):
         if analysis.user_id != current_user.id:
             flash('Sinulla ei ole oikeutta tähän analyysiin.', 'danger')
             return redirect(url_for('list_analyses'))
-            
+        
+        # Haetaan kohteen tiedot kohteet-taulusta, jos ne ovat saatavilla
+        kohde = Kohde.query.filter_by(analysis_id=analysis_id).first()
+        osoite = kohde.osoite if kohde else None
+        
+        # Käytetään kohteen osoitetta otsikkona, jos se on saatavilla
+        title = osoite or analysis.title or "Asuntoanalyysi"
+        
         # Haetaan mahdollinen riskianalyysi
         risk_analysis = None
         try:
@@ -571,7 +578,8 @@ def view_analysis(analysis_id):
             
         return render_template('analysis.html', 
                                analysis=analysis, 
-                               title=analysis.title, 
+                               title=title,
+                               kohde=kohde,
                                content=analysis.content,
                                risk_analysis=risk_analysis)
         

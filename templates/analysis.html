@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Analyysi - {{ analysis.title or 'Nimetön analyysi' }}{% endblock %}
+{% block title %}{{ title|default('Asuntoanalyysi') }}{% endblock %}
 
 {% block extra_css %}
 <!-- Lisätään Markdown-tuen kirjasto -->
@@ -257,7 +257,7 @@
 {% block content %}
 <div class="container container-narrow mt-5 mb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="page-title">{{ analysis.title or 'Nimetön analyysi' }}</h1>
+        <h1 class="page-title">{{ title }}</h1>
         <div>
             <a href="{{ url_for('download_analysis', analysis_id=analysis.id) }}" class="btn btn-outline-accent me-2">
                 <i class="fas fa-download"></i> Lataa
@@ -267,6 +267,10 @@
             </a>
         </div>
     </div>
+    
+    {% if kohde and kohde.tyyppi %}
+    <p class="mb-4"><strong>Tyyppi:</strong> {{ kohde.tyyppi }}</p>
+    {% endif %}
     
     {% if risk_analysis %}
     <div class="analysis-card shadow">
@@ -331,7 +335,12 @@
     <div class="analysis-card shadow">
         <div class="card-header-custom d-flex justify-content-between align-items-center">
             <div>
-                <strong>Kohde:</strong> <a href="{{ analysis.property_url }}" target="_blank" class="text-decoration-none">{{ analysis.property_url }}</a>
+                <strong>Kohde:</strong> 
+                {% if analysis.property_url %}
+                <a href="{{ analysis.property_url }}" target="_blank" class="text-decoration-none">{{ title }}</a>
+                {% else %}
+                {{ title }}
+                {% endif %}
             </div>
             <small>Luotu: {{ analysis.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
         </div>
