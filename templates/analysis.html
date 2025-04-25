@@ -92,6 +92,37 @@
         padding: 30px;
     }
     
+    /* Tab styles */
+    .results-tabs {
+        display: flex;
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .tab-btn {
+        background: none;
+        border: none;
+        padding: 10px 20px;
+        font-size: 1rem;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s;
+    }
+    
+    .tab-btn.active {
+        border-bottom: 3px solid var(--accent-color);
+        color: var(--accent-color);
+        font-weight: 600;
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
     .analysis-content {
         background-color: white;
         padding: 25px;
@@ -276,78 +307,106 @@
             <small>Luotu: {{ analysis.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
         </div>
         <div class="card-body">
-            <div id="analysisContent" class="analysis-content"></div>
-            <div id="analysisRawContent" data-content="{{ analysis.content|safe }}" style="display: none;"></div>
-        </div>
-    </div>
-    
-    {% if risk_analysis %}
-    <div class="analysis-card shadow">
-        <div class="card-header-custom">
-            <h3 class="mb-0 d-flex align-items-center">Riskianalyysi <span class="ms-2 risk-score">{{ risk_analysis.kokonaisriskitaso }}</span><span class="ms-1 text-muted">/10</span></h3>
-        </div>
-        <div class="card-body">
-            <div class="d-flex align-items-center mb-5">
-                <div class="flex-grow-1">
-                    <div class="fw-bold mb-2">Kokonaisriskitaso</div>
-                    <div class="risk-meter">
-                        <div class="risk-meter-fill {% if risk_analysis.kokonaisriskitaso <= 3.4 %}risk-low{% elif risk_analysis.kokonaisriskitaso <= 5.5 %}risk-medium{% elif risk_analysis.kokonaisriskitaso <= 6.9 %}risk-high{% else %}risk-critical{% endif %}" style="width: {{ risk_analysis.kokonaisriskitaso * 10 }}%;"></div>
-                    </div>
-                    <div class="text-muted small mt-1">
-                        {% if risk_analysis.kokonaisriskitaso <= 3.4 %}
-                            <span class="risk-label risk-level-low">Matala riski</span>
-                        {% elif risk_analysis.kokonaisriskitaso <= 5.5 %}
-                            <span class="risk-label risk-level-medium">Keskitason riski</span>
-                        {% elif risk_analysis.kokonaisriskitaso <= 6.9 %}
-                            <span class="risk-label risk-level-medium">Kohonnut riski</span>
-                        {% else %}
-                            <span class="risk-label risk-level-high">Korkea riski</span>
-                        {% endif %}
-                    </div>
-                </div>
+            <!-- Tabs Navigation -->
+            <div class="results-tabs">
+                <button class="tab-btn active" data-tab="risk-analysis">Riskianalyysi</button>
+                <button class="tab-btn" data-tab="analysis">Analyysi</button>
             </div>
             
-            <div class="list-group">
-                {% for riski in risk_analysis.riskimittari %}
-                <div class="list-group-item risk-area-row">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h5 class="risk-area-title">{{ riski.osa_alue }}</h5>
-                            {% if riski.kuvaus %}
-                            <p class="mb-3">{{ riski.kuvaus }}</p>
+            <!-- Analysis Tab Content -->
+            <div class="tab-content" id="analysis">
+                <div id="analysisContent" class="analysis-content"></div>
+                <div id="analysisRawContent" data-content="{{ analysis.content|safe }}" style="display: none;"></div>
+            </div>
+            
+            <!-- Risk Analysis Tab Content -->
+            <div class="tab-content active" id="risk-analysis">
+                {% if risk_analysis %}
+                <div class="d-flex align-items-center mb-5">
+                    <div class="flex-grow-1">
+                        <div class="fw-bold mb-2">Kokonaisriskitaso</div>
+                        <div class="risk-meter">
+                            <div class="risk-meter-fill {% if risk_analysis.kokonaisriskitaso <= 3.4 %}risk-low{% elif risk_analysis.kokonaisriskitaso <= 5.5 %}risk-medium{% elif risk_analysis.kokonaisriskitaso <= 6.9 %}risk-high{% else %}risk-critical{% endif %}" style="width: {{ risk_analysis.kokonaisriskitaso * 10 }}%;"></div>
+                        </div>
+                        <div class="text-muted small mt-1">
+                            {% if risk_analysis.kokonaisriskitaso <= 3.4 %}
+                                <span class="risk-label risk-level-low">Matala riski</span>
+                            {% elif risk_analysis.kokonaisriskitaso <= 5.5 %}
+                                <span class="risk-label risk-level-medium">Keskitason riski</span>
+                            {% elif risk_analysis.kokonaisriskitaso <= 6.9 %}
+                                <span class="risk-label risk-level-medium">Kohonnut riski</span>
+                            {% else %}
+                                <span class="risk-label risk-level-high">Korkea riski</span>
                             {% endif %}
-                            <div class="risk-meter mt-3">
-                                <div class="risk-meter-fill {% if riski.riski_taso <= 3.4 %}risk-low{% elif riski.riski_taso <= 5.5 %}risk-medium{% elif riski.riski_taso <= 6.9 %}risk-high{% else %}risk-critical{% endif %}" style="width: {{ riski.riski_taso * 10 }}%;"></div>
-                            </div>
-                            <div class="d-flex justify-content-between mt-2">
-                                <div class="text-muted small">
-                                    {% if riski.riski_taso <= 3.4 %}
-                                        <span class="risk-label risk-level-low">Matala ({{ riski.riski_taso }})</span>
-                                    {% elif riski.riski_taso <= 5.5 %}
-                                        <span class="risk-label risk-level-medium">Keskitaso ({{ riski.riski_taso }})</span>
-                                    {% elif riski.riski_taso <= 6.9 %}
-                                        <span class="risk-label risk-level-medium">Kohonnut ({{ riski.riski_taso }})</span>
-                                    {% else %}
-                                        <span class="risk-label risk-level-high">Korkea ({{ riski.riski_taso }})</span>
-                                    {% endif %}
-                                </div>
-                                <div class="text-muted small">Osuus: {{ riski.osuus_prosenttia }}%</div>
-                            </div>
                         </div>
                     </div>
                 </div>
-                {% endfor %}
+                
+                <div class="list-group">
+                    {% for riski in risk_analysis.riskimittari %}
+                    <div class="list-group-item risk-area-row">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <h5 class="risk-area-title">{{ riski.osa_alue }}</h5>
+                                {% if riski.kuvaus %}
+                                <p class="mb-3">{{ riski.kuvaus }}</p>
+                                {% endif %}
+                                <div class="risk-meter mt-3">
+                                    <div class="risk-meter-fill {% if riski.riski_taso <= 3.4 %}risk-low{% elif riski.riski_taso <= 5.5 %}risk-medium{% elif riski.riski_taso <= 6.9 %}risk-high{% else %}risk-critical{% endif %}" style="width: {{ riski.riski_taso * 10 }}%;"></div>
+                                </div>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <div class="text-muted small">
+                                        {% if riski.riski_taso <= 3.4 %}
+                                            <span class="risk-label risk-level-low">Matala ({{ riski.riski_taso }})</span>
+                                        {% elif riski.riski_taso <= 5.5 %}
+                                            <span class="risk-label risk-level-medium">Keskitaso ({{ riski.riski_taso }})</span>
+                                        {% elif riski.riski_taso <= 6.9 %}
+                                            <span class="risk-label risk-level-medium">Kohonnut ({{ riski.riski_taso }})</span>
+                                        {% else %}
+                                            <span class="risk-label risk-level-high">Korkea ({{ riski.riski_taso }})</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-muted small">Osuus: {{ riski.osuus_prosenttia }}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <h4 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Riskianalyysi ei saatavilla</h4>
+                    <p>Riskianalyysin laskemisessa tapahtui virhe tai dataa ei ole saatavilla.</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
-    {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Markdown-tekstin käsittely
     document.addEventListener('DOMContentLoaded', function() {
+        // Tab functionality
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+                
+                // Remove active class from all buttons and contents
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked button and corresponding content
+                this.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Markdown-tekstin käsittely
         const analysisContent = document.getElementById('analysisContent');
         
         try {
