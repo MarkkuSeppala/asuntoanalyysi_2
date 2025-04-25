@@ -3,12 +3,13 @@
 {% block title %}Analyysi - {{ analysis.title or 'Nimetön analyysi' }}{% endblock %}
 
 {% block extra_css %}
+<!-- Lisätään Markdown-tuen kirjasto -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
     :root {
         --primary-color: #F1EFEC;
         --secondary-color: #D4C9BE;
         --accent-color: #123458;
-        --accent-light: #2a4d77;
         --neutral-color: #030303;
     }
     
@@ -39,7 +40,7 @@
     }
     
     .btn-accent:hover {
-        background-color: var(--accent-light);
+        background-color: #1a4b7c;
         color: white;
         transform: translateY(-3px);
         box-shadow: 0 5px 15px rgba(18, 52, 88, 0.15);
@@ -91,40 +92,9 @@
         padding: 30px;
     }
     
-    .analysis-tabs {
-        display: flex;
-        border-bottom: 1px solid #dee2e6;
-        margin-bottom: 20px;
-    }
-    
-    .tab-btn {
-        background: none;
-        border: none;
-        padding: 10px 20px;
-        font-size: 1rem;
-        cursor: pointer;
-        border-bottom: 3px solid transparent;
-        transition: all 0.3s;
-        color: var(--neutral-color);
-    }
-    
-    .tab-btn.active {
-        border-bottom: 3px solid var(--accent-color);
-        color: var(--accent-color);
-        font-weight: 600;
-    }
-    
-    .tab-content {
-        display: none;
-    }
-    
-    .tab-content.active {
-        display: block;
-    }
-    
     .analysis-content {
         background-color: white;
-        padding: 0;
+        padding: 25px;
         line-height: 1.6;
         font-size: 1.05rem;
     }
@@ -162,60 +132,35 @@
         margin-bottom: 8px;
     }
     
-    .property-details {
-        margin-top: 15px;
-        display: flex;
-        align-items: center;
-        background-color: rgba(18, 52, 88, 0.05);
-        padding: 15px;
-        border-radius: 8px;
+    .analysis-content em {
+        font-style: italic;
     }
     
-    .property-icon {
-        font-size: 1.8rem;
-        margin-right: 15px;
-        color: var(--accent-color);
+    .analysis-content strong {
+        font-weight: bold;
     }
     
-    .property-url {
-        font-size: 0.95rem;
-        word-break: break-all;
-    }
-    
-    /* Risk styling */
-    .risk-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 30px;
-    }
-    
-    .risk-header-value {
-        font-size: 3rem;
-        font-weight: 800;
-        line-height: 1;
-        color: var(--accent-color);
-        margin-right: 10px;
-    }
-    
-    .risk-header-scale {
-        font-size: 1rem;
+    .analysis-footer {
+        margin-top: 30px;
         color: #6c757d;
-        margin-bottom: 5px;
+        font-size: 0.9rem;
+        text-align: center;
+        border-top: 1px solid #eee;
+        padding-top: 20px;
     }
     
-    .risk-header-label {
-        font-size: 1rem;
-        font-weight: 600;
+    .risk-analysis {
+        margin-top: 30px;
     }
     
     .risk-meter {
         width: 100%;
-        height: 10px;
-        background-color: #e9ecef;
-        border-radius: 5px;
-        overflow: hidden;
-        margin-bottom: 10px;
+        height: 8px;
+        background-color: var(--primary-color);
+        margin: 16px 0;
         position: relative;
+        border-radius: 4px;
+        overflow: hidden;
     }
     
     .risk-meter-fill {
@@ -226,20 +171,21 @@
         transition: width 1s ease-in-out;
     }
     
+    /* Risk color classes based on score */
     .risk-low {
-        background: linear-gradient(to right, #3498db, #64b5f6);
+        background: linear-gradient(to right, #3498db, #64b5f6) !important; /* Bluish gradient */
     }
     
     .risk-medium {
-        background: linear-gradient(to right, #4caf50, #8bc34a);
+        background: linear-gradient(to right, #4caf50, #8bc34a) !important; /* Greenish gradient */
     }
     
     .risk-high {
-        background: linear-gradient(to right, #ffc107, #ffeb3b);
+        background: linear-gradient(to right, #ffc107, #ffeb3b) !important; /* Yellowish gradient */
     }
     
     .risk-critical {
-        background: linear-gradient(to right, #f44336, #e57373);
+        background: linear-gradient(to right, #f44336, #e57373) !important; /* Reddish gradient */
     }
     
     .risk-score {
@@ -251,10 +197,10 @@
     
     .risk-label {
         display: inline-block;
-        padding: 4px 8px;
+        padding: 2px 6px;
         border-radius: 4px;
+        margin-left: 5px;
         font-weight: 600;
-        font-size: 0.85rem;
     }
     
     .risk-level-low {
@@ -273,68 +219,23 @@
     }
     
     .risk-area-row {
-        background-color: white;
-        border-radius: 10px;
         padding: 20px;
-        margin-bottom: 15px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s ease;
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 5px;
     }
     
-    .risk-area-row:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    .risk-area-row:last-child {
+        border-bottom: none;
     }
     
     .risk-area-title {
-        font-weight: 700;
+        font-weight: 600;
         color: var(--accent-color);
         margin-bottom: 10px;
-        font-size: 1.1rem;
     }
     
-    .risk-detail-container {
-        margin-top: 40px;
-    }
-    
-    .risk-detail-container h3 {
-        font-size: 1.5rem;
-        margin-bottom: 20px;
-        color: var(--accent-color);
-        font-weight: 700;
-    }
-    
-    .risk-scale {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.85rem;
-        color: #6c757d;
-    }
-    
-    /* Animation */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .fade-in {
-        animation: fadeIn 0.6s ease-out forwards;
-    }
-    
-    /* Responsive */
-    @media (max-width: 992px) {
-        .card-header-custom {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        
-        .card-header-custom small {
-            margin-top: 10px;
-        }
-        
-        .risk-header-value {
-            font-size: 2.5rem;
-        }
+    .list-group {
+        margin-top: 30px;
     }
     
     @media (max-width: 768px) {
@@ -342,61 +243,12 @@
             padding: 0 15px;
         }
         
-        .page-title {
-            font-size: 1.7rem;
-        }
-        
-        .d-flex.justify-content-between {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        
-        .d-flex.justify-content-between div {
-            margin-top: 15px;
-            display: flex;
-            width: 100%;
-        }
-        
-        .d-flex.justify-content-between div a {
-            flex: 1;
-            text-align: center;
-        }
-        
         .card-header-custom {
             padding: 15px 20px;
         }
         
-        .card-body {
+        .analysis-content {
             padding: 20px 15px;
-        }
-        
-        .tab-btn {
-            padding: 8px 12px;
-            font-size: 0.9rem;
-        }
-        
-        .risk-header-value {
-            font-size: 2.2rem;
-        }
-    }
-    
-    @media (max-width: 576px) {
-        .page-title {
-            font-size: 1.5rem;
-        }
-        
-        .tab-btn {
-            padding: 6px 10px;
-            font-size: 0.85rem;
-        }
-        
-        .property-details {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        
-        .property-icon {
-            margin-bottom: 10px;
         }
     }
 </style>
@@ -416,51 +268,32 @@
         </div>
     </div>
 
-    <div class="analysis-card shadow fade-in">
+    <div class="analysis-card shadow">
         <div class="card-header-custom d-flex justify-content-between align-items-center">
-            <span>Luotu: {{ analysis.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
-            <span class="badge rounded-pill bg-primary">Analyysi</span>
-        </div>
-        
-        <div class="property-details mx-4 mt-4">
-            <i class="fas fa-home property-icon"></i>
             <div>
-                <div class="small text-muted mb-1">Kohteen osoite:</div>
-                <a href="{{ analysis.property_url }}" target="_blank" class="property-url text-decoration-none">
-                    {{ analysis.property_url }}
-                </a>
+                <strong>Kohde:</strong> <a href="{{ analysis.property_url }}" target="_blank" class="text-decoration-none">{{ analysis.property_url }}</a>
             </div>
+            <small>Luotu: {{ analysis.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
         </div>
-            
         <div class="card-body">
-            <div class="analysis-tabs">
-                <button class="tab-btn active" data-tab="risk-analysis">Riskianalyysi</button>
-                <button class="tab-btn" data-tab="analysis">Analyysi</button>
-            </div>
-            
-            <!-- Riskianalyysi-välilehti -->
-            <div class="tab-content active" id="risk-analysis">
-                {% if risk_analysis %}
-                <div class="risk-meter-container">
-                    <div class="risk-header">
-                        <div class="risk-header-value">{{ risk_analysis.kokonaisriskitaso }}</div>
-                        <div>
-                            <div class="risk-header-scale">/10</div>
-                            <div class="risk-header-label">Kokonaisriskitaso</div>
-                        </div>
-                    </div>
-                    
+            <div id="analysisContent" class="analysis-content"></div>
+            <div id="analysisRawContent" data-content="{{ analysis.content|safe }}" style="display: none;"></div>
+        </div>
+    </div>
+    
+    {% if risk_analysis %}
+    <div class="analysis-card shadow">
+        <div class="card-header-custom">
+            <h3 class="mb-0 d-flex align-items-center">Riskianalyysi <span class="ms-2 risk-score">{{ risk_analysis.kokonaisriskitaso }}</span><span class="ms-1 text-muted">/10</span></h3>
+        </div>
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-5">
+                <div class="flex-grow-1">
+                    <div class="fw-bold mb-2">Kokonaisriskitaso</div>
                     <div class="risk-meter">
                         <div class="risk-meter-fill {% if risk_analysis.kokonaisriskitaso <= 3.4 %}risk-low{% elif risk_analysis.kokonaisriskitaso <= 5.5 %}risk-medium{% elif risk_analysis.kokonaisriskitaso <= 6.9 %}risk-high{% else %}risk-critical{% endif %}" style="width: {{ risk_analysis.kokonaisriskitaso * 10 }}%;"></div>
                     </div>
-                    
-                    <div class="risk-scale">
-                        <div>Matala riski (0)</div>
-                        <div>Normaali riski (5)</div>
-                        <div>Kohonnut riski (10)</div>
-                    </div>
-                    
-                    <div class="mt-2">
+                    <div class="text-muted small mt-1">
                         {% if risk_analysis.kokonaisriskitaso <= 3.4 %}
                             <span class="risk-label risk-level-low">Matala riski</span>
                         {% elif risk_analysis.kokonaisriskitaso <= 5.5 %}
@@ -472,85 +305,49 @@
                         {% endif %}
                     </div>
                 </div>
-                
-                <div class="risk-detail-container">
-                    <h3>Riskiarvio osa-alueittain</h3>
-                    
-                    <div class="row">
-                        {% for riski in risk_analysis.riskimittari %}
-                        <div class="col-lg-6 mb-4">
-                            <div class="risk-area-row">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h5 class="risk-area-title mb-0">{{ riski.osa_alue }}</h5>
-                                    <div>
-                                        {% if riski.riski_taso <= 3.4 %}
-                                            <span class="risk-label risk-level-low">{{ riski.riski_taso }}/10</span>
-                                        {% elif riski.riski_taso <= 5.5 %}
-                                            <span class="risk-label risk-level-medium">{{ riski.riski_taso }}/10</span>
-                                        {% elif riski.riski_taso <= 6.9 %}
-                                            <span class="risk-label risk-level-medium">{{ riski.riski_taso }}/10</span>
-                                        {% else %}
-                                            <span class="risk-label risk-level-high">{{ riski.riski_taso }}/10</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                
-                                {% if riski.kuvaus %}
-                                <p class="mb-3">{{ riski.kuvaus }}</p>
-                                {% endif %}
-                                
-                                <div class="risk-meter mt-3">
-                                    <div class="risk-meter-fill {% if riski.riski_taso <= 3.4 %}risk-low{% elif riski.riski_taso <= 5.5 %}risk-medium{% elif riski.riski_taso <= 6.9 %}risk-high{% else %}risk-critical{% endif %}" style="width: {{ riski.riski_taso * 10 }}%;"></div>
-                                </div>
-                                
-                                <div class="text-muted small mt-2 text-end">
-                                    Painoarvo: {{ riski.osuus_prosenttia }}%
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% else %}
-                <div class="alert alert-info">
-                    <h4 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Riskianalyysi ei saatavilla</h4>
-                    <p>Tästä kohteesta ei ole saatavilla riskianalyysiä. Analyysi edellyttää riittävästi tietoja kohteesta.</p>
-                </div>
-                {% endif %}
             </div>
             
-            <!-- Analyysi-välilehti -->
-            <div class="tab-content" id="analysis">
-                <div class="analysis-content markdown-content" id="analysisContent"></div>
-                <div id="analysisRawContent" data-content="{{ analysis.content|safe }}" style="display: none;"></div>
+            <div class="list-group">
+                {% for riski in risk_analysis.riskimittari %}
+                <div class="list-group-item risk-area-row">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h5 class="risk-area-title">{{ riski.osa_alue }}</h5>
+                            {% if riski.kuvaus %}
+                            <p class="mb-3">{{ riski.kuvaus }}</p>
+                            {% endif %}
+                            <div class="risk-meter mt-3">
+                                <div class="risk-meter-fill {% if riski.riski_taso <= 3.4 %}risk-low{% elif riski.riski_taso <= 5.5 %}risk-medium{% elif riski.riski_taso <= 6.9 %}risk-high{% else %}risk-critical{% endif %}" style="width: {{ riski.riski_taso * 10 }}%;"></div>
+                            </div>
+                            <div class="d-flex justify-content-between mt-2">
+                                <div class="text-muted small">
+                                    {% if riski.riski_taso <= 3.4 %}
+                                        <span class="risk-label risk-level-low">Matala ({{ riski.riski_taso }})</span>
+                                    {% elif riski.riski_taso <= 5.5 %}
+                                        <span class="risk-label risk-level-medium">Keskitaso ({{ riski.riski_taso }})</span>
+                                    {% elif riski.riski_taso <= 6.9 %}
+                                        <span class="risk-label risk-level-medium">Kohonnut ({{ riski.riski_taso }})</span>
+                                    {% else %}
+                                        <span class="risk-label risk-level-high">Korkea ({{ riski.riski_taso }})</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-muted small">Osuus: {{ riski.osuus_prosenttia }}%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    // Markdown-tekstin käsittely
     document.addEventListener('DOMContentLoaded', function() {
-        // Välilehtien vaihtaminen
-        const tabButtons = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
-        
-        tabButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const tabId = this.getAttribute('data-tab');
-                
-                // Poista active-luokka kaikilta napeista ja sisällöiltä
-                tabButtons.forEach(btn => btn.classList.remove('active'));
-                tabContents.forEach(content => content.classList.remove('active'));
-                
-                // Lisää active-luokka klikatulle napille ja vastaavalle sisällölle
-                this.classList.add('active');
-                document.getElementById(tabId).classList.add('active');
-            });
-        });
-        
-        // Markdown-tekstin käsittely
         const analysisContent = document.getElementById('analysisContent');
         
         try {
