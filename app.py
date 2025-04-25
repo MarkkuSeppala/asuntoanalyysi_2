@@ -134,6 +134,9 @@ with app.app_context():
         logger.info("Taulut luotu.")
     else:
         logger.info(f"Tietokanta sisältää jo taulut: {tables}")
+    
+    # Kutsutaan create_tables-funktiota, joka varmistaa myös kohteet-taulun olemassaolon
+    create_tables()
 
 # Lisätään päivämäärä kaikkiin templateihin
 @app.context_processor
