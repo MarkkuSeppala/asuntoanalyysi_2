@@ -267,19 +267,6 @@
             </a>
         </div>
     </div>
-
-    <div class="analysis-card shadow">
-        <div class="card-header-custom d-flex justify-content-between align-items-center">
-            <div>
-                <strong>Kohde:</strong> <a href="{{ analysis.property_url }}" target="_blank" class="text-decoration-none">{{ analysis.property_url }}</a>
-            </div>
-            <small>Luotu: {{ analysis.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
-        </div>
-        <div class="card-body">
-            <div id="analysisContent" class="analysis-content"></div>
-            <div id="analysisRawContent" data-content="{{ analysis.content|safe }}" style="display: none;"></div>
-        </div>
-    </div>
     
     {% if risk_analysis %}
     <div class="analysis-card shadow">
@@ -338,6 +325,19 @@
                 </div>
                 {% endfor %}
             </div>
+        </div>
+    </div>
+
+    <div class="analysis-card shadow">
+        <div class="card-header-custom d-flex justify-content-between align-items-center">
+            <div>
+                <strong>Kohde:</strong> <a href="{{ analysis.property_url }}" target="_blank" class="text-decoration-none">{{ analysis.property_url }}</a>
+            </div>
+            <small>Luotu: {{ analysis.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+        </div>
+        <div class="card-body">
+            <div id="analysisContent" class="analysis-content"></div>
+            <div id="analysisRawContent" data-content="{{ analysis.content|safe }}" style="display: none;"></div>
         </div>
     </div>
     {% endif %}
