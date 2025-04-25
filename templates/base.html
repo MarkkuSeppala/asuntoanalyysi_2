@@ -43,8 +43,9 @@
         
         .navbar-brand {
             font-weight: 800;
-            font-size: 1.6rem;
+            font-size: 2rem;
             letter-spacing: -0.5px;
+            margin-left: -15px;
         }
         
         .navbar-brand .brand-accent {
@@ -141,22 +142,14 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                {% if current_user.is_authenticated %}
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item {{ 'active' if request.path == url_for('index') else '' }}">
-                        <a class="nav-link" href="{{ url_for('index') }}"><i class="fas fa-home me-1"></i> Etusivu</a>
-                    </li>
-                    <li class="nav-item {{ 'active' if request.path == url_for('list_analyses') else '' }}">
-                        <a class="nav-link" href="{{ url_for('list_analyses') }}"><i class="fas fa-list me-1"></i> Analyysit</a>
-                    </li>
-                </ul>
-                {% else %}
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.login') }}"><i class="fas fa-info-circle me-1"></i> Kirjaudu sisään käyttääksesi sovellusta</a>
+                        <a class="nav-link" href="#"><i class="fas fa-info-circle me-1"></i> Palvelu</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-tag me-1"></i> Hinnat</a>
                     </li>
                 </ul>
-                {% endif %}
                 <ul class="navbar-nav">
                     {% if current_user.is_authenticated %}
                     <li class="nav-item dropdown">
