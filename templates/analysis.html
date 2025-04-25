@@ -5,6 +5,8 @@
 {% block extra_css %}
 <!-- Lisätään Markdown-tuen kirjasto -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<!-- Lisätään riskimittarin tyylit -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/risk-meter.css') }}">
 <style>
     :root {
         --primary-color: #F1EFEC;
@@ -90,37 +92,6 @@
     
     .card-body {
         padding: 30px;
-    }
-    
-    /* Tab styles */
-    .results-tabs {
-        display: flex;
-        border-bottom: 1px solid #dee2e6;
-        margin-bottom: 20px;
-    }
-    
-    .tab-btn {
-        background: none;
-        border: none;
-        padding: 10px 20px;
-        font-size: 1rem;
-        cursor: pointer;
-        border-bottom: 3px solid transparent;
-        transition: all 0.3s;
-    }
-    
-    .tab-btn.active {
-        border-bottom: 3px solid var(--accent-color);
-        color: var(--accent-color);
-        font-weight: 600;
-    }
-    
-    .tab-content {
-        display: none;
-    }
-    
-    .tab-content.active {
-        display: block;
     }
     
     .analysis-content {
@@ -269,6 +240,38 @@
         margin-top: 30px;
     }
     
+    /* Tab styling */
+    .results-tabs {
+        display: flex;
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .tab-btn {
+        background: none;
+        border: none;
+        padding: 10px 20px;
+        font-size: 1rem;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s;
+        color: var(--neutral-color);
+    }
+    
+    .tab-btn.active {
+        border-bottom: 3px solid var(--accent-color);
+        color: var(--accent-color);
+        font-weight: 600;
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
     @media (max-width: 768px) {
         .container-narrow {
             padding: 0 15px;
@@ -307,24 +310,24 @@
             <small>Luotu: {{ analysis.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
         </div>
         <div class="card-body">
-            <!-- Tabs Navigation -->
             <div class="results-tabs">
                 <button class="tab-btn active" data-tab="risk-analysis">Riskianalyysi</button>
                 <button class="tab-btn" data-tab="analysis">Analyysi</button>
             </div>
             
-            <!-- Analysis Tab Content -->
             <div class="tab-content" id="analysis">
                 <div id="analysisContent" class="analysis-content"></div>
                 <div id="analysisRawContent" data-content="{{ analysis.content|safe }}" style="display: none;"></div>
             </div>
             
-            <!-- Risk Analysis Tab Content -->
+            {% if risk_analysis %}
             <div class="tab-content active" id="risk-analysis">
-                {% if risk_analysis %}
                 <div class="d-flex align-items-center mb-5">
                     <div class="flex-grow-1">
                         <div class="fw-bold mb-2">Kokonaisriskitaso</div>
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="risk-score">{{ risk_analysis.kokonaisriskitaso }}</span><span class="ms-1 text-muted">/10</span>
+                        </div>
                         <div class="risk-meter">
                             <div class="risk-meter-fill {% if risk_analysis.kokonaisriskitaso <= 3.4 %}risk-low{% elif risk_analysis.kokonaisriskitaso <= 5.5 %}risk-medium{% elif risk_analysis.kokonaisriskitaso <= 6.9 %}risk-high{% else %}risk-critical{% endif %}" style="width: {{ risk_analysis.kokonaisriskitaso * 10 }}%;"></div>
                         </div>
@@ -373,13 +376,15 @@
                     </div>
                     {% endfor %}
                 </div>
-                {% else %}
+            </div>
+            {% else %}
+            <div class="tab-content active" id="risk-analysis">
                 <div class="alert alert-info">
                     <h4 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Riskianalyysi ei saatavilla</h4>
-                    <p>Riskianalyysin laskemisessa tapahtui virhe tai dataa ei ole saatavilla.</p>
+                    <p>Riskianalyysin tietoja ei ole saatavilla tälle analyysille.</p>
                 </div>
-                {% endif %}
             </div>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -387,8 +392,8 @@
 
 {% block extra_js %}
 <script>
+    // Välilehtien vaihtaminen
     document.addEventListener('DOMContentLoaded', function() {
-        // Tab functionality
         const tabButtons = document.querySelectorAll('.tab-btn');
         const tabContents = document.querySelectorAll('.tab-content');
         
@@ -396,11 +401,11 @@
             button.addEventListener('click', function() {
                 const tabId = this.getAttribute('data-tab');
                 
-                // Remove active class from all buttons and contents
+                // Poista active-luokka kaikilta napeista ja sisällöiltä
                 tabButtons.forEach(btn => btn.classList.remove('active'));
                 tabContents.forEach(content => content.classList.remove('active'));
                 
-                // Add active class to clicked button and corresponding content
+                // Lisää active-luokka klikatulle napille ja vastaavalle sisällölle
                 this.classList.add('active');
                 document.getElementById(tabId).classList.add('active');
             });
@@ -424,4 +429,7 @@
         }
     });
 </script>
+
+<!-- Lisätään riskimittarin JavaScript -->
+<script src="{{ url_for('static', filename='js/risk-meter.js') }}"></script>
 {% endblock %} 
