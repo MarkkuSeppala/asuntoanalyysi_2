@@ -79,18 +79,18 @@
                     </div>
         <div class="card-body">
             <div class="results-tabs">
-                <button class="tab-btn active" data-tab="analysis">Analyysi</button>
-                <button class="tab-btn" data-tab="risk-analysis">Riskianalyysi</button>
+                <button class="tab-btn active" data-tab="risk-analysis">Riskianalyysi</button>
+                <button class="tab-btn" data-tab="analysis">Analyysi</button>
                 <button class="tab-btn" data-tab="raw-data">Asunnon tiedot</button>
             </div>
             
-            <div class="tab-content active" id="analysis">
+            <div class="tab-content" id="analysis">
                 <div class="analysis-content markdown-content">
                     <!-- Tähän tulee analyysi markdown-muodossa -->
                 </div>
             </div>
             
-            <div class="tab-content" id="risk-analysis">
+            <div class="tab-content active" id="risk-analysis">
                 {% if riski_data %}
                 <div class="risk-meter-container">
                     <div class="risk-header">
