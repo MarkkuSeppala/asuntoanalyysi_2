@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 api_key = os.environ.get("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
 
-def get_property_data(markdown_data: str) -> dict:
+def get_property_data(markdown_data: str) -> str:
     """
     Hakee kiinteistön perustiedot markdown-muotoisesta datasta käyttäen OpenAI API:a.
     
@@ -29,7 +29,7 @@ def get_property_data(markdown_data: str) -> dict:
         markdown_data (str): Kiinteistön tiedot markdown-muodossa
         
     Returns:
-        dict: Kiinteistön perustiedot sanakirjamuodossa tai tyhjä sanakirja, jos haku epäonnistui
+        str: Kiinteistön perustiedot JSON-merkkijonona tai tyhjä merkkijono, jos haku epäonnistui
     """
     try:
         logger.info("Haetaan kiinteistön tietoja OpenAI API:sta")
@@ -65,20 +65,20 @@ def get_property_data(markdown_data: str) -> dict:
         )
         
         # Otetaan vastaus JSON-muodossa
-        property_data = response.output_json
+        property_data = response.output_text
         logger.info(f"Kiinteistön tiedot haettu onnistuneesti: {property_data}")
         return property_data
         
     except Exception as e:
         logger.error(f"Virhe kiinteistön tietojen hakemisessa: {e}")
-        return {}
+        return ""
 
-def save_property_data_to_db(property_data: dict, analysis_id: int = None) -> int:
+def save_property_data_to_db(property_data: str, analysis_id: int = None) -> int:
     """
     Tallentaa kiinteistön tiedot tietokantaan
     
     Args:
-        property_data (dict): Kiinteistön tiedot sanakirjamuodossa
+        property_data (str): Kiinteistön tiedot JSON-merkkijonona
         analysis_id (int, optional): Sen analyysin ID, johon tämä kohde liittyy
         
     Returns:
@@ -88,19 +88,27 @@ def save_property_data_to_db(property_data: dict, analysis_id: int = None) -> in
         if not property_data:
             logger.error("Kiinteistön tietoja ei voitu tallentaa: Tiedot puuttuvat")
             return None
+        
+        # Muunnetaan JSON-merkkijono sanakirjaksi
+        try:
+            data_dict = json.loads(property_data)
+            logger.info(f"JSON-merkkijono muunnettu sanakirjaksi onnistuneesti")
+        except json.JSONDecodeError as e:
+            logger.error(f"Virhe JSON-merkkijonon muuntamisessa sanakirjaksi: {e}")
+            return None
             
         # Muodostetaan osoite yhdeksi kentäksi
         osoite_parts = []
-        if "osoite" in property_data:
-            if "katu" in property_data["osoite"]:
-                osoite_parts.append(property_data["osoite"]["katu"])
-            if "kaupunki" in property_data["osoite"]:
-                osoite_parts.append(property_data["osoite"]["kaupunki"])
+        if "osoite" in data_dict:
+            if "katu" in data_dict["osoite"]:
+                osoite_parts.append(data_dict["osoite"]["katu"])
+            if "kaupunki" in data_dict["osoite"]:
+                osoite_parts.append(data_dict["osoite"]["kaupunki"])
         
         osoite = ", ".join(osoite_parts) if osoite_parts else "Tuntematon"
         
         # Muunnetaan hinta numeeriseksi arvoksi
-        hinta_str = property_data.get("hinta", "0")
+        hinta_str = data_dict.get("hinta", "0")
         try:
             # Poistetaan mahdolliset valuuttamerkit ja välilyönnit
             hinta_str = hinta_str.replace("€", "").replace(" ", "").strip()
@@ -110,10 +118,10 @@ def save_property_data_to_db(property_data: dict, analysis_id: int = None) -> in
             hinta = None
         
         # Haetaan rakennustyyppi
-        tyyppi = property_data.get("rakennustyyppi", None)
+        tyyppi = data_dict.get("rakennustyyppi", None)
         
         # Haetaan rakennusvuosi
-        rakennusvuosi_str = property_data.get("rakennusvuosi", None)
+        rakennusvuosi_str = data_dict.get("rakennusvuosi", None)
         try:
             rakennusvuosi = int(rakennusvuosi_str) if rakennusvuosi_str else None
         except:

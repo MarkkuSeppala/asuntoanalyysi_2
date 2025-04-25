@@ -300,6 +300,27 @@ def analyze():
         
         logger.debug(f"Markdown-datan pituus: {len(markdown_data)} merkkiä")
         
+        # Haetaan kohteen perustiedot ensin KAT API:n avulla
+        property_data = None
+        kohde_id = None
+        try:
+            logger.info("Haetaan kohteen perustiedot KAT API:lla")
+            property_data = kat_api_call.get_property_data(markdown_data)
+            
+            if property_data:
+                # Tallennetaan kohteet-tauluun ilman analysis_id:tä, liitetään myöhemmin
+                logger.info("Tallennetaan kohteen tiedot tietokantaan")
+                kohde_id = kat_api_call.save_property_data_to_db(property_data)
+                if kohde_id:
+                    logger.info(f"Kohde tallennettu tietokantaan ID:llä {kohde_id}")
+                else:
+                    logger.warning("Kohteen tallentaminen epäonnistui")
+            else:
+                logger.warning("Kohteen perustietoja ei saatu")
+        except Exception as e:
+            logger.error(f"Virhe kohteen tietojen käsittelyssä: {e}")
+            logger.error(traceback.format_exc())
+        
         # Käytetään OpenAI API:a analyysin tekemiseen
         logger.info("Tehdään OpenAI API -kutsu analyysia varten")
         analysis_response = api_call.get_analysis(markdown_data, url)
@@ -335,27 +356,19 @@ def analyze():
                 analysis_id = analysis.id
                 logger.info(f"Löydettiin juuri luotu analyysi ID: {analysis_id}")
 
-        # Haetaan kohteen tiedot KAT API:n avulla
-        if analysis_id:
+        # Jos meillä on nyt kohde_id ja analysis_id, päivitetään kohteen analysis_id
+        if kohde_id and analysis_id:
             try:
-                logger.info("Haetaan kohteen perustiedot KAT API:lla")
-                property_data = kat_api_call.get_property_data(markdown_data)
-                
-                # Tarkistetaan, onko kohde jo olemassa tälle analyysille
-                existing_kohde = Kohde.query.filter_by(analysis_id=analysis_id).first()
-                
-                if not existing_kohde and property_data:
-                    # Tallennetaan uusi kohde tietokantaan
-                    logger.info("Tallennetaan kohteen tiedot tietokantaan")
-                    kohde_id = kat_api_call.save_property_data_to_db(property_data, analysis_id)
-                    if kohde_id:
-                        logger.info(f"Kohde tallennettu tietokantaan ID:llä {kohde_id}")
-                    else:
-                        logger.warning("Kohteen tallentaminen epäonnistui")
+                logger.info(f"Päivitetään kohteen {kohde_id} analysis_id = {analysis_id}")
+                kohde = Kohde.query.get(kohde_id)
+                if kohde:
+                    kohde.analysis_id = analysis_id
+                    db.session.commit()
+                    logger.info("Kohteen analysis_id päivitetty onnistuneesti")
                 else:
-                    logger.info("Kohde on jo olemassa tai tietoja ei saatu")
+                    logger.warning(f"Kohdetta ID:llä {kohde_id} ei löytynyt")
             except Exception as e:
-                logger.error(f"Virhe kohteen tietojen käsittelyssä: {e}")
+                logger.error(f"Virhe kohteen analysis_id:n päivittämisessä: {e}")
                 logger.error(traceback.format_exc())
 
         # Tehdään riskianalyysi API-vastauksesta, jos analyysi on löydetty
@@ -425,6 +438,26 @@ def api_analyze():
                 'message': 'Ilmoituksen hakemisessa tapahtui virhe. Ole hyvä, yritä myöhemmin uudelleen.'
             }), 500
         
+        # Haetaan kohteen perustiedot ensin KAT API:n avulla
+        property_data = None
+        kohde_id = None
+        try:
+            logger.info("API: Haetaan kohteen perustiedot KAT API:lla")
+            property_data = kat_api_call.get_property_data(markdown_data)
+            
+            if property_data:
+                # Tallennetaan kohteet-tauluun ilman analysis_id:tä, liitetään myöhemmin
+                logger.info("API: Tallennetaan kohteen tiedot tietokantaan")
+                kohde_id = kat_api_call.save_property_data_to_db(property_data)
+                if kohde_id:
+                    logger.info(f"API: Kohde tallennettu tietokantaan ID:llä {kohde_id}")
+                else:
+                    logger.warning("API: Kohteen tallentaminen epäonnistui")
+            else:
+                logger.warning("API: Kohteen perustietoja ei saatu")
+        except Exception as e:
+            logger.error(f"API: Virhe kohteen tietojen käsittelyssä: {e}")
+        
         # Käytetään OpenAI API:a analyysin tekemiseen
         analysis_response = api_call.get_analysis(markdown_data, url)
         
@@ -451,29 +484,20 @@ def api_analyze():
             if analysis:
                 analysis_id = analysis.id
                 logger.info(f"API: Löydettiin juuri luotu analyysi ID: {analysis_id}")
-                
-        # Haetaan kohteen tiedot KAT API:n avulla
-        property_data = None
-        if analysis_id:
+        
+        # Jos meillä on nyt kohde_id ja analysis_id, päivitetään kohteen analysis_id
+        if kohde_id and analysis_id:
             try:
-                logger.info("API: Haetaan kohteen perustiedot KAT API:lla")
-                property_data = kat_api_call.get_property_data(markdown_data)
-                
-                # Tarkistetaan, onko kohde jo olemassa tälle analyysille
-                existing_kohde = Kohde.query.filter_by(analysis_id=analysis_id).first()
-                
-                if not existing_kohde and property_data:
-                    # Tallennetaan uusi kohde tietokantaan
-                    logger.info("API: Tallennetaan kohteen tiedot tietokantaan")
-                    kohde_id = kat_api_call.save_property_data_to_db(property_data, analysis_id)
-                    if kohde_id:
-                        logger.info(f"API: Kohde tallennettu tietokantaan ID:llä {kohde_id}")
-                    else:
-                        logger.warning("API: Kohteen tallentaminen epäonnistui")
+                logger.info(f"API: Päivitetään kohteen {kohde_id} analysis_id = {analysis_id}")
+                kohde = Kohde.query.get(kohde_id)
+                if kohde:
+                    kohde.analysis_id = analysis_id
+                    db.session.commit()
+                    logger.info("API: Kohteen analysis_id päivitetty onnistuneesti")
                 else:
-                    logger.info("API: Kohde on jo olemassa tai tietoja ei saatu")
+                    logger.warning(f"API: Kohdetta ID:llä {kohde_id} ei löytynyt")
             except Exception as e:
-                logger.error(f"API: Virhe kohteen tietojen käsittelyssä: {e}")
+                logger.error(f"API: Virhe kohteen analysis_id:n päivittämisessä: {e}")
                 
         # Tehdään riskianalyysi API-vastauksesta, jos analyysi on löydetty
         if analysis_id:
@@ -639,6 +663,27 @@ ID: {property_id}
 {text_content}
 """
                 
+                # Haetaan kohteen perustiedot ensin KAT API:n avulla
+                property_data = None
+                kohde_id = None
+                try:
+                    logger.info("PDF: Haetaan kohteen perustiedot KAT API:lla")
+                    property_data = kat_api_call.get_property_data(markdown_data)
+                    
+                    if property_data:
+                        # Tallennetaan kohteet-tauluun ilman analysis_id:tä, liitetään myöhemmin
+                        logger.info("PDF: Tallennetaan kohteen tiedot tietokantaan")
+                        kohde_id = kat_api_call.save_property_data_to_db(property_data)
+                        if kohde_id:
+                            logger.info(f"PDF: Kohde tallennettu tietokantaan ID:llä {kohde_id}")
+                        else:
+                            logger.warning("PDF: Kohteen tallentaminen epäonnistui")
+                    else:
+                        logger.warning("PDF: Kohteen perustietoja ei saatu")
+                except Exception as e:
+                    logger.error(f"PDF: Virhe kohteen tietojen käsittelyssä: {e}")
+                    logger.error(traceback.format_exc())
+                
                 # Use OpenAI API to analyze the data
                 logger.info("Tehdään OpenAI API -kutsu analyysia varten")
                 analysis_response = api_call.get_analysis(markdown_data, property_id)
@@ -674,27 +719,19 @@ ID: {property_id}
                         analysis_id = analysis.id
                         logger.info(f"Löydettiin juuri luotu analyysi ID: {analysis_id}")
 
-                # Haetaan kohteen tiedot KAT API:n avulla
-                if analysis_id:
+                # Jos meillä on nyt kohde_id ja analysis_id, päivitetään kohteen analysis_id
+                if kohde_id and analysis_id:
                     try:
-                        logger.info("PDF: Haetaan kohteen perustiedot KAT API:lla")
-                        property_data = kat_api_call.get_property_data(markdown_data)
-                        
-                        # Tarkistetaan, onko kohde jo olemassa tälle analyysille
-                        existing_kohde = Kohde.query.filter_by(analysis_id=analysis_id).first()
-                        
-                        if not existing_kohde and property_data:
-                            # Tallennetaan uusi kohde tietokantaan
-                            logger.info("PDF: Tallennetaan kohteen tiedot tietokantaan")
-                            kohde_id = kat_api_call.save_property_data_to_db(property_data, analysis_id)
-                            if kohde_id:
-                                logger.info(f"PDF: Kohde tallennettu tietokantaan ID:llä {kohde_id}")
-                            else:
-                                logger.warning("PDF: Kohteen tallentaminen epäonnistui")
+                        logger.info(f"PDF: Päivitetään kohteen {kohde_id} analysis_id = {analysis_id}")
+                        kohde = Kohde.query.get(kohde_id)
+                        if kohde:
+                            kohde.analysis_id = analysis_id
+                            db.session.commit()
+                            logger.info("PDF: Kohteen analysis_id päivitetty onnistuneesti")
                         else:
-                            logger.info("PDF: Kohde on jo olemassa tai tietoja ei saatu")
+                            logger.warning(f"PDF: Kohdetta ID:llä {kohde_id} ei löytynyt")
                     except Exception as e:
-                        logger.error(f"PDF: Virhe kohteen tietojen käsittelyssä: {e}")
+                        logger.error(f"PDF: Virhe kohteen analysis_id:n päivittämisessä: {e}")
                         logger.error(traceback.format_exc())
 
                 # Perform risk analysis from API response if analysis was found
