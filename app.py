@@ -3,7 +3,7 @@ import logging
 from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for, flash, send_file, abort
 import api_call
 from flask_login import LoginManager, current_user, login_required
-from models import db, User, Analysis, RiskAnalysis
+from models import db, User, Analysis, RiskAnalysis, Kohde
 from auth import auth
 from config import get_config
 from datetime import datetime
@@ -17,6 +17,7 @@ import time
 import etuovi_downloader  # Import the etuovi_downloader
 import oikotie_downloader  # Import the oikotie_downloader
 import tempfile
+import kat_api_call  # Import the kat_api_call module
 
 # Asetetaan lokitus
 logging.basicConfig(
@@ -280,6 +281,29 @@ def analyze():
                 analysis_id = analysis.id
                 logger.info(f"Löydettiin juuri luotu analyysi ID: {analysis_id}")
 
+        # Haetaan kohteen tiedot KAT API:n avulla
+        if analysis_id:
+            try:
+                logger.info("Haetaan kohteen perustiedot KAT API:lla")
+                property_data = kat_api_call.get_property_data(markdown_data)
+                
+                # Tarkistetaan, onko kohde jo olemassa tälle analyysille
+                existing_kohde = Kohde.query.filter_by(analysis_id=analysis_id).first()
+                
+                if not existing_kohde and property_data:
+                    # Tallennetaan uusi kohde tietokantaan
+                    logger.info("Tallennetaan kohteen tiedot tietokantaan")
+                    kohde_id = kat_api_call.save_property_data_to_db(property_data, analysis_id)
+                    if kohde_id:
+                        logger.info(f"Kohde tallennettu tietokantaan ID:llä {kohde_id}")
+                    else:
+                        logger.warning("Kohteen tallentaminen epäonnistui")
+                else:
+                    logger.info("Kohde on jo olemassa tai tietoja ei saatu")
+            except Exception as e:
+                logger.error(f"Virhe kohteen tietojen käsittelyssä: {e}")
+                logger.error(traceback.format_exc())
+
         # Tehdään riskianalyysi API-vastauksesta, jos analyysi on löydetty
         riski_data = None
         if analysis_id:
@@ -374,6 +398,29 @@ def api_analyze():
                 analysis_id = analysis.id
                 logger.info(f"API: Löydettiin juuri luotu analyysi ID: {analysis_id}")
                 
+        # Haetaan kohteen tiedot KAT API:n avulla
+        property_data = None
+        if analysis_id:
+            try:
+                logger.info("API: Haetaan kohteen perustiedot KAT API:lla")
+                property_data = kat_api_call.get_property_data(markdown_data)
+                
+                # Tarkistetaan, onko kohde jo olemassa tälle analyysille
+                existing_kohde = Kohde.query.filter_by(analysis_id=analysis_id).first()
+                
+                if not existing_kohde and property_data:
+                    # Tallennetaan uusi kohde tietokantaan
+                    logger.info("API: Tallennetaan kohteen tiedot tietokantaan")
+                    kohde_id = kat_api_call.save_property_data_to_db(property_data, analysis_id)
+                    if kohde_id:
+                        logger.info(f"API: Kohde tallennettu tietokantaan ID:llä {kohde_id}")
+                    else:
+                        logger.warning("API: Kohteen tallentaminen epäonnistui")
+                else:
+                    logger.info("API: Kohde on jo olemassa tai tietoja ei saatu")
+            except Exception as e:
+                logger.error(f"API: Virhe kohteen tietojen käsittelyssä: {e}")
+                
         # Tehdään riskianalyysi API-vastauksesta, jos analyysi on löydetty
         if analysis_id:
             try:
@@ -393,6 +440,10 @@ def api_analyze():
             'source': source
         }
         
+        # Lisätään perustiedot vastaukseen, jos ne on saatavilla
+        if property_data:
+            response_data['basic_property_data'] = property_data
+            
         # Lisätään riskianalyysi vastaukseen, jos se on saatavilla
         if riski_data:
             response_data['risk_analysis'] = riski_data
@@ -568,6 +619,29 @@ ID: {property_id}
                     if analysis:
                         analysis_id = analysis.id
                         logger.info(f"Löydettiin juuri luotu analyysi ID: {analysis_id}")
+
+                # Haetaan kohteen tiedot KAT API:n avulla
+                if analysis_id:
+                    try:
+                        logger.info("PDF: Haetaan kohteen perustiedot KAT API:lla")
+                        property_data = kat_api_call.get_property_data(markdown_data)
+                        
+                        # Tarkistetaan, onko kohde jo olemassa tälle analyysille
+                        existing_kohde = Kohde.query.filter_by(analysis_id=analysis_id).first()
+                        
+                        if not existing_kohde and property_data:
+                            # Tallennetaan uusi kohde tietokantaan
+                            logger.info("PDF: Tallennetaan kohteen tiedot tietokantaan")
+                            kohde_id = kat_api_call.save_property_data_to_db(property_data, analysis_id)
+                            if kohde_id:
+                                logger.info(f"PDF: Kohde tallennettu tietokantaan ID:llä {kohde_id}")
+                            else:
+                                logger.warning("PDF: Kohteen tallentaminen epäonnistui")
+                        else:
+                            logger.info("PDF: Kohde on jo olemassa tai tietoja ei saatu")
+                    except Exception as e:
+                        logger.error(f"PDF: Virhe kohteen tietojen käsittelyssä: {e}")
+                        logger.error(traceback.format_exc())
 
                 # Perform risk analysis from API response if analysis was found
                 riski_data = None

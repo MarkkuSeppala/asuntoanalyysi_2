@@ -58,6 +58,9 @@ class Analysis(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
+    # Kohteet, jotka on liitetty tähän analyysiin
+    kohde = db.relationship('Kohde', backref='analysis', lazy=True, uselist=False)
+    
     def __repr__(self):
         return f'<Analysis {self.title}>'
 
@@ -74,4 +77,19 @@ class RiskAnalysis(db.Model):
     analysis = db.relationship('Analysis', backref=db.backref('risk_analysis', lazy=True, uselist=False))
     
     def __repr__(self):
-        return f'<RiskAnalysis for Analysis {self.analysis_id}>' 
+        return f'<RiskAnalysis for Analysis {self.analysis_id}>'
+
+class Kohde(db.Model):
+    """Kohteiden tietomalli tietokantaa varten"""
+    __tablename__ = 'kohteet'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    osoite = db.Column(db.String(255), nullable=False)
+    tyyppi = db.Column(db.String(50), nullable=True)  # omakotitalo, kerrostalo, rivitalo, erillistalo, paritalo
+    hinta = db.Column(db.Numeric, nullable=True)
+    rakennusvuosi = db.Column(db.Integer, nullable=True)
+    analysis_id = db.Column(db.Integer, db.ForeignKey('analyses.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<Kohde {self.osoite}>' 
