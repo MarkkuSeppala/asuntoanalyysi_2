@@ -164,41 +164,26 @@ Ilmoitus-ID: {property_id}
         logger.info(f"Etuovi URL havaittu: {url}")
         try:
             # Määritellään tiedostonimi
-            property_id = url.split('/')[-1]
+            property_id = url.split('/')[-1].split('?')[0]  # Remove query parameters
             pdf_filename = f"etuovi_{property_id}.pdf"
             
-            # Ladataan PDF ja muunnetaan tekstiksi
-            logger.info("Ladataan PDF Etuovesta...")
-            pdf_path = etuovi_downloader.download_pdf(url, pdf_filename, headless=True)
-            
-            logger.info("Muunnetaan PDF tekstiksi...")
-            text_path = etuovi_downloader.convert_pdf_to_text(pdf_path)
-            
-            # Luetaan tekstitiedosto
-            with open(text_path, 'r', encoding='utf-8') as f:
-                text_content = f.read()
+            # Käytetään parannettua get_property_info-funktiota, joka yrittää ensin PDF-latausta ja sitten HTML-parsintaa
+            logger.info("Haetaan tietoja Etuovesta (PDF tai HTML)...")
+            text_content, source_type = etuovi_downloader.get_property_info(url, pdf_filename, headless=False)
             
             # Muunnetaan etuovi-teksti markdown-muotoon
-            logger.info("Muotoillaan teksti markdown-muotoon...")
+            logger.info(f"Muotoillaan teksti markdown-muotoon (lähde: {source_type})...")
             markdown_data = f"""# Etuovi-asuntoilmoitus
 
 ## Perustiedot
 URL: {url}
-Lähde: Etuovi.com
+Lähde: Etuovi.com ({source_type})
 Ilmoitus-ID: {property_id}
 
 ## Ilmoituksen sisältö
 {text_content}
 """
             
-            # Poista tilapäiset tiedostot
-            try:
-                os.remove(pdf_path)
-                os.remove(text_path)
-                logger.info("Tilapäiset tiedostot poistettu")
-            except Exception as e:
-                logger.warning(f"Tilapäisten tiedostojen poistaminen epäonnistui: {e}")
-                
             return True, markdown_data, 'etuovi'
             
         except Exception as e:
