@@ -130,7 +130,7 @@ def riskianalyysi(kohde_teksti, analysis_id=None):
                     riski["kuvaus"] = f"Riskitaso kategorialle {riski['osa_alue']}"
             
             # Muodostetaan JSON-muotoinen tulos
-            json_result = json.dumps(json_data)
+            json_result = json.dumps(json_data, ensure_ascii=False)
             
             # Jos analysis_id on annettu, tallennetaan riskianalyysi tietokantaan
             if analysis_id:
@@ -175,7 +175,7 @@ def riskianalyysi(kohde_teksti, analysis_id=None):
                     }
                 ]
             }
-            return json.dumps(default_json)
+            return json.dumps(default_json, ensure_ascii=False)
     
     except Exception as e:
         logger.exception(f"Virhe riskianalyysissä: {e}")
@@ -191,5 +191,5 @@ def riskianalyysi(kohde_teksti, analysis_id=None):
                 }
             ]
         }
-        return json.dumps(default_json)
+        return json.dumps(default_json, ensure_ascii=False)
     
