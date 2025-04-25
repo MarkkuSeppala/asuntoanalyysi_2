@@ -127,7 +127,7 @@ Alla kuvaus vastauksen rakenteesta.
 
 <rakennekuvaus>
 **KOHDE:**
-\"Kaivokselantie 5, Vantaa\"
+\"Katuosoite, Kaupunki\"
 
 <yhteenveto>
 *Hinta:* (kerro pyyntihinta ja esitä tässä myös oma hinta-arviosi, mutta huomioi, että ostajat olettavat saavansa aina ostotilanteessa noin 5% alennuksen.)
