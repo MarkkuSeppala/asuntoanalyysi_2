@@ -293,8 +293,12 @@ def analyze():
                 logger.error(f"Virhe riskianalyysissä: {e}")
                 logger.error(traceback.format_exc())
         
-        # Renderöidään asunnon tiedot ja analyysi
-        return render_template('results.html', 
+        # Redirect to the analysis page if we have an analysis ID
+        if analysis_id:
+            return redirect(url_for('view_analysis', analysis_id=analysis_id))
+        else:
+            # Renderöidään asunnon tiedot ja analyysi
+            return render_template('results.html', 
                             property_data=sanitized_markdown, 
                             analysis=sanitized_analysis,
                               riski_data=riski_data,
@@ -585,8 +589,12 @@ ID: {property_id}
                 except Exception as e:
                     logger.warning(f"Tilapäisen PDF-tiedoston poistaminen epäonnistui: {e}")
                 
-                # Render the results
-                return render_template('results.html', 
+                # Redirect to the analysis page instead of rendering results
+                if analysis_id:
+                    return redirect(url_for('view_analysis', analysis_id=analysis_id))
+                else:
+                    # Render the results if we don't have an analysis ID for some reason
+                    return render_template('results.html', 
                                     property_data=sanitized_markdown, 
                                     analysis=sanitized_analysis,
                                     riski_data=riski_data,
