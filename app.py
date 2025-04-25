@@ -237,7 +237,10 @@ def analyze():
         success, markdown_data, source = get_property_data(url)
         
         if not success or not markdown_data:
-            return jsonify({'error': 'Asunnon tietojen hakeminen epäonnistui'}), 500
+            logger.error("Asuntoilmoituksen noutaminen epäonnistui")
+            return render_template('error.html', 
+                                  error_title="Virhe ilmoituksen haussa", 
+                                  error_message="Ilmoituksen hakemisessa tapahtui virhe. Ole hyvä, yritä myöhemmin uudelleen."), 500
         
         logger.debug(f"Markdown-datan pituus: {len(markdown_data)} merkkiä")
         
@@ -329,10 +332,15 @@ def api_analyze():
             return jsonify({'error': 'Syötä kelvollinen Oikotie- tai Etuovi-asuntolinkin URL'}), 400
         
         # Haetaan asunnon tiedot URL:n perusteella
+        logger.info(f"Haetaan tietoja URL:sta: {url}")
         success, markdown_data, source = get_property_data(url)
         
         if not success or not markdown_data:
-            return jsonify({'error': 'Asunnon tietojen hakeminen epäonnistui'}), 500
+            logger.error("API: Asuntoilmoituksen noutaminen epäonnistui")
+            return jsonify({
+                'error': 'Ilmoituksen hakemisessa tapahtui virhe', 
+                'message': 'Ilmoituksen hakemisessa tapahtui virhe. Ole hyvä, yritä myöhemmin uudelleen.'
+            }), 500
         
         # Käytetään OpenAI API:a analyysin tekemiseen
         analysis_response = api_call.get_analysis(markdown_data, url)
