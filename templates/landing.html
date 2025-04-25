@@ -308,13 +308,9 @@
 </section>
 
 <!-- Logo Section -->
-<div style="height: 100px; display: flex; justify-content: center; align-items: center; gap: 40px; margin-bottom: 30px; background-color: #f8f9fa;">
-    <img src="/static/img/etuovi_logo.png" alt="Etuovi Logo" style="max-height: 30px;" 
-         onload="console.log('Etuovi logo loaded')" 
-         onerror="console.error('Failed to load Etuovi logo:', this.src); this.src='https://via.placeholder.com/150x50?text=Etuovi'">
-    <img src="/static/img/oikotie_logo.png" alt="Oikotie Logo" style="max-height: 30px;" 
-         onload="console.log('Oikotie logo loaded')" 
-         onerror="console.error('Failed to load Oikotie logo:', this.src); this.src='https://via.placeholder.com/150x50?text=Oikotie'">
+<div style="height: 100px; display: flex; justify-content: center; align-items: center; gap: 40px; margin-bottom: 30px;">
+    <img src="{{ url_for('static', filename='img/etuovi-logo.png') }}" alt="Etuovi Logo" style="max-height: 50px;">
+    <img src="{{ url_for('static', filename='img/oikotie-logo.png') }}" alt="Oikotie Logo" style="max-height: 50px;">
 </div>
 
 <!-- Features Section -->
@@ -503,26 +499,6 @@
                 behavior: 'smooth'
             });
         });
-    });
-    
-    // Add debug logs for images
-    window.addEventListener('load', function() {
-        console.log('Page loaded');
-        const etuoviImg = document.querySelector('img[src*="etuovi_logo.png"]');
-        const oikotieImg = document.querySelector('img[src*="oikotie_logo.png"]');
-        
-        console.log('Etuovi img:', etuoviImg);
-        console.log('Oikotie img:', oikotieImg);
-        
-        if (etuoviImg) {
-            console.log('Etuovi complete:', etuoviImg.complete);
-            console.log('Etuovi naturalWidth:', etuoviImg.naturalWidth);
-        }
-        
-        if (oikotieImg) {
-            console.log('Oikotie complete:', oikotieImg.complete);
-            console.log('Oikotie naturalWidth:', oikotieImg.naturalWidth);
-        }
     });
 </script>
 {% endblock %} 
