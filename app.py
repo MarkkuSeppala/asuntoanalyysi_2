@@ -18,6 +18,7 @@ import etuovi_downloader  # Import the etuovi_downloader
 import oikotie_downloader  # Import the oikotie_downloader
 import tempfile
 import kat_api_call  # Import the kat_api_call module
+from sqlalchemy import text
 
 # Asetetaan lokitus
 logging.basicConfig(
@@ -71,6 +72,56 @@ def create_tables():
     """Luo tietokanta ja taulut jos ne eivät ole olemassa"""
     with app.app_context():
         db.create_all()
+        
+        # Varmistetaan että kohteet-taulu on luotu oikein
+        inspector = sqlalchemy.inspect(db.engine)
+        tables = inspector.get_table_names()
+        
+        # Tarkista onko kohteet-taulu jo olemassa
+        if 'kohteet' not in tables:
+            logger.info("Kohteet-taulu puuttuu. Luodaan se...")
+            try:
+                # Luodaan taulu käyttäen create_all-funktiota, joka huomioi kaikki määritellyt mallit
+                db.create_all()
+                logger.info("Kohteet-taulu luotu onnistuneesti.")
+            except Exception as e:
+                logger.error(f"Virhe kohteet-taulun luomisessa SQLAlchemylla: {e}")
+                
+                # Jos SQLAlchemy epäonnistuu, yritetään luoda taulu suoralla SQL-kyselyllä
+                try:
+                    with db.engine.connect() as conn:
+                        with conn.begin():
+                            conn.execute(text("""
+                            CREATE TABLE kohteet (
+                                id SERIAL PRIMARY KEY,
+                                osoite VARCHAR(255) NOT NULL,
+                                tyyppi VARCHAR(50),
+                                hinta NUMERIC,
+                                rakennusvuosi INTEGER,
+                                analysis_id INTEGER,
+                                created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+                                FOREIGN KEY (analysis_id) REFERENCES analyses (id) ON DELETE SET NULL
+                            )
+                            """))
+                    logger.info("Kohteet-taulu luotu onnistuneesti suoralla SQL-kyselyllä!")
+                except Exception as e2:
+                    logger.error(f"Virhe kohteet-taulun luomisessa suoralla SQL-kyselyllä: {e2}")
+        else:
+            # Tarkista onko analysis_id-sarake määritetty ei-null-arvoiseksi
+            columns = inspector.get_columns('kohteet')
+            # Etsi analysis_id-sarake
+            for column in columns:
+                if column['name'] == 'analysis_id':
+                    if not column.get('nullable', True):
+                        logger.info("Päivitetään kohteet-taulun analysis_id-sarake nullable=True")
+                        try:
+                            with db.engine.connect() as conn:
+                                with conn.begin():
+                                    conn.execute(text("ALTER TABLE kohteet ALTER COLUMN analysis_id DROP NOT NULL"))
+                            logger.info("Kohteet-taulun analysis_id-sarake päivitetty onnistuneesti!")
+                        except Exception as e:
+                            logger.error(f"Virhe kohteet-taulun päivityksessä: {e}")
+                    break
 
 # Varmistetaan että taulut on luotu sovelluksen käynnistyessä
 with app.app_context():
