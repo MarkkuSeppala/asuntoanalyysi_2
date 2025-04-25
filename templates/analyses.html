@@ -140,6 +140,56 @@
         color: #6c757d;
     }
     
+    /* Hakukentän tyylit */
+    .search-container {
+        position: relative;
+    }
+    
+    .search-container .input-group {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .search-container .form-control {
+        padding: 12px 15px;
+        border-color: #e0e0e0;
+        font-size: 1rem;
+    }
+    
+    .search-container .form-control:focus {
+        box-shadow: none;
+        border-color: var(--accent-color);
+    }
+    
+    .search-container .input-group-text {
+        border-color: #e0e0e0;
+    }
+    
+    .search-status {
+        min-height: 20px;
+    }
+    
+    /* Hakutulosten korostukset */
+    .highlight {
+        background-color: rgba(255, 230, 0, 0.3);
+        padding: 2px 0;
+    }
+    
+    /* Animaatio hakutuloksille */
+    .analysis-item.search-hidden {
+        display: none;
+    }
+    
+    .analysis-item.search-visible {
+        animation: fadeIn 0.4s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
     @media (max-width: 768px) {
         .container-narrow {
             padding: 0 15px;
@@ -157,15 +207,41 @@
     <h1 class="page-title">Omat analyysit</h1>
     
     {% if analyses|length > 0 %}
-        <div class="analyses-list">
+        <!-- Hakukenttä -->
+        <div class="search-container mb-4">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="fas fa-search text-muted"></i>
+                </span>
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    class="form-control border-start-0" 
+                    placeholder="Hae analyyseja (osoite, analyysin sisältö...)" 
+                    aria-label="Hae analyyseja"
+                >
+                <button class="btn btn-outline-secondary border-start-0" type="button" id="clearSearch">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="search-status mt-2 small text-muted" id="searchStatus"></div>
+        </div>
+        
+        <div class="analyses-list" id="analysesList">
             {% for analysis in analyses %}
-                <div class="analysis-item">
+                <div class="analysis-item" data-search-content="{{ analysis.kohde.osoite if analysis.kohde and analysis.kohde.osoite else '' }} {{ analysis.title }} {{ analysis.content }}">
                     <a href="{{ url_for('view_analysis', analysis_id=analysis.id) }}" class="analysis-link">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="analysis-title mb-0">{{ analysis.title or 'Nimetön analyysi' }}</h5>
+                            <h5 class="analysis-title mb-0">
+                                {% if analysis.kohde and analysis.kohde.osoite %}
+                                    {{ analysis.kohde.osoite }}
+                                {% else %}
+                                    {{ analysis.title or 'Nimetön analyysi' }}
+                                {% endif %}
+                            </h5>
                             <span class="analysis-date">{{ analysis.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
                         </div>
-                        <p class="analysis-url mb-2">{{ analysis.property_url }}</p>
+                        <p class="analysis-url mb-2">{{ analysis.title or 'Analyysi: ' + (analysis.created_at|string) }}</p>
                         <div class="d-flex justify-content-end mt-3">
                             <a href="{{ url_for('download_analysis', analysis_id=analysis.id) }}" class="btn btn-sm btn-outline-accent me-2">
                                 <i class="fas fa-download"></i> Lataa
@@ -177,6 +253,18 @@
                     </a>
                 </div>
             {% endfor %}
+        </div>
+        
+        <!-- Ei hakutuloksia -tila -->
+        <div id="noSearchResults" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">
+                <i class="fas fa-search"></i>
+            </div>
+            <h3 class="empty-state-text">Ei hakutuloksia</h3>
+            <p class="empty-state-subtext">Kokeile eri hakusanoja tai tyhjennä haku</p>
+            <button class="btn btn-outline-accent mt-3" id="resetSearchBtn">
+                <i class="fas fa-undo me-1"></i> Tyhjennä haku
+            </button>
         </div>
     {% else %}
         <div class="empty-state">
@@ -194,4 +282,89 @@
         </a>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Hakutoiminnallisuuden elementit
+    const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearch');
+    const resetSearchBtn = document.getElementById('resetSearchBtn');
+    const searchStatus = document.getElementById('searchStatus');
+    const analysesList = document.getElementById('analysesList');
+    const analysisItems = document.querySelectorAll('.analysis-item');
+    const noSearchResults = document.getElementById('noSearchResults');
+    
+    // Hakufunktio
+    function performSearch() {
+        const searchTerm = searchInput.value.trim().toLowerCase();
+        let visibleCount = 0;
+        
+        if (searchTerm === '') {
+            // Jos hakukenttä on tyhjä, näytä kaikki
+            analysisItems.forEach(item => {
+                item.classList.remove('search-hidden');
+                item.classList.add('search-visible');
+                
+                // Poista mahdolliset korostukset
+                const title = item.querySelector('.analysis-title');
+                title.innerHTML = title.innerHTML.replace(/<span class="highlight">|<\/span>/g, '');
+            });
+            
+            searchStatus.textContent = '';
+            noSearchResults.style.display = 'none';
+            return;
+        }
+        
+        // Käy läpi kaikki analyysikohteet
+        analysisItems.forEach(item => {
+            const content = item.getAttribute('data-search-content').toLowerCase();
+            const title = item.querySelector('.analysis-title');
+            
+            if (content.includes(searchTerm)) {
+                // Näytä kohde jos sisältää hakutermin
+                item.classList.remove('search-hidden');
+                item.classList.add('search-visible');
+                
+                // Korosta hakutermi otsikossa
+                const originalText = title.textContent;
+                const regex = new RegExp('(' + searchTerm + ')', 'gi');
+                title.innerHTML = originalText.replace(regex, '<span class="highlight">$1</span>');
+                
+                visibleCount++;
+            } else {
+                // Piilota kohde
+                item.classList.add('search-hidden');
+                item.classList.remove('search-visible');
+            }
+        });
+        
+        // Päivitä hakutiedot
+        if (visibleCount === 0) {
+            noSearchResults.style.display = 'block';
+            analysesList.style.display = 'none';
+        } else {
+            noSearchResults.style.display = 'none';
+            analysesList.style.display = 'block';
+            searchStatus.textContent = `Löydetty ${visibleCount} ${visibleCount === 1 ? 'analyysi' : 'analyysia'}`;
+        }
+    }
+    
+    // Tyhjennä haku
+    function clearSearch() {
+        searchInput.value = '';
+        performSearch();
+        searchInput.focus();
+    }
+    
+    // Tapahtumakuuntelijat
+    searchInput.addEventListener('input', performSearch);
+    clearSearchBtn.addEventListener('click', clearSearch);
+    resetSearchBtn.addEventListener('click', clearSearch);
+    
+    // Tyhjennä hakukenttä, kun sivu ladataan
+    searchInput.value = '';
+});
+</script>
 {% endblock %} 
