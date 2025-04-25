@@ -169,7 +169,7 @@ Ilmoitus-ID: {property_id}
             
             # Ladataan PDF ja muunnetaan tekstiksi
             logger.info("Ladataan PDF Etuovesta...")
-            pdf_path = etuovi_downloader.download_pdf(url, pdf_filename, headless=True)
+            pdf_path = etuovi_downloader.download_with_retry(url, pdf_filename, headless=True)
             
             logger.info("Muunnetaan PDF tekstiksi...")
             text_path = etuovi_downloader.convert_pdf_to_text(pdf_path)
