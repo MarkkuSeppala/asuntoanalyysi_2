@@ -809,6 +809,10 @@ def serve_react(path):
         if len(path_parts) > 1:
             return send_from_directory(os.path.join(app.root_path, path_parts[0]), path_parts[1])
         return app.send_static_file(path)
+    
+    # Jos on favicon tai muu Root-tason tiedosto
+    if path in ['favicon.ico', 'manifest.json', 'logo192.png', 'logo512.png', 'robots.txt']:
+        return send_from_directory(os.path.join(app.root_path, 'static', 'react'), path)
         
     # Tarkista onko polku joku API-reitti tai muu Flask-reitti
     if path.startswith('api/') or path.startswith('auth/') or path.startswith('flask/') or path.startswith('analyses/') or path.startswith('analysis/'):
