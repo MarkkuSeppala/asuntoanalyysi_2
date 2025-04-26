@@ -48,6 +48,15 @@ if [ -d "build" ]; then
   mkdir -p static/react
   cp -r build/* static/react/
   
+  # Korjaa index.html tiedoston polut lisäämällä /react-etuliite
+  if [ -f "static/react/index.html" ]; then
+    echo "Korjataan index.html tiedoston polut..."
+    # Korvataan kaikki '/static/' viittaukset '/react/static/' viittauksilla
+    sed -i 's|href="/|href="/react/|g' static/react/index.html
+    sed -i 's|src="/|src="/react/|g' static/react/index.html
+    echo "index.html polut korjattu"
+  fi
+  
   # DEBUG: Näytä static/react-kansion sisältö kopioinnin jälkeen
   echo "static/react-kansion sisältö kopioinnin jälkeen:"
   ls -la static/react/

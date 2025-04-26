@@ -807,6 +807,12 @@ def serve_react(path):
         # Jos on, anna Flaskin hoitaa se normaalisti
         return app.send_static_file('react/index.html')
     
+    # Tarkista onko pyydetty tiedosto static/js tai static/css -polku (vanhat polut)
+    if path.startswith('static/js/') or path.startswith('static/css/'):
+        # Uudelleenohjaa /react-polkuun
+        corrected_path = f"react/{path}"
+        return send_from_directory(os.path.join(app.root_path, 'static'), corrected_path)
+    
     # Tarkista onko pyydetty tiedosto olemassa static/react-kansiossa
     if path != "" and os.path.exists(os.path.join(app.root_path, 'static', 'react', path)):
         return send_from_directory(os.path.join(app.root_path, 'static', 'react'), path)
