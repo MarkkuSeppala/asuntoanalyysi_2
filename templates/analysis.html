@@ -3,8 +3,9 @@
 {% block title %}{{ title|default('Asuntoanalyysi') }}{% endblock %}
 
 {% block extra_css %}
-<!-- Lisätään Markdown-tuen kirjasto -->
+<!-- Lisätään Markdown-tuen kirjasto ja Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
     :root {
         --primary-color: #F1EFEC;
@@ -218,15 +219,23 @@
         color: #721c24;
     }
     
-    .risk-area-row {
-        padding: 30px 20px;
-        border-bottom: 1px solid #dee2e6;
-        margin-bottom: 15px;
-        margin-top: 15px;
+    /* Riski-korttien tyylit */
+    .risk-card {
+        border-radius: 12px;
+        border: none;
+        overflow: hidden;
+        background-color: white;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        height: 100%;
+        margin-bottom: 20px;
+        padding: 20px;
     }
     
-    .risk-area-row:last-child {
-        border-bottom: none;
+    .risk-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        border-bottom: 4px solid var(--accent-color);
     }
     
     .risk-area-title {
@@ -235,8 +244,28 @@
         margin-bottom: 10px;
     }
     
-    .list-group {
-        margin-top: 30px;
+    /* Donut chart -kortin tyyli */
+    .risk-chart-container {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        margin: 0 auto;
+    }
+    
+    .risk-chart-score {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 32px;
+        font-weight: bold;
+        color: var(--accent-color);
+        text-align: center;
+    }
+    
+    .risk-chart-label {
+        font-size: 14px;
+        color: #666;
     }
     
     @media (max-width: 768px) {
@@ -274,18 +303,22 @@
     {% endif %}
     
     {% if risk_analysis %}
-    <div class="analysis-card shadow">
-        <div class="card-header-custom">
-            <h3 class="mb-0 d-flex align-items-center">Riskianalyysi <span class="ms-2 risk-score">{{ risk_analysis.kokonaisriskitaso }}</span><span class="ms-1 text-muted">/10</span></h3>
-        </div>
-        <div class="card-body">
-            <div class="d-flex align-items-center mb-5">
-                <div class="flex-grow-1">
-                    <div class="fw-bold mb-2">Kokonaisriskitaso</div>
-                    <div class="risk-meter">
-                        <div class="risk-meter-fill {% if risk_analysis.kokonaisriskitaso <= 3.4 %}risk-low{% elif risk_analysis.kokonaisriskitaso <= 5.5 %}risk-medium{% elif risk_analysis.kokonaisriskitaso <= 6.9 %}risk-high{% else %}risk-critical{% endif %}" style="width: {{ risk_analysis.kokonaisriskitaso * 10 }}%;"></div>
+    <div class="mb-4">
+        <h3 class="mb-3">Riskianalyysi</h3>
+        
+        <!-- Kokonaisriskitason kortti ja donut chart -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="risk-card">
+                    <h4 class="risk-area-title text-center mb-3">Kokonaisriskitaso</h4>
+                    <div class="risk-chart-container">
+                        <canvas id="riskDonutChart"></canvas>
+                        <div class="risk-chart-score">
+                            {{ risk_analysis.kokonaisriskitaso }}<br>
+                            <span class="risk-chart-label">/10</span>
+                        </div>
                     </div>
-                    <div class="text-muted small mt-1">
+                    <div class="text-center mt-3">
                         {% if risk_analysis.kokonaisriskitaso <= 3.4 %}
                             <span class="risk-label risk-level-low">Matala riski</span>
                         {% elif risk_analysis.kokonaisriskitaso <= 5.5 %}
@@ -299,37 +332,45 @@
                 </div>
             </div>
             
-            <div class="list-group">
-                {% for riski in risk_analysis.riskimittari %}
-                <div class="list-group-item risk-area-row">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h5 class="risk-area-title">{{ riski.osa_alue }}</h5>
-                            {% if riski.kuvaus %}
-                            <p class="mb-3">{{ riski.kuvaus }}</p>
+            <div class="col-lg-6">
+                <div class="risk-card d-flex flex-column justify-content-center">
+                    <h4 class="risk-area-title mb-3">Riskianalyysin yhteenveto</h4>
+                    <p>Tämä analyysi perustuu {{ risk_analysis.riskimittari|length }} eri tekijään, joiden perusteella kokonaisriski on arvioitu.</p>
+                    <p>Kokonaisriskitaso ({{ risk_analysis.kokonaisriskitaso }}/10) on painotettu keskiarvo kaikista osa-alueista.</p>
+                    <p class="mb-0">Alla näet jokaisen riskiosa-alueen eritellyn analyysin.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Riskialueiden kortit -->
+        <div class="row">
+            {% for riski in risk_analysis.riskimittari %}
+            <div class="col-lg-4 col-md-6">
+                <div class="risk-card">
+                    <h5 class="risk-area-title">{{ riski.osa_alue }}</h5>
+                    {% if riski.kuvaus %}
+                    <p class="mb-3">{{ riski.kuvaus }}</p>
+                    {% endif %}
+                    <div class="risk-meter mt-3">
+                        <div class="risk-meter-fill {% if riski.riski_taso <= 3.4 %}risk-low{% elif riski.riski_taso <= 5.5 %}risk-medium{% elif riski.riski_taso <= 6.9 %}risk-high{% else %}risk-critical{% endif %}" style="width: {{ riski.riski_taso * 10 }}%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <div class="text-muted small">
+                            {% if riski.riski_taso <= 3.4 %}
+                                <span class="risk-label risk-level-low">Matala ({{ riski.riski_taso }})</span>
+                            {% elif riski.riski_taso <= 5.5 %}
+                                <span class="risk-label risk-level-medium">Keskitaso ({{ riski.riski_taso }})</span>
+                            {% elif riski.riski_taso <= 6.9 %}
+                                <span class="risk-label risk-level-medium">Kohonnut ({{ riski.riski_taso }})</span>
+                            {% else %}
+                                <span class="risk-label risk-level-high">Korkea ({{ riski.riski_taso }})</span>
                             {% endif %}
-                            <div class="risk-meter mt-3">
-                                <div class="risk-meter-fill {% if riski.riski_taso <= 3.4 %}risk-low{% elif riski.riski_taso <= 5.5 %}risk-medium{% elif riski.riski_taso <= 6.9 %}risk-high{% else %}risk-critical{% endif %}" style="width: {{ riski.riski_taso * 10 }}%;"></div>
-                            </div>
-                            <div class="d-flex justify-content-between mt-2">
-                                <div class="text-muted small">
-                                    {% if riski.riski_taso <= 3.4 %}
-                                        <span class="risk-label risk-level-low">Matala ({{ riski.riski_taso }})</span>
-                                    {% elif riski.riski_taso <= 5.5 %}
-                                        <span class="risk-label risk-level-medium">Keskitaso ({{ riski.riski_taso }})</span>
-                                    {% elif riski.riski_taso <= 6.9 %}
-                                        <span class="risk-label risk-level-medium">Kohonnut ({{ riski.riski_taso }})</span>
-                                    {% else %}
-                                        <span class="risk-label risk-level-high">Korkea ({{ riski.riski_taso }})</span>
-                                    {% endif %}
-                                </div>
-                                <div class="text-muted small">Osuus: {{ riski.osuus_prosenttia }}%</div>
-                            </div>
                         </div>
+                        <div class="text-muted small">Osuus: {{ riski.osuus_prosenttia }}%</div>
                     </div>
                 </div>
-                {% endfor %}
             </div>
+            {% endfor %}
         </div>
     </div>
 
@@ -372,6 +413,75 @@
         } catch (error) {
             console.error('Virhe markdown-käsittelyssä:', error);
             analysisContent.innerHTML = '<p class="error-message">Virhe sisällön käsittelyssä.</p>';
+        }
+        
+        // Luodaan donut chart riskianalyysiin
+        const riskChart = document.getElementById('riskDonutChart');
+        if (riskChart) {
+            const ctx = riskChart.getContext('2d');
+            
+            // Haetaan riskialueiden tiedot ja luodaan värikartta
+            const riskiAlueet = [];
+            const riskiArvot = [];
+            const riskiVarit = [];
+            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim();
+            
+            // Muokataan accent-väriä eri sävyiksi
+            function getShadeOfAccent(opacity) {
+                // Parsitaan hex-väri rgb-arvoiksi
+                let r = 18, g = 52, b = 88; // #123458 oletusväri
+                
+                if (accentColor.startsWith('#')) {
+                    const hex = accentColor.substring(1);
+                    r = parseInt(hex.substring(0, 2), 16);
+                    g = parseInt(hex.substring(2, 4), 16);
+                    b = parseInt(hex.substring(4, 6), 16);
+                } else if (accentColor.startsWith('rgb')) {
+                    const rgbMatch = accentColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+                    if (rgbMatch) {
+                        r = parseInt(rgbMatch[1]);
+                        g = parseInt(rgbMatch[2]);
+                        b = parseInt(rgbMatch[3]);
+                    }
+                }
+                
+                return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+            }
+            
+            {% if risk_analysis %}
+                {% for riski in risk_analysis.riskimittari %}
+                    riskiAlueet.push('{{ riski.osa_alue }}');
+                    riskiArvot.push({{ riski.osuus_prosenttia }});
+                    riskiVarit.push(getShadeOfAccent({{ 1.0 - (loop.index0 * 0.15) }}));
+                {% endfor %}
+                
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: riskiAlueet,
+                        datasets: [{
+                            data: riskiArvot,
+                            backgroundColor: riskiVarit,
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.label + ': ' + context.raw + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            {% endif %}
         }
     });
 </script>
