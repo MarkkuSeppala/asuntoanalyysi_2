@@ -290,6 +290,11 @@
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
     }
     
+    .map-wrapper {
+        max-width: 80%;
+        margin: 0 auto;
+    }
+    
     @media (max-width: 768px) {
         .container-narrow {
             padding: 0 15px;
@@ -305,6 +310,10 @@
         
         #mapContainer {
             height: 200px;
+        }
+        
+        .map-wrapper {
+            max-width: 100%;
         }
     }
 </style>
@@ -327,7 +336,7 @@
     {% if kohde and kohde.osoite %}
     <!-- Karttaelementti -->
     <div class="row mb-4">
-        <div class="col-12">
+        <div class="col-12 map-wrapper">
             <div class="analysis-card shadow">
                 <div class="card-header-custom">
                     <h3 class="mb-0">Sijainti kartalla</h3>
@@ -498,7 +507,7 @@
                                 color: 'rgba(18, 52, 88, 0.4)',
                                 fillColor: 'rgba(18, 52, 88, 0.2)',
                                 fillOpacity: 0.5,
-                                radius: 100 // 100 metrin säde
+                                radius: 50 // 50 metrin säde
                             }).addTo(map);
                         } else {
                             console.error('Osoitetta ei löytynyt');
