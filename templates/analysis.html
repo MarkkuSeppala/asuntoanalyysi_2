@@ -22,7 +22,7 @@
     }
     
     .container-narrow {
-        max-width: 900px;
+        max-width: 1100px;
         margin: 0 auto;
     }
     
@@ -327,7 +327,7 @@
     /* Varmistetaan, että muut kortit ovat linjassa kartan kanssa isoilla näytöillä */
     @media (min-width: 992px) {
         .risk-container, .analysis-card {
-            width: 70%;
+            width: 100%;
             margin-left: auto;
             margin-right: auto;
         }
@@ -358,8 +358,9 @@
 {% endblock %}
 
 {% block content %}
-<div class="container container-narrow mt-5 mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container container-narrow">
+    <!-- Yläosan otsikko ja toimintopainikkeet -->
+    <div class="d-flex justify-content-between align-items-center mb-4 mt-5">
         <h1 class="page-title">{{ title }}</h1>
         <div>
             <a href="{{ url_for('download_analysis', analysis_id=analysis.id) }}" class="btn btn-outline-accent me-2">

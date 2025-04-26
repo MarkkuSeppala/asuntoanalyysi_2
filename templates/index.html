@@ -1127,12 +1127,15 @@ document.addEventListener('DOMContentLoaded', function() {
             messageElement.style.opacity = '0';
             
             setTimeout(() => {
-                currentIndex = (currentIndex + 1) % loadingMessages.length;
-                messageElement.textContent = loadingMessages[currentIndex];
-                messageElement.style.opacity = '1';
+                // Odota 3 sekuntia ennen kuin näytetään seuraava viesti
+                setTimeout(() => {
+                    currentIndex = (currentIndex + 1) % loadingMessages.length;
+                    messageElement.textContent = loadingMessages[currentIndex];
+                    messageElement.style.opacity = '1';
+                }, 3000); // 3 sekunnin tauko viestien välissä
             }, 800); // Odota fade-out -efektin ajan
             
-        }, 5000); // Vaihda viesti 5 sekunnin välein
+        }, 15000); // Vaihda viesti 15 sekunnin välein
         
         // Tallenna interval globaaliin scopeen, jotta voimme pysäyttää sen myöhemmin
         window.messageRotationInterval = messageRotationInterval;
