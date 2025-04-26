@@ -48,12 +48,16 @@ if [ -d "build" ]; then
   mkdir -p static/react
   cp -r build/* static/react/
   
-  # Korjaa index.html tiedoston polut lisäämällä /react-etuliite
+  # Korjaa index.html tiedoston polut lisäämällä suhteelliset polut
   if [ -f "static/react/index.html" ]; then
-    echo "Korjataan index.html tiedoston polut..."
-    # Korvataan kaikki '/static/' viittaukset '/react/static/' viittauksilla
-    sed -i 's|href="/|href="/react/|g' static/react/index.html
-    sed -i 's|src="/|src="/react/|g' static/react/index.html
+    echo "Korjataan index.html tiedoston polut käyttämään suhteellisia polkuja..."
+    # Korvataan etuliitteet suhteellisilla poluilla
+    sed -i 's|href="/static/|href="static/|g' static/react/index.html
+    sed -i 's|src="/static/|src="static/|g' static/react/index.html
+    sed -i 's|href="/react/|href="|g' static/react/index.html
+    sed -i 's|src="/react/|src="|g' static/react/index.html
+    sed -i 's|href="/|href="|g' static/react/index.html
+    sed -i 's|src="/|src="|g' static/react/index.html
     echo "index.html polut korjattu"
   fi
   

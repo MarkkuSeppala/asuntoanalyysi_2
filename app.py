@@ -802,23 +802,25 @@ ID: {property_id}
 @app.route('/<path:path>')
 def serve_react(path):
     """Tarjoaa React-sovelluksen"""
+    # Jos polku on static-kansion alla, tarjoa tiedosto suoraan
+    if path.startswith('static/'):
+        # Pilko polku osiin ja siirrä static-kansion tiedosto
+        path_parts = path.split('/', 1)
+        if len(path_parts) > 1:
+            return send_from_directory(os.path.join(app.root_path, path_parts[0]), path_parts[1])
+        return app.send_static_file(path)
+        
     # Tarkista onko polku joku API-reitti tai muu Flask-reitti
-    if path.startswith('api/') or path.startswith('auth/') or path.startswith('flask/') or path.startswith('static/') or path.startswith('analyses/') or path.startswith('analysis/'):
-        # Jos on, anna Flaskin hoitaa se normaalisti
+    if path.startswith('api/') or path.startswith('auth/') or path.startswith('flask/') or path.startswith('analyses/') or path.startswith('analysis/'):
+        # Jos on API-kutsu, anna Flaskin hoitaa se normaalisti
         return app.send_static_file('react/index.html')
-    
-    # Tarkista onko pyydetty tiedosto static/js tai static/css -polku (vanhat polut)
-    if path.startswith('static/js/') or path.startswith('static/css/'):
-        # Uudelleenohjaa /react-polkuun
-        corrected_path = f"react/{path}"
-        return send_from_directory(os.path.join(app.root_path, 'static'), corrected_path)
     
     # Tarkista onko pyydetty tiedosto olemassa static/react-kansiossa
     if path != "" and os.path.exists(os.path.join(app.root_path, 'static', 'react', path)):
         return send_from_directory(os.path.join(app.root_path, 'static', 'react'), path)
-    else:
-        # Muussa tapauksessa tarjoile index.html
-        return send_from_directory(os.path.join(app.root_path, 'static', 'react'), 'index.html')
+    
+    # Muussa tapauksessa tarjoile index.html
+    return send_from_directory(os.path.join(app.root_path, 'static', 'react'), 'index.html')
 
 # JSON-API-reitti analyysien hakemiseen React-sovellukselle
 @app.route('/api/analyses', methods=['GET'])
