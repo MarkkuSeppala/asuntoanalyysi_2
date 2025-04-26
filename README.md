@@ -7,8 +7,8 @@ Sovellus, joka käyttää OpenAI API:a suomalaisten asuntoilmoitusten analysoint
 - Asuntotietojen automaattinen hakeminen Oikotie- ja Etuovi-palveluista
 - Tekoälyanalyysi asunnon tiedoista käyttäen OpenAI API:a
 - Markdownin käyttö asuntotietojen ja analyysin esittämiseen
-- Analyysien tallentaminen tekstitiedostoihin myöhempää tarkastelua varten
-- Käyttäjäystävällinen verkkoliittymä
+- Analyysien tallentaminen tietokantaan myöhempää tarkastelua varten
+- Käyttäjäystävällinen verkkoliittymä (sekä perinteinen että React-pohjainen)
 - Riskianalyysi asuntokohteelle
 
 ## Asennus
@@ -19,21 +19,43 @@ Sovellus, joka käyttää OpenAI API:a suomalaisten asuntoilmoitusten analysoint
 4. Asenna Chrome-selain ja varmista, että ChromeDriver on saatavilla (vaaditaan Etuovi-tiedostojen lataamiseen)
 5. Käynnistä sovellus: `python app.py`
 
+## React-käyttöliittymä
+
+Sovellus tukee myös React-pohjaista käyttöliittymää. React-sovellus täytyy rakentaa ennalta, ennen kuin se voidaan julkaista Render.com-alustalla.
+
+### React-sovelluksen rakentaminen
+
+1. Asenna Node.js (versio 14 tai uudempi)
+2. Asenna React-sovelluksen riippuvuudet projektihakemistossa:
+   ```
+   npm install
+   ```
+3. Rakenna React-sovellus:
+   ```
+   npm run build
+   ```
+4. Varmista, että "build"-kansio on luotu projektin juureen
+
+### React-sovelluksen käyttöönotto
+
+React-sovelluksen build-kansio otetaan automaattisesti käyttöön, kun projekti julkaistaan Render.com-alustalla. Render-konfiguraatio löytyy `build.sh`-tiedostosta, joka kopioi React-buildin staattiset tiedostot oikeaan paikkaan julkaisun yhteydessä.
+
+React-käyttöliittymä on saatavilla osoitteessa `/react` kun sovellus on julkaistu.
+
 ## Käyttö
 
-1. Avaa sovellus selaimessa: http://localhost:5000
+1. Avaa sovellus selaimessa: http://localhost:5000 (perinteinen käyttöliittymä) tai http://localhost:5000/react (React-käyttöliittymä)
 2. Syötä Oikotie- tai Etuovi-asuntoilmoituksen URL
 3. Klikkaa "Analysoi asunto"
 4. Tarkastele analyysiä ja asunnon tietoja
 
 ## Tallennetut analyysit
 
-Sovellus tallentaa automaattisesti kaikki tehdyt analyysit tekstitiedostoihin `analyses`-hakemistoon. Tallennetut analyysit ovat saatavilla myös sovelluksen käyttöliittymässä:
+Sovellus tallentaa kaikki tehdyt analyysit tietokantaan. Tallennetut analyysit ovat saatavilla sovelluksen käyttöliittymässä:
 
-1. Klikkaa "Näytä tallennetut analyysit" etusivulla
+1. Valitse "Analyysit" navigaatiovalikosta
 2. Selaa tallennettuja analyysejä
 3. Katso yksityiskohtia klikkaamalla analyysiä
-4. Lataa analyysi tekstitiedostona tarvittaessa
 
 ## Tuetut lähteet
 
@@ -50,6 +72,8 @@ Sovellus tallentaa automaattisesti kaikki tehdyt analyysit tekstitiedostoihin `a
 
 - Python
 - Flask
+- PostgreSQL
+- React (frontend)
 - OpenAI API
 - BeautifulSoup
 - Markdown

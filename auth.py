@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash
 from models import db, User
@@ -10,6 +10,28 @@ auth = Blueprint('auth', __name__)
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     """Kirjautumissivu"""
+    # Tarkistetaan onko kyseessä API-kutsu vai tavallinen selainpyyntö
+    if request.is_json:
+        data = request.get_json()
+        user = User.query.filter_by(email=data.get('email')).first()
+        
+        if user and user.check_password(data.get('password')):
+            login_user(user)
+            return jsonify({
+                'status': 'success',
+                'message': 'Kirjautuminen onnistui',
+                'user': {
+                    'id': user.id,
+                    'email': user.email,
+                    'name': user.username
+                }
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Virheelliset kirjautumistiedot'
+            }), 401
+
     # Jos käyttäjä on jo kirjautunut, ohjataan etusivulle
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -33,6 +55,42 @@ def login():
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     """Rekisteröitymissivu"""
+    # Tarkistetaan onko kyseessä API-kutsu vai tavallinen selainpyyntö
+    if request.is_json:
+        data = request.get_json()
+        
+        # Tarkistetaan onko sama sähköposti jo käytössä
+        existing_user = User.query.filter_by(email=data.get('email')).first()
+        if existing_user:
+            return jsonify({
+                'status': 'error',
+                'message': 'Tämä sähköpostiosoite on jo käytössä'
+            }), 400
+        
+        # Luodaan uusi käyttäjä
+        user = User(
+            username=data.get('name'),
+            email=data.get('email'),
+            password=data.get('password')
+        )
+        
+        # Lisätään käyttäjä tietokantaan
+        db.session.add(user)
+        db.session.commit()
+        
+        # Kirjataan käyttäjä sisään heti rekisteröitymisen jälkeen
+        login_user(user)
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Rekisteröityminen onnistui',
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'name': user.username
+            }
+        })
+
     # Jos käyttäjä on jo kirjautunut, ohjataan etusivulle
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -58,11 +116,19 @@ def register():
     
     return render_template('register.html', form=form)
 
-@auth.route('/logout')
+@auth.route('/logout', methods=['GET', 'POST'])
 @login_required
 def logout():
     """Kirjaa käyttäjän ulos"""
     logout_user()
+    
+    # Tarkistetaan onko kyseessä API-kutsu vai tavallinen selainpyyntö
+    if request.is_json or request.method == 'POST':
+        return jsonify({
+            'status': 'success',
+            'message': 'Olet kirjautunut ulos'
+        })
+    
     flash('Olet kirjautunut ulos.', 'info')
     return redirect(url_for('auth.login'))
 
@@ -70,4 +136,17 @@ def logout():
 @login_required
 def profile():
     """Käyttäjän profiilisivu"""
-    return render_template('profile.html') 
+    return render_template('profile.html')
+
+@auth.route('/api/user')
+@login_required
+def api_user():
+    """Palauttaa kirjautuneen käyttäjän tiedot API-kutsua varten"""
+    return jsonify({
+        'status': 'success',
+        'user': {
+            'id': current_user.id,
+            'email': current_user.email,
+            'name': current_user.username
+        }
+    }) 

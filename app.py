@@ -797,6 +797,92 @@ ID: {property_id}
                             error_title="Virhe PDF-latauksessa", 
                             error_message=f"PDF-tiedoston lataamisessa tapahtui virhe: {str(e)}"), 500
 
+# Lisätään React-sovelluksen reitti
+@app.route('/react', defaults={'path': ''})
+@app.route('/react/<path:path>')
+def serve_react(path):
+    """Tarjoaa React-sovelluksen"""
+    if path != "" and os.path.exists(os.path.join(app.root_path, 'static', 'react', path)):
+        return send_from_directory(os.path.join(app.root_path, 'static', 'react'), path)
+    else:
+        return send_from_directory(os.path.join(app.root_path, 'static', 'react'), 'index.html')
+
+# JSON-API-reitti analyysien hakemiseen React-sovellukselle
+@app.route('/api/analyses', methods=['GET'])
+@login_required
+def api_list_analyses():
+    """Hakee käyttäjän analyysit JSON-muodossa React-sovellukselle"""
+    analyses = Analysis.query.filter_by(user_id=current_user.id).order_by(Analysis.created_at.desc()).all()
+    analyses_data = []
+    
+    for analysis in analyses:
+        # Sanitoi sisältö
+        sanitized_content = _sanitize_content(analysis.content)
+        
+        # Lisää analyysi listaan
+        analyses_data.append({
+            'id': analysis.id,
+            'title': analysis.title,
+            'content': sanitized_content,
+            'created_at': analysis.created_at.strftime('%d.%m.%Y %H:%M'),
+            'type': analysis.type
+        })
+    
+    return jsonify({
+        'status': 'success',
+        'analyses': analyses_data
+    })
+
+# JSON-API-reitti yksittäisen analyysin hakemiseen React-sovellukselle
+@app.route('/api/analysis/<int:analysis_id>', methods=['GET'])
+@login_required
+def api_view_analysis(analysis_id):
+    """Hakee yksittäisen analyysin JSON-muodossa React-sovellukselle"""
+    analysis = Analysis.query.get_or_404(analysis_id)
+    
+    # Tarkistetaan että käyttäjällä on oikeus nähdä analyysi
+    if analysis.user_id != current_user.id:
+        return jsonify({
+            'status': 'error',
+            'message': 'Sinulla ei ole oikeutta tähän analyysiin.'
+        }), 403
+    
+    # Haetaan myös riskianalyysi jos se on olemassa
+    risk_analysis = RiskAnalysis.query.filter_by(analysis_id=analysis.id).first()
+    risk_analysis_data = None
+    if risk_analysis:
+        risk_analysis_data = {
+            'id': risk_analysis.id,
+            'content': risk_analysis.content,
+            'created_at': risk_analysis.created_at.strftime('%d.%m.%Y %H:%M')
+        }
+    
+    # Haetaan myös kohdetiedot jos ne ovat olemassa
+    kohteet = Kohde.query.filter_by(analysis_id=analysis.id).all()
+    kohteet_data = []
+    for kohde in kohteet:
+        kohteet_data.append({
+            'id': kohde.id,
+            'osoite': kohde.osoite,
+            'tyyppi': kohde.tyyppi,
+            'hinta': str(kohde.hinta) if kohde.hinta else None,
+            'rakennusvuosi': kohde.rakennusvuosi
+        })
+    
+    # Palauta analyysi
+    return jsonify({
+        'status': 'success',
+        'analysis': {
+            'id': analysis.id,
+            'title': analysis.title,
+            'content': _sanitize_content(analysis.content),
+            'created_at': analysis.created_at.strftime('%d.%m.%Y %H:%M'),
+            'type': analysis.type,
+            'risk_analysis': risk_analysis_data,
+            'kohteet': kohteet_data
+        }
+    })
+
 if __name__ == '__main__':
     # Luodaan templates-kansio, jos sitä ei ole
     os.makedirs('templates', exist_ok=True)
