@@ -275,6 +275,23 @@
         text-align: center;
     }
     
+    /* Riskiluvun värit riskiluokan mukaan */
+    .risk-score-low {
+        color: #3498db;
+    }
+    
+    .risk-score-medium {
+        color: #4caf50;
+    }
+    
+    .risk-score-high {
+        color: #ffc107;
+    }
+    
+    .risk-score-critical {
+        color: #f44336;
+    }
+    
     .risk-chart-label {
         font-size: 14px;
         color: #666;
@@ -291,8 +308,27 @@
     }
     
     .map-card {
-        width: 80%;
+        width: 70%;
         margin: 0 auto 30px auto;
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* Erityisluokka täydelle leveydelle */
+    .full-width-container {
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+        position: relative;
+    }
+    
+    /* Varmistetaan, että muut kortit ovat linjassa kartan kanssa isoilla näytöillä */
+    @media (min-width: 992px) {
+        .risk-container, .analysis-card {
+            width: 70%;
+            margin-left: auto;
+            margin-right: auto;
+        }
     }
     
     @media (max-width: 768px) {
@@ -312,7 +348,7 @@
             height: 200px;
         }
         
-        .map-card {
+        .map-card, .risk-container, .analysis-card {
             width: 100%;
         }
     }
@@ -332,9 +368,11 @@
             </a>
         </div>
     </div>
+</div>
     
-    {% if kohde and kohde.osoite %}
-    <!-- Karttaelementti -->
+{% if kohde and kohde.osoite %}
+<!-- Karttaelementti täysleveässä containerissa -->
+<div class="full-width-container">
     <div class="map-card analysis-card shadow">
         <div class="card-header-custom">
             <h3 class="mb-0">Sijainti kartalla</h3>
@@ -352,10 +390,12 @@
             </div>
         </div>
     </div>
-    {% endif %}
-    
+</div>
+{% endif %}
+
+<div class="container container-narrow">
     {% if risk_analysis %}
-    <div class="mb-4">
+    <div class="mb-4 risk-container">
         <h3 class="mb-3">Riskianalyysi</h3>
         
         <!-- Kokonaisriskitason kortti ja donut chart -->
@@ -366,7 +406,9 @@
                     <div class="risk-chart-container">
                         <canvas id="riskDonutChart"></canvas>
                         <div class="risk-chart-score">
-                            {{ risk_analysis.kokonaisriskitaso }}<br>
+                            <span class="{% if risk_analysis.kokonaisriskitaso <= 3.4 %}risk-score-low{% elif risk_analysis.kokonaisriskitaso <= 5.5 %}risk-score-medium{% elif risk_analysis.kokonaisriskitaso <= 6.9 %}risk-score-high{% else %}risk-score-critical{% endif %}">
+                                {{ risk_analysis.kokonaisriskitaso }}
+                            </span><br>
                             <span class="risk-chart-label">/10</span>
                         </div>
                     </div>
