@@ -2,6 +2,7 @@
   "name": "asuntoanalyysi-frontend",
   "version": "0.1.0",
   "private": true,
+  "homepage": ".",
   "dependencies": {
     "axios": "^1.6.7",
     "bootstrap": "^5.3.3",

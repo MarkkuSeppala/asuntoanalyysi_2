@@ -17,7 +17,7 @@ function LandingPage() {
               </div>
             </div>
             <div className="col-lg-5 d-none d-lg-block">
-              <img src="/static/img/hero-image.svg" alt="Kotolyysi" className="img-fluid" onError={(e) => {e.target.style.display='none'}} />
+              <img src="static/img/hero-image.svg" alt="Kotolyysi" className="img-fluid" onError={(e) => {e.target.style.display='none'}} />
             </div>
           </div>
         </div>
@@ -25,8 +25,8 @@ function LandingPage() {
 
       {/* Logo Section */}
       <div style={{height: '100px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '400px', marginBottom: '30px'}} className="logo-section">
-        <img src="/static/img/etuovi-logo.png" alt="Etuovi Logo" style={{maxHeight: '35px'}} />
-        <img src="/static/img/oikotie-logo.png" alt="Oikotie Logo" style={{maxHeight: '50px'}} />
+        <img src="static/img/etuovi-logo.png" alt="Etuovi Logo" style={{maxHeight: '35px'}} />
+        <img src="static/img/oikotie-logo.png" alt="Oikotie Logo" style={{maxHeight: '50px'}} />
       </div>
 
       {/* Features Section */}
