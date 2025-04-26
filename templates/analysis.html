@@ -476,7 +476,7 @@
                 
                 // Haetaan osoite geokoodausta varten
                 {% if kohde and kohde.osoite %}
-                const osoite = "{{ kohde.osoite }}, Turku, Finland";
+                const osoite = "{{ kohde.osoite }}, Finland";
                 
                 // Haetaan koordinaatit OpenStreetMap Nominatim API:sta
                 fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(osoite)}`)
