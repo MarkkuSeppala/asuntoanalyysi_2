@@ -6,8 +6,7 @@ __pycache__/*.pyc
 *.so
 .Python
 env/
-# Sallitaan build-kansio React-sovellusta varten
-# build/
+build/
 develop-eggs/
 dist/
 downloads/

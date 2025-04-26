@@ -148,9 +148,9 @@ def landing():
     """Landing page - sovelluksen markkinointisivu"""
     return render_template('landing.html')
 
-@app.route('/flask')
-def flask_index():
-    """Flask-pohjainen etusivu, jossa käyttäjä voi syöttää asuntolinkin tai näkee landing-sivun"""
+@app.route('/')
+def index():
+    """Etusivu, jossa käyttäjä voi syöttää asuntolinkin tai näkee landing-sivun"""
     if current_user.is_authenticated:
         # Haetaan käyttäjän viimeisimmät analyysit
         analyses = Analysis.query.filter_by(user_id=current_user.id).order_by(Analysis.created_at.desc()).limit(5).all()
@@ -796,111 +796,6 @@ ID: {property_id}
         return render_template('error.html', 
                             error_title="Virhe PDF-latauksessa", 
                             error_message=f"PDF-tiedoston lataamisessa tapahtui virhe: {str(e)}"), 500
-
-# Siirretään React-sovelluksen reitti juureen
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve_react(path):
-    """Tarjoaa React-sovelluksen"""
-    # Jos polku on static-kansion alla, tarjoa tiedosto suoraan
-    if path.startswith('static/'):
-        # Pilko polku osiin ja siirrä static-kansion tiedosto
-        path_parts = path.split('/', 1)
-        if len(path_parts) > 1:
-            return send_from_directory(os.path.join(app.root_path, path_parts[0]), path_parts[1])
-        return app.send_static_file(path)
-    
-    # Jos on favicon tai muu Root-tason tiedosto
-    if path in ['favicon.ico', 'manifest.json', 'logo192.png', 'logo512.png', 'robots.txt']:
-        return send_from_directory(os.path.join(app.root_path, 'static', 'react'), path)
-        
-    # Tarkista onko polku joku API-reitti tai muu Flask-reitti
-    if path.startswith('api/') or path.startswith('auth/') or path.startswith('flask/') or path.startswith('analyses/') or path.startswith('analysis/'):
-        # Jos on API-kutsu, anna Flaskin hoitaa se normaalisti
-        return app.send_static_file('react/index.html')
-    
-    # Tarkista onko pyydetty tiedosto olemassa static/react-kansiossa
-    if path != "" and os.path.exists(os.path.join(app.root_path, 'static', 'react', path)):
-        return send_from_directory(os.path.join(app.root_path, 'static', 'react'), path)
-    
-    # Muussa tapauksessa tarjoile index.html
-    return send_from_directory(os.path.join(app.root_path, 'static', 'react'), 'index.html')
-
-# JSON-API-reitti analyysien hakemiseen React-sovellukselle
-@app.route('/api/analyses', methods=['GET'])
-@login_required
-def api_list_analyses():
-    """Hakee käyttäjän analyysit JSON-muodossa React-sovellukselle"""
-    analyses = Analysis.query.filter_by(user_id=current_user.id).order_by(Analysis.created_at.desc()).all()
-    analyses_data = []
-    
-    for analysis in analyses:
-        # Sanitoi sisältö
-        sanitized_content = _sanitize_content(analysis.content)
-        
-        # Lisää analyysi listaan
-        analyses_data.append({
-            'id': analysis.id,
-            'title': analysis.title,
-            'content': sanitized_content,
-            'created_at': analysis.created_at.strftime('%d.%m.%Y %H:%M'),
-            'type': analysis.type
-        })
-    
-    return jsonify({
-        'status': 'success',
-        'analyses': analyses_data
-    })
-
-# JSON-API-reitti yksittäisen analyysin hakemiseen React-sovellukselle
-@app.route('/api/analysis/<int:analysis_id>', methods=['GET'])
-@login_required
-def api_view_analysis(analysis_id):
-    """Hakee yksittäisen analyysin JSON-muodossa React-sovellukselle"""
-    analysis = Analysis.query.get_or_404(analysis_id)
-    
-    # Tarkistetaan että käyttäjällä on oikeus nähdä analyysi
-    if analysis.user_id != current_user.id:
-        return jsonify({
-            'status': 'error',
-            'message': 'Sinulla ei ole oikeutta tähän analyysiin.'
-        }), 403
-    
-    # Haetaan myös riskianalyysi jos se on olemassa
-    risk_analysis = RiskAnalysis.query.filter_by(analysis_id=analysis.id).first()
-    risk_analysis_data = None
-    if risk_analysis:
-        risk_analysis_data = {
-            'id': risk_analysis.id,
-            'content': risk_analysis.content,
-            'created_at': risk_analysis.created_at.strftime('%d.%m.%Y %H:%M')
-        }
-    
-    # Haetaan myös kohdetiedot jos ne ovat olemassa
-    kohteet = Kohde.query.filter_by(analysis_id=analysis.id).all()
-    kohteet_data = []
-    for kohde in kohteet:
-        kohteet_data.append({
-            'id': kohde.id,
-            'osoite': kohde.osoite,
-            'tyyppi': kohde.tyyppi,
-            'hinta': str(kohde.hinta) if kohde.hinta else None,
-            'rakennusvuosi': kohde.rakennusvuosi
-        })
-    
-    # Palauta analyysi
-    return jsonify({
-        'status': 'success',
-        'analysis': {
-            'id': analysis.id,
-            'title': analysis.title,
-            'content': _sanitize_content(analysis.content),
-            'created_at': analysis.created_at.strftime('%d.%m.%Y %H:%M'),
-            'type': analysis.type,
-            'risk_analysis': risk_analysis_data,
-            'kohteet': kohteet_data
-        }
-    })
 
 if __name__ == '__main__':
     # Luodaan templates-kansio, jos sitä ei ole
