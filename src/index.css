@@ -48,4 +48,26 @@ code {
   justify-content: center;
   align-items: center;
   min-height: 200px;
+}
+
+/* Riskikaavion tyylit */
+.risk-chart-wrapper {
+  border-radius: 8px;
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+.risk-chart-container {
+  margin-bottom: 20px;
+}
+
+/* Mobiiliresponsiivisuus */
+@media (max-width: 767px) {
+  .risk-chart-wrapper {
+    margin-top: 30px;
+  }
+  
+  .markdown-content {
+    font-size: 0.9rem;
+  }
 } 

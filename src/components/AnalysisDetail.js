@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
+import RiskPieChart from './RiskPieChart';
 
 function AnalysisDetail() {
   const [analysis, setAnalysis] = useState(null);
@@ -131,8 +132,19 @@ function AnalysisDetail() {
                 <div className="mb-3">
                   <small className="text-muted">Luotu: {analysis.risk_analysis.created_at}</small>
                 </div>
-                <div className="markdown-content">
-                  <ReactMarkdown>{analysis.risk_analysis.content}</ReactMarkdown>
+                
+                {/* Riskien visuaalinen esitys piirakkakaaviona */}
+                <div className="row">
+                  <div className="col-md-6">
+                    <div className="markdown-content">
+                      <ReactMarkdown>{analysis.risk_analysis.content}</ReactMarkdown>
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="risk-chart-wrapper py-3">
+                      <RiskPieChart riskAnalysisContent={analysis.risk_analysis.content} />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
