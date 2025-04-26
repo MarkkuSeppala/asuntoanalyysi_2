@@ -9,6 +9,7 @@ import AnalysisDetail from './components/AnalysisDetail';
 import AnalysisForm from './components/AnalysisForm';
 import Login from './components/Login';
 import Register from './components/Register';
+import LandingPage from './components/LandingPage';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -95,16 +96,22 @@ function App() {
         </div>
       </nav>
 
-      <div className="container mt-4">
+      {user || window.location.pathname !== '/' ? (
+        <div className="container mt-4">
+          <Routes>
+            <Route path="/" element={user ? <Home user={user} /> : <LandingPage />} />
+            <Route path="/analyses" element={user ? <AnalysisList /> : <Login onLogin={(userData) => setUser(userData)} />} />
+            <Route path="/analysis/:id" element={user ? <AnalysisDetail /> : <Login onLogin={(userData) => setUser(userData)} />} />
+            <Route path="/analyze" element={user ? <AnalysisForm /> : <Login onLogin={(userData) => setUser(userData)} />} />
+            <Route path="/login" element={<Login onLogin={(userData) => setUser(userData)} />} />
+            <Route path="/register" element={<Register onRegister={(userData) => setUser(userData)} />} />
+          </Routes>
+        </div>
+      ) : (
         <Routes>
-          <Route path="/" element={user ? <Home user={user} /> : <Login onLogin={(userData) => setUser(userData)} />} />
-          <Route path="/analyses" element={user ? <AnalysisList /> : <Login onLogin={(userData) => setUser(userData)} />} />
-          <Route path="/analysis/:id" element={user ? <AnalysisDetail /> : <Login onLogin={(userData) => setUser(userData)} />} />
-          <Route path="/analyze" element={user ? <AnalysisForm /> : <Login onLogin={(userData) => setUser(userData)} />} />
-          <Route path="/login" element={<Login onLogin={(userData) => setUser(userData)} />} />
-          <Route path="/register" element={<Register onRegister={(userData) => setUser(userData)} />} />
+          <Route path="/" element={<LandingPage />} />
         </Routes>
-      </div>
+      )}
 
       <footer className="py-3 bg-light mt-auto">
         <div className="container text-center">
