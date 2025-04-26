@@ -299,7 +299,7 @@
     
     /* Kartan tyylit */
     #mapContainer {
-        height: 300px;
+        height: 400px;
         width: 100%;
         border-radius: 12px;
         overflow: hidden;
@@ -312,6 +312,8 @@
         margin: 0 auto 30px auto;
         position: relative;
         z-index: 1;
+        border-radius: 12px;
+        overflow: hidden;
     }
     
     /* Erityisluokka täydelle leveydelle */
@@ -345,7 +347,7 @@
         }
         
         #mapContainer {
-            height: 200px;
+            height: 300px;
         }
         
         .map-card, .risk-container, .analysis-card {
@@ -373,22 +375,8 @@
 {% if kohde and kohde.osoite %}
 <!-- Karttaelementti täysleveässä containerissa -->
 <div class="full-width-container">
-    <div class="map-card analysis-card shadow">
-        <div class="card-header-custom">
-            <h3 class="mb-0">Sijainti kartalla</h3>
-        </div>
-        <div class="card-body p-0">
-            <div id="mapContainer"></div>
-        </div>
-        <div class="card-footer bg-white p-3">
-            <div class="d-flex align-items-center">
-                <i class="fas fa-map-marker-alt text-danger me-2"></i>
-                <strong>{{ kohde.osoite }}</strong>
-                {% if kohde.tyyppi %}
-                <span class="badge bg-light text-dark ms-2">{{ kohde.tyyppi }}</span>
-                {% endif %}
-            </div>
-        </div>
+    <div class="map-card shadow">
+        <div id="mapContainer"></div>
     </div>
 </div>
 {% endif %}
