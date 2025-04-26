@@ -148,9 +148,9 @@ def landing():
     """Landing page - sovelluksen markkinointisivu"""
     return render_template('landing.html')
 
-@app.route('/')
-def index():
-    """Etusivu, jossa käyttäjä voi syöttää asuntolinkin tai näkee landing-sivun"""
+@app.route('/flask')
+def flask_index():
+    """Flask-pohjainen etusivu, jossa käyttäjä voi syöttää asuntolinkin tai näkee landing-sivun"""
     if current_user.is_authenticated:
         # Haetaan käyttäjän viimeisimmät analyysit
         analyses = Analysis.query.filter_by(user_id=current_user.id).order_by(Analysis.created_at.desc()).limit(5).all()
@@ -797,14 +797,21 @@ ID: {property_id}
                             error_title="Virhe PDF-latauksessa", 
                             error_message=f"PDF-tiedoston lataamisessa tapahtui virhe: {str(e)}"), 500
 
-# Lisätään React-sovelluksen reitti
-@app.route('/react', defaults={'path': ''})
-@app.route('/react/<path:path>')
+# Siirretään React-sovelluksen reitti juureen
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
 def serve_react(path):
     """Tarjoaa React-sovelluksen"""
+    # Tarkista onko polku joku API-reitti tai muu Flask-reitti
+    if path.startswith('api/') or path.startswith('auth/') or path.startswith('flask/') or path.startswith('static/') or path.startswith('analyses/') or path.startswith('analysis/'):
+        # Jos on, anna Flaskin hoitaa se normaalisti
+        return app.send_static_file('react/index.html')
+    
+    # Tarkista onko pyydetty tiedosto olemassa static/react-kansiossa
     if path != "" and os.path.exists(os.path.join(app.root_path, 'static', 'react', path)):
         return send_from_directory(os.path.join(app.root_path, 'static', 'react'), path)
     else:
+        # Muussa tapauksessa tarjoile index.html
         return send_from_directory(os.path.join(app.root_path, 'static', 'react'), 'index.html')
 
 # JSON-API-reitti analyysien hakemiseen React-sovellukselle
