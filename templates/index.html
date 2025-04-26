@@ -845,7 +845,7 @@
 <div class="loading-overlay" id="loading-overlay">
     <div class="loading-spinner"></div>
     <h3 class="loading-text">Analysoidaan kohdetta...</h3>
-    <p class="loading-subtext">Tekoäly käy läpi asunnon tiedot ja muodostaa kokonaisvaltaisen analyysin. Tämä voi kestää hetken, joten ole hyvä ja odota.</p>
+    <p class="loading-subtext" id="loading-message">Tekoäly käy läpi asunnon tiedot ja muodostaa kokonaisvaltaisen analyysin. Tämä voi kestää hetken, joten ole hyvä ja odota.</p>
     <div class="loading-progress-container">
         <div class="loading-progress-bar"></div>
     </div>
@@ -913,6 +913,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show loading overlay with slight delay for better UX
         setTimeout(() => {
             loadingOverlay.classList.add('show');
+            
+            // Aloita vaihtuva latausviestien näyttäminen
+            startRotatingLoadingMessages();
         }, 300);
     });
     
@@ -1084,6 +1087,63 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Kutsu animaatiofunktiota kun sivu on ladattu
     addPageAnimations();
+
+    // Vaihtuvia latausviestejä varten
+    function startRotatingLoadingMessages() {
+        const loadingMessages = [
+            "Haetaanpa hintatietoa, kaupankäynnin kalliskasta.",
+            "Kysellähän kämppätietoa, turuilta ja toreilta.",
+            "Lasketahan lainasummat, rahoituksen raamitukset.",
+            "Luetaanpa ilmoitukset, myytävien maitten päältä.",
+            "Nostetaan nyt neliöhinnat, punnitaanpa paikkakunnat.",
+            "Mitataanpa myyntihinnat, huonehinnat huvitellaan.",
+            "Otettahan Oikotieltä, asuntojen aartehia.",
+            "Katsellaanpa kauppakirjat, lainhuudot ja lainatiedot.",
+            "Kurkistetaan kulutukset, lämmön, veden, varjotusten.",
+            "Kuunnellaanpa kuntotarkast, raporttien reunoilta.",
+            "Lähdetähän liikkehelle, etsitähän ensikodit, myytävien maitten päältä.",
+            "Nostetahan neliöhintoja, tarkastellaan tonttimaat, rannat, pellot, pientalotkin.",
+            "Kaivetahan karttakuvat, maitten, teitten mittasuhteet, naapurusten näkymätkin.",
+            "Lasketahan lämmitykset, katsotahan kulutukset, sähkölaskut selvitellään.",
+            "Punnitaanpa paikkakunnat, katsotahan kaupunginosat, kukkulat ja kylänraitat.",
+            "Haetaanpa hallintakirjat, tutkistellaan tonttijaot, perustiedot pureksitaan.",
+            "Tutkitaanpa tontinrajoja, mittanauhat mittoillahan, nurkat nostetahan näkyviin.",
+            "Rahoituksen raamituksia lasketahan laskin kädessä, sopimukset sovitahan.",
+            "Lasketahan lainalyhenteet, kuukaudet kulutellaan, maksut maksutellaan muistiin.",
+            "Kaivetahan kauppahinnat, luetaanpa luovutukset, puhalletaan pölyt päältä."
+        ];
+
+        const messageElement = document.getElementById('loading-message');
+        let currentIndex = 0;
+        
+        // Näytä ensimmäinen viesti heti
+        messageElement.textContent = loadingMessages[currentIndex];
+        
+        // Lisää pieni fade-efekti
+        messageElement.style.transition = 'opacity 0.8s ease';
+        
+        // Aloita viestien kierto
+        const messageRotationInterval = setInterval(() => {
+            messageElement.style.opacity = '0';
+            
+            setTimeout(() => {
+                currentIndex = (currentIndex + 1) % loadingMessages.length;
+                messageElement.textContent = loadingMessages[currentIndex];
+                messageElement.style.opacity = '1';
+            }, 800); // Odota fade-out -efektin ajan
+            
+        }, 5000); // Vaihda viesti 5 sekunnin välein
+        
+        // Tallenna interval globaaliin scopeen, jotta voimme pysäyttää sen myöhemmin
+        window.messageRotationInterval = messageRotationInterval;
+    }
+    
+    // Pysäytä viestien kierto kun poistutaan latausruudusta
+    window.addEventListener('beforeunload', () => {
+        if (window.messageRotationInterval) {
+            clearInterval(window.messageRotationInterval);
+        }
+    });
 });
 </script>
 {% endblock %} 
