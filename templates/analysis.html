@@ -246,6 +246,27 @@
         border-bottom: 4px solid var(--accent-color);
     }
     
+    /* Kohonneen ja korkean riskin hohtavat kortit */
+    .risk-card-elevated {
+        box-shadow: 0 5px 15px rgba(255, 193, 7, 0.2);
+        border-left: 3px solid #ffc107;
+    }
+    
+    .risk-card-elevated:hover {
+        box-shadow: 0 15px 30px rgba(255, 193, 7, 0.25);
+        border-bottom: 4px solid #ffc107;
+    }
+    
+    .risk-card-high {
+        box-shadow: 0 5px 20px rgba(244, 67, 54, 0.2);
+        border-left: 3px solid #f44336;
+    }
+    
+    .risk-card-high:hover {
+        box-shadow: 0 15px 30px rgba(244, 67, 54, 0.3);
+        border-bottom: 4px solid #f44336;
+    }
+    
     /* Riskitason numeerinen arvo oikeassa yläkulmassa */
     .risk-value {
         position: absolute;
@@ -261,9 +282,28 @@
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     }
     
+    /* Kohonneen ja korkean riskin arvot */
+    .risk-card-elevated .risk-value {
+        color: #ffc107;
+    }
+    
+    .risk-card-high .risk-value {
+        color: #f44336;
+    }
+    
     .risk-card:hover .risk-value {
         transform: scale(1.05);
         background-color: var(--accent-color);
+        color: white;
+    }
+    
+    .risk-card-elevated:hover .risk-value {
+        background-color: #ffc107;
+        color: white;
+    }
+    
+    .risk-card-high:hover .risk-value {
+        background-color: #f44336;
         color: white;
     }
     
@@ -457,7 +497,7 @@
         <div class="row risk-cards-container">
             {% for riski in risk_analysis.riskimittari %}
             <div class="col-lg-4 col-md-6 risk-card-wrapper">
-                <div class="risk-card">
+                <div class="risk-card {% if riski.riski_taso > 6.9 %}risk-card-high{% elif riski.riski_taso > 5.5 %}risk-card-elevated{% endif %}">
                     <span class="risk-value">{{ riski.riski_taso }}</span>
                     <h5 class="risk-area-title">{{ riski.osa_alue }}</h5>
                     {% if riski.kuvaus %}
