@@ -84,13 +84,14 @@ def sanitize_markdown_response(text: str) -> str:
     logger.debug("Sanitoitu markdown-vastaus")
     return text.strip()
 
-def get_analysis(markdown_data: str, property_url: str = None) -> str:
+def get_analysis(markdown_data: str, property_url: str = None, kohde_tyyppi: str = None) -> str:
     """
     Lähettää asunnon tiedot markdown-muodossa OpenAI:lle ja pyytää analyysin.
     
     Args:
         markdown_data (str): Asunnon tiedot markdown-muodossa
         property_url (str, optional): Analysoitavan asunnon URL
+        kohde_tyyppi (str, optional): Kiinteistön tyyppi (esim. "Omakotitalo", "Kerrostalo", "Rivitalo")
         
     Returns:
         str: OpenAI:n tuottama analyysi
@@ -98,6 +99,76 @@ def get_analysis(markdown_data: str, property_url: str = None) -> str:
     if not markdown_data:
         logger.error("Markdown-data puuttuu")
         return ERROR_MESSAGES["invalid_request"]
+    
+    # Valitaan prompt-tiedosto kiinteistön tyypin mukaan
+    prompt_file = "prompt_analyysi_okt.txt" if kohde_tyyppi and "omakotitalo" in kohde_tyyppi.lower() else "prompt_analyysi_kt.txt"
+    
+    try:
+        # Luetaan prompt tiedostosta
+        with open(prompt_file, "r", encoding="utf-8") as file:
+            system_prompt = file.read()
+        logger.info(f"Käytetään promptia: {prompt_file}")
+    except Exception as e:
+        logger.error(f"Virhe promptin lukemisessa tiedostosta {prompt_file}: {e}")
+        # Käytetään oletuspromptia jos tiedoston lukeminen epäonnistuu
+        system_prompt = """Olet kiinteistö- ja kiinteistövälityksen kokenut ammattilainen.
+Tehtävänäsi on tehdä ostajalle analyysi myynnisssä olevasta kohteesta.
+
+**TÄMÄ ON TÄRKEÄÄ:**
+Perhedy tietoihin huolellisesi. Tee kohteen tiedoista implisiittisiä päätelmiä ostajalle tärkeistä asioista.
+
+Analyysin alussa on yhteenveto. Tee siitä hyvin napakka ja jopa räväkkä. On tärkeää, että kiinnittää huomiota.
+Kerro suorasanaisesti kohteen puutteet ja vahvuudet. Vältä toistoa.
+
+Laadi teksi asiantuntijamaiseen tyyliin. Kerro kuitenkin suoraan kohteen puutteet ja negatiiviset asiat.
+Vältä ilmoitustekstin toistoa, ilman että siinä on mielestäsi jotain huomioitavaa. Ota huomioon, että lukija on jo perehtynyt ilmoituksen sisältöön ja odottaa nyt sinulta huomioita, jotka eivät suoraan ilmene tekstistä.
+Koosta analyysin loppuun kolmen kysymyksen kysymyslista. Tee sellaisia kysymyksiä, jotka ovat oikeasti merkittäviä ostajalle.
+Älä kommentoi välitysliikettä tai välittäjää.
+
+Alla kuvaus vastauksen rakenteesta.
+
+<rakennekuvaus>
+**KOHDE:**
+\"Katuosoite, Kaupunki\"
+
+<yhteenveto>
+*Hinta:* (kerro pyyntihinta ja esitä tässä myös oma hinta-arviosi, mutta huomioi, että ostajat olettavat saavansa aina ostotilanteessa noin 5% alennuksen.)
+*Sijainti:*
+*Taloyhtiö ja rakennus:*
+</yhteenveto>
+
+*1. Sijainti ja alueellinen konteksti*
+Anna tässä rehellinen kuvaus alueesta, jossa kiinteistö sijaitsee. Kerro suoraan, jos alue on maineeltaan kyseenalainen.
+
+*2. Rakennus ja taloyhtiö*
+Pyri tekemään omia päätelmiäsi siitä, millainen rakennus ja taloyhtiö on kyseessä, myös sen perusteella, mitä ilmoituksessa ei ole sanottu. On tärkeää, ettei tässä kohdassa ainoastaan toisteta samoja asioita, jotka ilmenevät jo ilmoituksessa.
+
+*3. Asunto ja varustelutaso*
+*4. Markkina- ja ostotilanne*
+*5. Mahdolliset huomiot tai riskitekijät*
+Tämä on tärkeä osio. Pyri kirjoittamaan tämä osio mahdollisimman vakuuttavasti, niin että lukija kokee saaneensa arvokasta tietoa.
+
+*6. Kohteen hinta verrattuna vastaaviin*
+Anna tässä konkreettinen oma hinta-arviosi kohteesta perusteluineen.
+
+*7. Kysymyslista välittäjälle*
+Listaa tähän kolme kysymystä, jotka olisi mielestäsi tärkeä kysyä välittäjältä.
+</rakennekuvaus>
+
+**Tämä on tärkeää:**
+Kirjoita analyysi markdown-muodossa, joka on täysin yhteensopiva verkkosivujen Markdown-renderöijien kanssa. Käytä vain tavallisia ASCII-merkkejä ja vältä erikoisia UNICODE-välilyöntejä kuten narrow no-break space (U+202F).
+
+Käytä ainoastaan seuraavia muotoiluelementtejä:
+Otsikot muodossa ### ja ####
+Lihavoinnit **...**
+Yksinkertaiset listat -...
+Rivinvaihdot käyttäen kaksoisvälilyöntiä + \n (eli \n)
+Älä käytä lainausmerkkejä.
+Käytä ainoastaan tavallisia välilyöntejä.
+
+Älä käytä otsikoinnissa suurempaa kuin h3.
+"""
+        logger.warning(f"Käytetään oletuspromptia prompt-tiedoston sijaan!")
     
     retry_count = 0
     max_retries = 3

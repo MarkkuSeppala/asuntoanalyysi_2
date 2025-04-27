@@ -303,6 +303,7 @@ def analyze():
         # Haetaan kohteen perustiedot ensin KAT API:n avulla
         property_data = None
         kohde_id = None
+        kohde_tyyppi = None
         try:
             logger.info("Haetaan kohteen perustiedot KAT API:lla")
             property_data = kat_api_call.get_property_data(markdown_data)
@@ -313,6 +314,11 @@ def analyze():
                 kohde_id = kat_api_call.save_property_data_to_db(property_data)
                 if kohde_id:
                     logger.info(f"Kohde tallennettu tietokantaan ID:llä {kohde_id}")
+                    # Haetaan kohteen tyyppi
+                    kohde = Kohde.query.get(kohde_id)
+                    if kohde and kohde.tyyppi:
+                        kohde_tyyppi = kohde.tyyppi
+                        logger.info(f"Kohteen tyyppi: {kohde_tyyppi}")
                 else:
                     logger.warning("Kohteen tallentaminen epäonnistui")
             else:
@@ -323,7 +329,7 @@ def analyze():
         
         # Käytetään OpenAI API:a analyysin tekemiseen
         logger.info("Tehdään OpenAI API -kutsu analyysia varten")
-        analysis_response = api_call.get_analysis(markdown_data, url)
+        analysis_response = api_call.get_analysis(markdown_data, url, kohde_tyyppi)
         
         if not analysis_response:
             logger.error("API-kutsu palautti tyhjän vastauksen")
@@ -441,6 +447,7 @@ def api_analyze():
         # Haetaan kohteen perustiedot ensin KAT API:n avulla
         property_data = None
         kohde_id = None
+        kohde_tyyppi = None
         try:
             logger.info("API: Haetaan kohteen perustiedot KAT API:lla")
             property_data = kat_api_call.get_property_data(markdown_data)
@@ -451,6 +458,11 @@ def api_analyze():
                 kohde_id = kat_api_call.save_property_data_to_db(property_data)
                 if kohde_id:
                     logger.info(f"API: Kohde tallennettu tietokantaan ID:llä {kohde_id}")
+                    # Haetaan kohteen tyyppi
+                    kohde = Kohde.query.get(kohde_id)
+                    if kohde and kohde.tyyppi:
+                        kohde_tyyppi = kohde.tyyppi
+                        logger.info(f"API: Kohteen tyyppi: {kohde_tyyppi}")
                 else:
                     logger.warning("API: Kohteen tallentaminen epäonnistui")
             else:
@@ -459,7 +471,7 @@ def api_analyze():
             logger.error(f"API: Virhe kohteen tietojen käsittelyssä: {e}")
         
         # Käytetään OpenAI API:a analyysin tekemiseen
-        analysis_response = api_call.get_analysis(markdown_data, url)
+        analysis_response = api_call.get_analysis(markdown_data, url, kohde_tyyppi)
         
         # Varmistetaan että vastaus on puhdistettu (API:ssa puhdistus tehdään jo)
         analysis_response = api_call.sanitize_markdown_response(analysis_response)
@@ -674,6 +686,7 @@ ID: {property_id}
                 # Haetaan kohteen perustiedot ensin KAT API:n avulla
                 property_data = None
                 kohde_id = None
+                kohde_tyyppi = None
                 try:
                     logger.info("PDF: Haetaan kohteen perustiedot KAT API:lla")
                     property_data = kat_api_call.get_property_data(markdown_data)
@@ -684,6 +697,11 @@ ID: {property_id}
                         kohde_id = kat_api_call.save_property_data_to_db(property_data)
                         if kohde_id:
                             logger.info(f"PDF: Kohde tallennettu tietokantaan ID:llä {kohde_id}")
+                            # Haetaan kohteen tyyppi
+                            kohde = Kohde.query.get(kohde_id)
+                            if kohde and kohde.tyyppi:
+                                kohde_tyyppi = kohde.tyyppi
+                                logger.info(f"PDF: Kohteen tyyppi: {kohde_tyyppi}")
                         else:
                             logger.warning("PDF: Kohteen tallentaminen epäonnistui")
                     else:
@@ -694,7 +712,7 @@ ID: {property_id}
                 
                 # Use OpenAI API to analyze the data
                 logger.info("Tehdään OpenAI API -kutsu analyysia varten")
-                analysis_response = api_call.get_analysis(markdown_data, property_id)
+                analysis_response = api_call.get_analysis(markdown_data, property_id, kohde_tyyppi)
                 
                 if not analysis_response:
                     logger.error("API-kutsu palautti tyhjän vastauksen")

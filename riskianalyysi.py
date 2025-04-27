@@ -2,7 +2,7 @@ from openai import OpenAI
 import os
 import json
 import logging
-from models import db, Analysis, RiskAnalysis
+from models import db, Analysis, RiskAnalysis, Kohde
 from flask import current_app
 from flask_login import current_user
 
@@ -43,10 +43,73 @@ def riskianalyysi(kohde_teksti, analysis_id=None):
     Returns:
     str: JSON-muotoinen analyysi riskeistä
     """
-    # Lataa promptin tiedostosta
-    prompt_tiedosto = "prompt_riski.txt"
-    with open(prompt_tiedosto, "r") as tiedosto:
-        prompt = tiedosto.read()
+    # Tarkistetaan onko kyseessä omakotitalo
+    on_omakotitalo = False
+    
+    try:
+        # Tarkistetaan analysis_id:n perusteella kohteen tyyppi
+        if analysis_id:
+            # Haetaan analyysi
+            analyysi = Analysis.query.get(analysis_id)
+            if analyysi:
+                # Haetaan kohde, joka on linkitetty analyysiin
+                kohde = Kohde.query.filter_by(analysis_id=analysis_id).first()
+                if kohde and kohde.tyyppi:
+                    on_omakotitalo = "omakotitalo" in kohde.tyyppi.lower()
+                    logger.info(f"Kohteen tyyppi: {kohde.tyyppi}, omakotitalo: {on_omakotitalo}")
+    except Exception as e:
+        logger.error(f"Virhe kohteen tyypin tarkistuksessa: {e}")
+    
+    # Valitaan promptin tiedosto kohteen tyypin mukaan
+    prompt_tiedosto = "prompt_riski_okt.txt" if on_omakotitalo else "prompt_riski_kt.txt"
+    logger.info(f"Käytetään riskianalyysi-promptia: {prompt_tiedosto}")
+    
+    try:
+        # Lataa promptin tiedostosta
+        with open(prompt_tiedosto, "r", encoding="utf-8") as tiedosto:
+            prompt = tiedosto.read()
+    except Exception as e:
+        logger.error(f"Virhe promptin lukemisessa tiedostosta {prompt_tiedosto}: {e}")
+        # Käytetään oletuspromptia jos tiedoston lukeminen epäonnistuu
+        prompt_tiedosto = "prompt_riski_kt.txt"  # Käytetään oletuksena kerrostalopromptia
+        logger.warning(f"Yritetään lukea oletuspromptia: {prompt_tiedosto}")
+        
+        try:
+            with open(prompt_tiedosto, "r", encoding="utf-8") as tiedosto:
+                prompt = tiedosto.read()
+        except Exception as e:
+            logger.error(f"Virhe oletuspromptinkin lukemisessa: {e}")
+            # Jos mikään ei toimi, käytetään kovakoodattua promptia
+            prompt = """Olet koknut kiinteistöanalyytikko, joka arvioi asuntokohteiden riskejä ostajille. Sinun tehtäväsi on analysoida annettu kohdeanalyysi ja luoda siitä riskianalyysi.
+
+Arvioi kohteen riskitaso analysoimalla oheinen kohteen analyysi. Käytä riskitasoasteikkoa 1-10, jossa 1 on erittäin matala riski ja 10 on erittäin korkea riski.
+
+Analyysi on jaettava eri riskiosa-alueisiin. Arvioi jokaiselle osa-alueelle oma riskitasonsa. Osa-alueet ovat:
+1. Sijainti ja alue: Alueen arvonkehitys, maineriski, alueen sosioekonominen status
+2. Talous ja rahoitus: Hinnoittelu, arvonkehitys, sijoituksen kannattavuus
+3. Kohteen kunto: Rakenteelliset riskit, korjaustarpeet, tekniset järjestelmät
+4. Juridiikka: Omistusmuoto, rasitteet, kaavoitus, käyttörajoitukset
+5. Taloyhtiö: Jos kyseessä on kerros- tai rivitalo, arvioi taloyhtiön talous, korjausvelka ja hallinnointi
+
+Anna lopuksi kokonaisriskitaso, joka on painotettu keskiarvo osa-alueiden riskeistä.
+
+Vastaa JSON-muodossa:
+{
+  "kokonaisriskitaso": numero välillä 1-10,
+  "riskimittari": [
+    {
+      "osa_alue": "Sijainti ja alue",
+      "riski_taso": numero välillä 1-10,
+      "osuus_prosenttia": numero välillä 1-100,
+      "kuvaus": "Lyhyt kuvaus riskistä"
+    },
+    ...seuraaville osa-alueille
+  ]
+}
+
+Varmista että riskimittarin osa-alueiden osuus_prosenttia-arvojen summa on tasan 100%.
+"""
+            logger.warning("Käytetään kovakoodattua oletuspromptia.")
 
     try:
         logger.info("Tehdään riskianalyysi")
