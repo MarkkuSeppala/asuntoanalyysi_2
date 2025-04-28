@@ -11,6 +11,74 @@ Sovellus, joka käyttää OpenAI API:a suomalaisten asuntoilmoitusten analysoint
 - Käyttäjäystävällinen verkkoliittymä
 - Riskianalyysi asuntokohteelle
 
+## Kehitysympäristön asennus Dockerilla
+
+### Vaatimukset
+- Docker ja Docker Compose asennettuna
+- Git
+
+### Asennus ja käynnistys
+
+1. Kloonaa repositorio
+```
+git clone <repository-url>
+cd asuntoanalyysi
+```
+
+2. Kopioi ympäristömuuttujat
+```
+cp .env-example .env
+```
+Muokkaa `.env` tiedostoa tarvittaessa (lisää esim. OpenAI API-avain).
+
+3. Käynnistä Docker-kontit
+```
+docker-compose up -d
+```
+
+4. Sovellus on nyt käytettävissä osoitteessa http://localhost:5000
+
+### Kehitys Dockerin kanssa
+
+Kun muokkaat tiedostoja paikallisesti, Flask-sovellus lataa muutokset automaattisesti kehitystilassa. Docker-kontti jakaa sovelluksen tiedostot volumes-määritysten avulla.
+
+### Konsoliyhteys konttiin
+
+```
+docker-compose exec app bash
+```
+
+### Tietokannan käyttö
+
+PostgreSQL-tietokanta on käytettävissä Docker-kontin kautta. Voit yhdistää siihen joko suoraan portista 5432 tai konttien kautta:
+
+```
+docker-compose exec db psql -U postgres -d asuntoanalyysi
+```
+
+### Tuotantoversion rakentaminen
+
+Tuotantoversiota varten on erillinen Dockerfile.prod:
+
+```
+docker build -f Dockerfile.prod -t asuntoanalyysi-prod .
+```
+
+## Julkaisu Render.com:issa
+
+Sovellus voidaan julkaista Render.com-palvelussa käyttäen olemassa olevaa render.yaml-määrittelyä. 
+
+Render.com käyttää PostgreSQL-tietokantaa, joka määritellään Render Dashboardissa. Tietokannan URL tulee asettaa ympäristömuuttujaan `DATABASE_URL`.
+
+### Ympäristömuuttujat Render.com:issa
+
+Aseta vähintään seuraavat ympäristömuuttujat Render.com:in dashboardissa:
+
+- `FLASK_ENV`: production
+- `SECRET_KEY`: Vahva satunnainen merkkijono
+- `DATABASE_URL`: Render.com:in tarjoama PostgreSQL-URL
+- `OPENAI_API_KEY`: OpenAI API-avain
+
 ## Asennus
 
 1. Kloonaa repositorio

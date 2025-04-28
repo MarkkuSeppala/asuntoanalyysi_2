@@ -1,0 +1,21 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Kopioi riippuvuudet ja asenna ne
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Kopioi sovellus
+COPY . .
+
+# Ympäristömuuttujat
+ENV FLASK_APP=app.py
+ENV FLASK_ENV=production
+ENV PYTHONUNBUFFERED=1
+
+# Portti (Render asettaa tämän, mutta varmuuden vuoksi)
+EXPOSE 8080
+
+# Komento, joka suoritetaan kontin käynnistyessä
+CMD gunicorn app:app --bind 0.0.0.0:$PORT --workers=4 --threads=2 --timeout=120 

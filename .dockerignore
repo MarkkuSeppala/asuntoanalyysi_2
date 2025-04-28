@@ -1,0 +1,60 @@
+# Version control
+.git
+.gitignore
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs and databases
+*.log
+logs/
+*.sqlite3
+data/
+
+# Docker specific
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Local development files that shouldn't be in container
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Node modules if any
+node_modules/
+npm-debug.log
+
+# Build folders
+build/ 
