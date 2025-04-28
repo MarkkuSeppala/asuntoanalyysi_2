@@ -231,19 +231,40 @@
         border-radius: 12px;
         border: none;
         overflow: hidden;
-        background-color: white;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        background-color: #f8f8f8; /* Vaalea harmaa tausta normaalitason korteille */
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         transition: all 0.3s ease;
-        height: 100%;
+        min-height: 120px; /* Vähimmäiskorkeus pienelle kortille */
         margin-bottom: 20px;
-        padding: 25px;
+        padding: 25px 25px 45px 25px; /* Lisätty padding alaosaan laajennusindikaattorille */
         position: relative;
+        cursor: pointer;
     }
     
     .risk-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
         border-bottom: 4px solid var(--accent-color);
+    }
+    
+    /* Piilotetaan kortin sisältö oletuksena */
+    .risk-card-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.6s ease, opacity 0.4s ease;
+        opacity: 0;
+        margin-top: 0;
+    }
+    
+    /* Laajennetun kortin tyyli */
+    .risk-card.expanded {
+        z-index: 10; /* Nostaa kortin muiden yläpuolelle */
+    }
+    
+    .risk-card.expanded .risk-card-content {
+        max-height: 500px; /* Kasvatettu maksimikorkeus pidemmille sisällöille */
+        opacity: 1;
+        margin-top: 15px;
     }
     
     /* Kohonneen ja korkean riskin hohtavat kortit */
@@ -309,11 +330,17 @@
     
     /* Riski-korttien container */
     .risk-cards-container {
-        margin-bottom: 40px;
+        margin-bottom: 0;
+        position: relative; /* Suhteellinen asemointi lapsielementeille */
+        background-color: white; /* Muutettu valkoiseksi */
+        border-radius: 16px;
+        padding: 25px 15px;
+        box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.03);
     }
     
     .risk-card-wrapper {
         margin-bottom: 30px;
+        transition: all 0.5s ease; /* Sujuva siirtymä kun kortit liikkuvat */
     }
     
     .risk-area-title {
@@ -322,6 +349,36 @@
         margin-bottom: 20px;
         font-size: 18px;
         padding-right: 50px; /* Jättää tilaa numeroarvolle */
+    }
+    
+    /* Kortin avaamisen indikaattori */
+    .expand-indicator {
+        position: absolute;
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: var(--accent-color);
+        opacity: 0.7;
+        transition: all 0.3s ease;
+        background-color: rgba(241, 239, 236, 0.7);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .risk-card:hover .expand-indicator {
+        opacity: 1;
+        background-color: var(--accent-color);
+        color: white;
+    }
+    
+    .risk-card.expanded .expand-indicator {
+        transform: translateX(-50%) rotate(180deg);
+        background-color: var(--accent-color);
+        color: white;
     }
     
     /* Donut chart -kortin tyyli */
@@ -422,6 +479,28 @@
             width: 100%;
         }
     }
+    
+    .risk-cards-section {
+        background-color: white;
+        border-radius: 18px;
+        margin-bottom: 40px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        padding: 30px;
+        border-bottom: 4px solid var(--accent-color);
+    }
+    
+    .risk-cards-section-header {
+        text-align: center;
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .risk-cards-section-title {
+        font-weight: 600;
+        color: var(--accent-color);
+        margin-bottom: 8px;
+    }
 </style>
 {% endblock %}
 
@@ -494,31 +573,36 @@
         </div>
         
         <!-- Riskialueiden kortit -->
-        <div class="row risk-cards-container">
-            {% for riski in risk_analysis.riskimittari %}
-            <div class="col-lg-4 col-md-6 risk-card-wrapper">
-                <div class="risk-card {% if riski.riski_taso > 6.9 %}risk-card-high{% elif riski.riski_taso > 5.5 %}risk-card-elevated{% endif %}">
-                    <span class="risk-value">{{ riski.riski_taso }}</span>
-                    <h5 class="risk-area-title">{{ riski.osa_alue }}</h5>
-                    {% if riski.kuvaus %}
-                    <p class="mb-3">{{ riski.kuvaus }}</p>
-                    {% endif %}
-                    <div class="risk-meter mt-3">
-                        <div class="risk-meter-fill" style="width: {{ riski.riski_taso * 10 }}%;"></div>
-                    </div>
-                    <div class="d-flex justify-content-between mt-2">
-                        <div class="text-muted small">
-                            {% if riski.riski_taso > 6.9 %}
-                                <span class="risk-label risk-level-high">Korkea</span>
-                            {% elif riski.riski_taso > 5.5 %}
-                                <span class="risk-label risk-level-medium">Kohonnut</span>
+        <div class="risk-cards-section">
+            <div class="row risk-cards-container">
+                {% for riski in risk_analysis.riskimittari %}
+                <div class="col-lg-4 col-md-6 risk-card-wrapper">
+                    <div class="risk-card {% if riski.riski_taso > 6.9 %}risk-card-high{% elif riski.riski_taso > 5.5 %}risk-card-elevated{% endif %}" data-risk-id="{{ loop.index }}">
+                        <span class="risk-value">{{ riski.riski_taso }}</span>
+                        <h5 class="risk-area-title">{{ riski.osa_alue }}</h5>
+                        <div class="risk-card-content">
+                            {% if riski.kuvaus %}
+                            <p class="mb-3">{{ riski.kuvaus }}</p>
                             {% endif %}
+                            <div class="risk-meter mt-3">
+                                <div class="risk-meter-fill" style="width: {{ riski.riski_taso * 10 }}%;"></div>
+                            </div>
+                            <div class="d-flex justify-content-between mt-2">
+                                <div class="text-muted small">
+                                    {% if riski.riski_taso > 6.9 %}
+                                        <span class="risk-label risk-level-high">Korkea</span>
+                                    {% elif riski.riski_taso > 5.5 %}
+                                        <span class="risk-label risk-level-medium">Kohonnut</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-muted small">Osuus: {{ riski.osuus_prosenttia }}%</div>
+                            </div>
                         </div>
-                        <div class="text-muted small">Osuus: {{ riski.osuus_prosenttia }}%</div>
+                        <span class="expand-indicator"><i class="fas fa-chevron-down"></i></span>
                     </div>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
     </div>
 
@@ -562,6 +646,25 @@
             console.error('Virhe markdown-käsittelyssä:', error);
             analysisContent.innerHTML = '<p class="error-message">Virhe sisällön käsittelyssä.</p>';
         }
+        
+        // Riskikorttien laajentaminen klikkauksella
+        const riskCards = document.querySelectorAll('.risk-card');
+        riskCards.forEach(card => {
+            card.addEventListener('click', function() {
+                // Tarkistetaan, onko tämä kortti jo auki
+                const isExpanded = this.classList.contains('expanded');
+                
+                // Suljetaan kaikki kortit
+                riskCards.forEach(c => {
+                    c.classList.remove('expanded');
+                });
+                
+                // Jos kortti ei ollut auki, avataan se
+                if (!isExpanded) {
+                    this.classList.add('expanded');
+                }
+            });
+        });
         
         // Alustetaan kartta jos osoite on saatavilla
         const mapContainer = document.getElementById('mapContainer');

@@ -61,11 +61,6 @@
         z-index: 1;
     }
     
-    .hero-content {
-        position: relative;
-        z-index: 2;
-    }
-    
     .hero-title {
         font-size: 3.2rem;
         font-weight: 800;
@@ -682,101 +677,94 @@
 {% block content %}
 <!-- Hero Section -->
 <section class="hero-section">
-    <div class="container hero-content">
-        <div class="row">
-            <div class="col-lg-12 mb-4">
-                <h1 class="hero-title">Analysoi <span class="accent-text">asuntokohteita</span> älykkäällä tekoälyllä</h1>
-                <p class="hero-subtitle">Saat kattavan analyysin ja riskiprofiilin mistä tahansa Oikotie tai Etuovi asuntoilmoituksesta hetkessä.</p>
+    <div class="container">
+        <div class="container">
+            <div class="row g-4">
+                <!-- Form column -->
+                <div class="col-lg-7 mb-4">
+                    <div class="form-card">
+                        <div class="form-header">
+                            <h4 class="mb-0"><i class="fas fa-link me-2"></i>Syötä asuntoilmoituksen URL</h4>
+                        </div>
+                        <div class="form-body">
+                            <form id="analyze-form" action="{{ url_for('analyze') }}" method="post">
+                                <div class="mb-4">
+                                    <label for="url" class="form-label">Asuntoilmoituksen URL-osoite</label>
+                                    <input 
+                                        type="url" 
+                                        class="form-control url-input" 
+                                        id="url" 
+                                        name="url" 
+                                        placeholder="https://asunnot.oikotie.fi/... tai https://www.etuovi.com/..."
+                                        required
+                                    >
+                                    <div id="url-error" class="url-error">Syötä kelvollinen Oikotie- tai Etuovi-asuntoilmoituksen URL.</div>
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-accent" id="submit-btn">
+                                        <i class="fas fa-search-location me-2"></i>Analysoi kohde
+                                    </button>
+                                </div>
+                                <div class="mt-3">
+                                    <p class="small text-muted mb-0">Tuemme tällä hetkellä Oikotien ja Etuovin asuntoilmoituksia.</p>
+                                </div>
+                            </form>
+                            
+                            <div class="mt-4 pt-3 border-top">
+                                <h5><i class="fas fa-file-upload me-2"></i>Tai lataa PDF-tiedosto suoraan</h5>
+                                <div id="drag-drop-area" class="drag-drop-area">
+                                    <input type="file" id="file-input" accept=".pdf" style="display: none;">
+                                    <div class="drag-drop-icon">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </div>
+                                    <p class="drag-drop-text">Raahaa ja pudota PDF-tiedosto tähän</p>
+                                    <p class="drag-drop-subtext">tai <span class="text-primary">selaa tiedostoja</span></p>
+                                    <p class="drag-drop-subtext mt-2">Hyväksytään Etuovi ja Oikotie PDF-esitteet</p>
+                                </div>
+                                <div id="file-preview" style="display: none;" class="file-preview">
+                                    <span class="file-preview-icon"><i class="fas fa-file-pdf"></i></span>
+                                    <div class="file-preview-info">
+                                        <p class="file-preview-name" id="file-name"></p>
+                                        <p class="file-preview-size" id="file-size"></p>
+                                    </div>
+                                    <span class="file-preview-remove" id="file-remove"><i class="fas fa-times"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Instructions column - siirretty oikealle puolelle -->
+                <div class="col-lg-5 mb-4">
+                    <div class="info-card">
+                        <div class="info-header">
+                            <h4 class="mb-0"><i class="fas fa-info-circle me-2"></i>Ohjeita analyysin tekemiseen</h4>
+                        </div>
+                        <div class="info-body">
+                            <h5 class="mb-3">Vaihtoehto 1: Anna verkko-osoite</h5>
+                            <ol class="mb-4">
+                                <li class="mb-2">Kopioi asuntoilmoituksen URL-osoite <strong>Oikotie.fi</strong> tai <strong>Etuovi.com</strong> -sivustolta</li>
+                                <li class="mb-2">Liitä osoite vasemman puolen kenttään</li>
+                                <li class="mb-2">Paina "<strong>Analysoi kohde</strong>" -painiketta</li>
+                                <li class="mb-2">Analyysi kestää noin 1-2 minuuttia</li>
+                            </ol>
+                            
+                            <h5 class="mb-3">Vaihtoehto 2: Lataa PDF</h5>
+                            <ol class="mb-4">
+                                <li class="mb-2">Lataa asunnon myynti-ilmoitus Oikotieltä tai Etuovesta PDF-muodossa</li>
+                                <li class="mb-2">Raahaa asuntoilmoituksen PDF-tiedosto latausalueelle</li>
+                                <li class="mb-2">Vaihtoehtoisesti klikkaa aluetta ja valitse tiedosto laitteeltasi</li>
+                                <li class="mb-2">Analyysi käynnistyy automaattisesti tiedoston valinnan jälkeen</li>
+                                <li class="mb-2">Analyysi kestää noin 1-2 minuuttia</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
     </div>
 </section>
 
-<div class="container">
-    <div class="row g-4">
-        <!-- Form column -->
-        <div class="col-lg-7 mb-4">
-            <div class="form-card">
-                <div class="form-header">
-                    <h4 class="mb-0"><i class="fas fa-link me-2"></i>Syötä asuntoilmoituksen URL</h4>
-                </div>
-                <div class="form-body">
-                    <form id="analyze-form" action="{{ url_for('analyze') }}" method="post">
-                        <div class="mb-4">
-                            <label for="url" class="form-label">Asuntoilmoituksen URL-osoite</label>
-                            <input 
-                                type="url" 
-                                class="form-control url-input" 
-                                id="url" 
-                                name="url" 
-                                placeholder="https://asunnot.oikotie.fi/... tai https://www.etuovi.com/..."
-                                required
-                            >
-                            <div id="url-error" class="url-error">Syötä kelvollinen Oikotie- tai Etuovi-asuntoilmoituksen URL.</div>
-                        </div>
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-accent" id="submit-btn">
-                                <i class="fas fa-search-location me-2"></i>Analysoi kohde
-                            </button>
-                        </div>
-                        <div class="mt-3">
-                            <p class="small text-muted mb-0">Tuemme tällä hetkellä Oikotien ja Etuovin asuntoilmoituksia.</p>
-                        </div>
-                    </form>
-                    
-                    <div class="mt-4 pt-3 border-top">
-                        <h5><i class="fas fa-file-upload me-2"></i>Tai lataa PDF-tiedosto suoraan</h5>
-                        <div id="drag-drop-area" class="drag-drop-area">
-                            <input type="file" id="file-input" accept=".pdf" style="display: none;">
-                            <div class="drag-drop-icon">
-                                <i class="fas fa-file-pdf"></i>
-                            </div>
-                            <p class="drag-drop-text">Raahaa ja pudota PDF-tiedosto tähän</p>
-                            <p class="drag-drop-subtext">tai <span class="text-primary">selaa tiedostoja</span></p>
-                            <p class="drag-drop-subtext mt-2">Hyväksytään Etuovi ja Oikotie PDF-esitteet</p>
-                        </div>
-                        <div id="file-preview" style="display: none;" class="file-preview">
-                            <span class="file-preview-icon"><i class="fas fa-file-pdf"></i></span>
-                            <div class="file-preview-info">
-                                <p class="file-preview-name" id="file-name"></p>
-                                <p class="file-preview-size" id="file-size"></p>
-                            </div>
-                            <span class="file-preview-remove" id="file-remove"><i class="fas fa-times"></i></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Instructions column - siirretty oikealle puolelle -->
-        <div class="col-lg-5 mb-4">
-            <div class="info-card">
-                <div class="info-header">
-                    <h4 class="mb-0"><i class="fas fa-info-circle me-2"></i>Ohjeita analyysin tekemiseen</h4>
-                </div>
-                <div class="info-body">
-                    <h5 class="mb-3">Vaihtoehto 1: URL-analyysi</h5>
-                    <ol class="mb-4">
-                        <li class="mb-2">Kopioi asuntoilmoituksen URL-osoite <strong>Oikotie.fi</strong> tai <strong>Etuovi.com</strong> -sivustolta</li>
-                        <li class="mb-2">Liitä osoite vasemman puolen kenttään</li>
-                        <li class="mb-2">Paina "<strong>Analysoi kohde</strong>" -painiketta</li>
-                    </ol>
-                    
-                    <h5 class="mb-3">Vaihtoehto 2: PDF-analyysi</h5>
-                    <ol class="mb-4">
-                        <li class="mb-2">Raahaa asuntoilmoituksen PDF-tiedosto "Tai lataa PDF-tiedosto suoraan" -alueelle</li>
-                        <li class="mb-2">Vaihtoehtoisesti klikkaa aluetta ja valitse tiedosto laitteeltasi</li>
-                        <li class="mb-2">Analyysi käynnistyy automaattisesti tiedoston valinnan jälkeen</li>
-                    </ol>
-                    
-                    <div class="alert alert-info p-3">
-                        <i class="fas fa-lightbulb me-2"></i>
-                        <span><strong>Analyysin valmistuttua</strong> saat yksityiskohtaisen raportin kohteen ominaisuuksista, riskiprofiilista ja sijoituspotentiaalista.</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+
     
     <!-- Recent analyses row - siirretty omalle rivilleen -->
     <div class="row">
