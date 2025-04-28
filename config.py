@@ -13,6 +13,22 @@ class Config:
     if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith('postgres://'):
         SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace('postgres://', 'postgresql://', 1)
     
+    # Tietokantapoolien asetukset, jotka auttavat SSL-virheiden kanssa
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,      # Tarkistaa yhteyden toimivuuden ennen käyttöä
+        'pool_recycle': 280,        # Kierrättää yhteydet 280 sekunnin välein (alle Render.com 5min timeout)
+        'pool_timeout': 30,         # Yhteyden odotusaika poolituksessa
+        'pool_size': 5,             # Yhteyksien määrä poolissa
+        'max_overflow': 10,         # Sallittujen lisäyhteyksien määrä
+        'connect_args': {
+            'connect_timeout': 10,  # Yhteyden muodostamisen timeout
+            'keepalives': 1,        # Pitää yhteyttä auki
+            'keepalives_idle': 60,  # Idle-aika ennen keepalive-viestiä
+            'keepalives_interval': 10, # Aika keepalive-viestien välillä
+            'keepalives_count': 5   # Kuinka monta kertaa yritetään
+        }
+    }
+    
     # Asetetaan sessioiden kesto
     PERMANENT_SESSION_LIFETIME = timedelta(days=30)
     

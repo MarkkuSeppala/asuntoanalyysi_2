@@ -1,24 +1,26 @@
 import os
 import logging
-from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for, flash, send_file, abort
-import api_call
-from flask_login import LoginManager, current_user, login_required
-from models import db, User, Analysis, RiskAnalysis, Kohde
-from auth import auth
-from config import get_config
-from datetime import datetime
-import sqlalchemy
-from riskianalyysi import riskianalyysi
 import json
 import sys
 import re
 import traceback
 import time
+import tempfile
+from functools import wraps
+from datetime import datetime
+from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for, flash, send_file, abort
+from flask_login import LoginManager, current_user, login_required
+import sqlalchemy
+from sqlalchemy import text, exc
+
+import api_call
+from models import db, User, Analysis, RiskAnalysis, Kohde
+from auth import auth
+from config import get_config
+from riskianalyysi import riskianalyysi
 import etuovi_downloader  # Import the etuovi_downloader
 import oikotie_downloader  # Import the oikotie_downloader
-import tempfile
 import kat_api_call  # Import the kat_api_call module
-from sqlalchemy import text
 
 # Asetetaan lokitus
 logging.basicConfig(
@@ -59,7 +61,42 @@ login_manager.login_view = 'auth.login'
 login_manager.login_message = 'Kirjaudu sisään käyttääksesi tätä sivua.'
 login_manager.login_message_category = 'info'
 
+# Lisätään tietokantayhteyden virheiden käsittely
+def retry_on_db_error(max_retries=3, retry_delay=1):
+    """Decorator, joka yrittää suorittaa tietokantaoperaation uudelleen virhetilanteissa"""
+    def decorator(f):
+        @wraps(f)
+        def wrapped_f(*args, **kwargs):
+            attempts = 0
+            while attempts < max_retries:
+                try:
+                    return f(*args, **kwargs)
+                except (exc.OperationalError, exc.ProgrammingError, exc.DisconnectionError) as e:
+                    attempts += 1
+                    app.logger.warning(f"Tietokantavirhe (yritys {attempts}/{max_retries}): {str(e)}")
+                    
+                    # Jos viimeinen yritys, nosta virhe uudelleen
+                    if attempts >= max_retries:
+                        app.logger.error(f"Kaikki yritykset epäonnistuivat: {str(e)}")
+                        raise
+                    
+                    # Sulje päättyneeksi merkitty yhteys ja odota ennen uutta yritystä
+                    try:
+                        db.session.rollback()
+                    except:
+                        pass
+                    
+                    # Odota ennen uudelleenyritystä (exponentiaalinen backoff)
+                    sleep_time = retry_delay * (2 ** (attempts - 1))
+                    app.logger.info(f"Odotetaan {sleep_time}s ennen uudelleenyritystä...")
+                    time.sleep(sleep_time)
+            return None  # Ei pitäisi koskaan päästä tänne
+        return wrapped_f
+    return decorator
+
+# Sovelletaan tietokantayhteyden virheiden käsittelyä load_user-funktioon
 @login_manager.user_loader
+@retry_on_db_error(max_retries=3)
 def load_user(user_id):
     """Lataa käyttäjä session tunnisteen perusteella"""
     return User.query.get(int(user_id))
