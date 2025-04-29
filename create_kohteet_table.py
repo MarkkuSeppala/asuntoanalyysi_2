@@ -76,6 +76,46 @@ def create_kohteet_table():
                 logger.error(f"Virhe taulun luomisessa suoralla SQL-kyselyllä: {e2}")
                 return False
 
+def add_risk_level_column():
+    """Lisää risk_level-sarake kohteet-tauluun, jos sitä ei ole"""
+    app = create_app()
+    
+    with app.app_context():
+        try:
+            # Tarkistetaan onko kohteet-taulu olemassa
+            inspector = sqlalchemy.inspect(db.engine)
+            if 'kohteet' not in inspector.get_table_names():
+                logger.error("Kohteet-taulua ei löydy. Aja ensin create_tables-funktio.")
+                return False
+                
+            # Tarkistetaan onko risk_level-sarake jo olemassa
+            columns = inspector.get_columns('kohteet')
+            column_names = [c['name'] for c in columns]
+            
+            if 'risk_level' in column_names:
+                logger.info("risk_level-sarake on jo olemassa kohteet-taulussa.")
+                return True
+                
+            # Lisätään risk_level-sarake
+            logger.info("Lisätään risk_level-sarake kohteet-tauluun...")
+            with db.engine.connect() as conn:
+                with conn.begin():
+                    conn.execute(text("""
+                    ALTER TABLE kohteet 
+                    ADD COLUMN risk_level NUMERIC(3,1)
+                    """))
+            
+            logger.info("risk_level-sarake lisätty onnistuneesti!")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Virhe risk_level-sarakkeen lisäämisessä: {e}")
+            return False
+
 if __name__ == "__main__":
-    success = create_kohteet_table()
-    sys.exit(0 if success else 1) 
+    # Suorita migraatio
+    if add_risk_level_column():
+        logger.info("Migraatio suoritettu onnistuneesti.")
+    else:
+        logger.error("Migraatio epäonnistui.")
+        sys.exit(1) 

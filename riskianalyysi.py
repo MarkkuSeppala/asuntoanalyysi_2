@@ -214,6 +214,15 @@ Varmista että riskimittarin osa-alueiden osuus_prosenttia-arvojen summa on tasa
                         db.session.add(new_risk)
                         logger.info(f"Luotiin uusi riskianalyysi analyysille {analysis_id}")
                     
+                    # Päivitetään kohteen riskitaso
+                    try:
+                        kohde = Kohde.query.filter_by(analysis_id=analysis_id).first()
+                        if kohde:
+                            kohde.risk_level = json_data["kokonaisriskitaso"]
+                            logger.info(f"Päivitettiin kohteen {kohde.id} riskitaso: {kohde.risk_level}")
+                    except Exception as kohde_error:
+                        logger.error(f"Virhe tallennettaessa riskitasoa kohteeseen: {kohde_error}")
+                    
                     # Tallennetaan muutokset tietokantaan
                     db.session.commit()
                     logger.info("Riskianalyysi tallennettu tietokantaan")

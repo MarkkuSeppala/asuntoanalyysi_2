@@ -837,9 +837,9 @@
                                     </td>
                                     <td>{{ analysis.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
                                     <td>
-                                        {% if analysis.risk_analysis and analysis.risk_analysis.kokonaisriskitaso %}
-                                            <span class="badge {% if analysis.risk_analysis.kokonaisriskitaso <= 3.4 %}bg-success{% elif analysis.risk_analysis.kokonaisriskitaso <= 5.5 %}bg-warning{% elif analysis.risk_analysis.kokonaisriskitaso <= 6.9 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
-                                                {{ analysis.risk_analysis.kokonaisriskitaso }}/10
+                                        {% if analysis.kohde and analysis.kohde.risk_level %}
+                                            <span class="badge {% if analysis.kohde.risk_level <= 3.4 %}bg-success{% elif analysis.kohde.risk_level <= 5.5 %}bg-warning{% elif analysis.kohde.risk_level <= 6.9 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                                {{ analysis.kohde.risk_level }}/10
                                             </span>
                                         {% else %}
                                             <span class="badge bg-secondary">ei tietoa</span>

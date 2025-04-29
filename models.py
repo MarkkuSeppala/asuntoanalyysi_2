@@ -54,6 +54,11 @@ class User(UserMixin, db.Model):
         """Tarkistaa onko käyttäjä saavuttanut API-kutsujen rajan."""
         return self.api_calls_count >= limit
     
+    def can_make_api_call(self):
+        """Tarkistaa voiko käyttäjä tehdä API-kutsun.
+        Admin-käyttäjillä tai käyttäjillä, jotka eivät ole saavuttaneet rajaa, on oikeus."""
+        return self.is_admin or not self.has_reached_api_limit(2)  # Rajoitus 2 kutsuun tavallisille käyttäjille
+    
     def __repr__(self):
         """Palauttaa käyttäjän esitysmuodon."""
         return f'<User {self.email}>'
@@ -102,6 +107,7 @@ class Kohde(db.Model):
     rakennusvuosi = db.Column(db.Integer, nullable=True)
     analysis_id = db.Column(db.Integer, db.ForeignKey('analyses.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    risk_level = db.Column(db.Numeric(3, 1), nullable=True)  # Riskitaso asteikolla 1-10, 1 desimaalin tarkkuudella
     
     def __repr__(self):
         return f'<Kohde {self.osoite}>' 

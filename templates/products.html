@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}Tuotteet - Kotolyysi{% endblock %}
+
+{% block extra_css %}
+<style>
+    .products-header {
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-light));
+        padding: 80px 0;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .products-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1500&q=80') center/cover;
+        opacity: 0.1;
+        z-index: 0;
+    }
+    
+    .products-header .container {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .product-card {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border: none;
+        position: relative;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(18, 52, 88, 0.15);
+    }
+    
+    .popular-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background: linear-gradient(135deg, #FF9B42, #F76B1C);
+        color: white;
+        padding: 5px 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border-radius: 0 16px 0 16px;
+        z-index: 3;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .card-header {
+        background: var(--accent-color);
+        color: white;
+        padding: 25px 20px;
+        border-bottom: none;
+    }
+    
+    .card-header h3 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0;
+    }
+    
+    .card-body {
+        padding: 30px 25px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: white;
+    }
+    
+    .price-container {
+        display: flex;
+        align-items: baseline;
+        margin-bottom: 20px;
+    }
+    
+    .price {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--accent-color);
+        line-height: 1;
+    }
+    
+    .price-period {
+        font-size: 1rem;
+        color: #666;
+        margin-left: 5px;
+    }
+    
+    .price-note {
+        font-size: 0.8rem;
+        color: #888;
+        margin-top: 5px;
+    }
+    
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 25px 0;
+        flex-grow: 1;
+    }
+    
+    .feature-list li {
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+    }
+    
+    .feature-list li:last-child {
+        border-bottom: none;
+    }
+    
+    .feature-list i {
+        color: #28a745;
+        margin-right: 10px;
+        font-size: 1.1rem;
+    }
+    
+    .btn-product {
+        padding: 12px 30px;
+        font-weight: 600;
+        border-radius: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: auto;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-product:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(18, 52, 88, 0.15);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-light));
+        border: none;
+    }
+    
+    .btn-outline-primary {
+        color: var(--accent-color);
+        border: 2px solid var(--accent-color);
+    }
+    
+    .btn-outline-primary:hover {
+        background-color: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
+    }
+    
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 15px;
+    }
+    
+    .section-subtitle {
+        font-size: 1.2rem;
+        color: #666;
+        margin-bottom: 50px;
+    }
+    
+    .products-section {
+        padding: 80px 0;
+        background-color: var(--primary-color);
+    }
+    
+    @media (max-width: 768px) {
+        .product-card {
+            margin-bottom: 30px;
+        }
+        
+        .products-header {
+            padding: 50px 0;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Tuotteet Header -->
+<header class="products-header">
+    <div class="container text-center">
+        <h1 class="display-4 fw-bold mb-3">Valitse Sopiva Tuote</h1>
+        <p class="lead mb-0">Tehosta kotien analyysiprosessia tehokkailla työkaluilla</p>
+    </div>
+</header>
+
+<!-- Tuotteet Section -->
+<section class="products-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Hinnoittelu</h2>
+            <p class="section-subtitle">Valitse sopiva tuote tarpeisiisi</p>
+        </div>
+        
+        <div class="row">
+            <!-- Kuukausijäsenyys -->
+            <div class="col-lg-6 mb-4">
+                <div class="product-card">
+                    <div class="popular-badge">Suosittu</div>
+                    <div class="card-header">
+                        <h3>Kuukausijäsenyys</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="price-container">
+                            <span class="price">9,90€</span>
+                            <span class="price-period">/kk</span>
+                        </div>
+                        <p class="price-note">Sisältää ALV 25,5%</p>
+                        
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check-circle"></i> Jopa 300 analyysia kuukaudessa</li>
+                            <li><i class="fas fa-check-circle"></i> Pääsy kaikkiin ominaisuuksiin</li>
+                            <li><i class="fas fa-check-circle"></i> Kattavat kiinteistöanalyysit</li>
+                            <li><i class="fas fa-check-circle"></i> Soveltuu aktiiviseen käyttöön</li>
+                            <li><i class="fas fa-check-circle"></i> Ei sitoutumisaikaa</li>
+                        </ul>
+                        
+                        <a href="#" class="btn btn-primary btn-product btn-lg w-100">
+                            <i class="fas fa-shopping-cart me-2"></i> Valitse
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 20 Analyysia -->
+            <div class="col-lg-6 mb-4">
+                <div class="product-card">
+                    <div class="card-header">
+                        <h3>Kertapaketti</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="price-container">
+                            <span class="price">2,90€</span>
+                        </div>
+                        <p class="price-note">Sisältää ALV 25,5%</p>
+                        
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check-circle"></i> 20 analyysia</li>
+                            <li><i class="fas fa-check-circle"></i> Pääsy kaikkiin ominaisuuksiin</li>
+                            <li><i class="fas fa-check-circle"></i> Kattavat kiinteistöanalyysit</li>
+                            <li><i class="fas fa-check-circle"></i> Soveltuu satunnaiseen käyttöön</li>
+                            <li><i class="fas fa-check-circle"></i> Ei vanhene</li>
+                        </ul>
+                        
+                        <a href="#" class="btn btn-outline-primary btn-product btn-lg w-100">
+                            <i class="fas fa-shopping-cart me-2"></i> Valitse
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Usein Kysytyt Kysymykset</h2>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item border-0 mb-3 shadow-sm">
+                        <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                Miten voin käyttää analyyseja?
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Voit tehdä analyysin mistä tahansa Oikotie.fi tai Etuovi.com sivustolla olevasta kiinteistöilmoituksesta syöttämällä ilmoituksen URL-osoitteen järjestelmään. Saat kattavan analyysin kiinteistön arvosta, kunnosta ja potentiaalisista riskeistä.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item border-0 mb-3 shadow-sm">
+                        <h2 class="accordion-header" id="headingTwo">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                Voinko peruuttaa kuukausijäsenyyden?
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Kyllä, kuukausijäsenyyden voi peruuttaa milloin tahansa. Peruutuksen jälkeen jäsenyys on voimassa kuluvan laskutuskauden loppuun asti.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item border-0 mb-3 shadow-sm">
+                        <h2 class="accordion-header" id="headingThree">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                Miten maksaminen tapahtuu?
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Maksaminen tapahtuu turvallisesti verkkopankin, luottokortin tai mobiilimaksun avulla. Käytämme turvallista maksujärjestelmää, joka takaa tietojesi suojauksen.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 

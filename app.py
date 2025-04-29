@@ -174,6 +174,22 @@ with app.app_context():
     
     # Kutsutaan create_tables-funktiota, joka varmistaa myös kohteet-taulun olemassaolon
     create_tables()
+    
+    # Päivitetään kohteet-taulun rakenne tarvittaessa
+    try:
+        # Tarkistetaan onko risk_level-sarake jo olemassa
+        kohteet_columns = [c['name'] for c in inspector.get_columns('kohteet')] if 'kohteet' in tables else []
+        if 'risk_level' not in kohteet_columns and 'kohteet' in tables:
+            logger.info("Lisätään risk_level-sarake kohteet-tauluun...")
+            with db.engine.connect() as conn:
+                with conn.begin():
+                    conn.execute(text("""
+                    ALTER TABLE kohteet 
+                    ADD COLUMN risk_level NUMERIC(3,1)
+                    """))
+            logger.info("risk_level-sarake lisätty onnistuneesti!")
+    except Exception as e:
+        logger.error(f"Virhe risk_level-sarakkeen lisäämisessä: {e}")
 
 # Lisätään päivämäärä kaikkiin templateihin
 @app.context_processor
@@ -184,6 +200,11 @@ def inject_now():
 def landing():
     """Landing page - sovelluksen markkinointisivu"""
     return render_template('landing.html')
+
+@app.route('/products')
+def products():
+    """Tuotteet - sivusto tuotevaihtoehtoineen"""
+    return render_template('products.html')
 
 @app.route('/')
 def index():
@@ -381,7 +402,7 @@ def analyze():
         
         # Kasvatetaan käyttäjän API-kutsujen määrää, jos ei ole admin
         if not current_user.is_admin:
-            current_user.increment_api_call_count()
+            current_user.increment_api_calls()
         
         # Haetaan analyysi tietokannasta URL:n perusteella tai luodaan uusi
         analysis = Analysis.query.filter_by(property_url=url, user_id=current_user.id).first()
@@ -515,7 +536,7 @@ def api_analyze():
         
         # Kasvatetaan käyttäjän API-kutsujen määrää, jos ei ole admin
         if not current_user.is_admin:
-            current_user.increment_api_call_count()
+            current_user.increment_api_calls()
         
         # Haetaan analyysi tietokannasta URL:n perusteella tai luodaan uusi
         analysis = Analysis.query.filter_by(property_url=url, user_id=current_user.id).first()
@@ -764,7 +785,7 @@ ID: {property_id}
                 
                 # Increment API call count if user is not admin
                 if not current_user.is_admin:
-                    current_user.increment_api_call_count()
+                    current_user.increment_api_calls()
                 
                 # Get the analysis from database or create a new one
                 analysis = Analysis.query.filter_by(property_url=property_id, user_id=current_user.id).first()
