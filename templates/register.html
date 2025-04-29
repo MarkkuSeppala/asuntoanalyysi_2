@@ -220,18 +220,18 @@
                             
                             <!-- Käyttäjätiedot -->
                             <div class="mb-3">
-                                {{ form.username.label(class="form-label") }}
-                                {% if form.username.errors %}
-                                    {{ form.username(class="form-control is-invalid") }}
+                                {{ form.email.label(class="form-label") }}
+                                {% if form.email.errors %}
+                                    {{ form.email(class="form-control is-invalid") }}
                                     <div class="invalid-feedback">
-                                        {% for error in form.username.errors %}
+                                        {% for error in form.email.errors %}
                                             {{ error }}
                                         {% endfor %}
                                     </div>
                                 {% else %}
-                                    {{ form.username(class="form-control") }}
+                                    {{ form.email(class="form-control") }}
                                 {% endif %}
-                                <small class="form-text text-muted">Valitse käyttäjätunnus joka on 3-20 merkkiä pitkä.</small>
+                                <small class="form-text text-muted">Sähköpostiosoitteesi toimii käyttäjätunnuksenasi.</small>
                             </div>
                             
                             <!-- Osoitetiedot -->
@@ -277,21 +277,6 @@
                                         {{ form.city(class="form-control") }}
                                     {% endif %}
                                 </div>
-                            </div>
-                            
-                            <!-- Sähköposti -->
-                            <div class="mb-3">
-                                {{ form.email.label(class="form-label") }}
-                                {% if form.email.errors %}
-                                    {{ form.email(class="form-control is-invalid") }}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.email.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% else %}
-                                    {{ form.email(class="form-control") }}
-                                {% endif %}
                             </div>
                             
                             <!-- Salasana -->

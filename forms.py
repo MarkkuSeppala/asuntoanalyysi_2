@@ -22,6 +22,7 @@ class RegistrationForm(FlaskForm):
     city = StringField('Kaupunki', validators=[DataRequired(), Length(min=2, max=80)])
     state = StringField('Maakunta')
     country = StringField('Maa', default='Suomi')
+    accept_tos = BooleanField('Hyväksyn käyttöehdot', validators=[DataRequired()])
     submit = SubmitField('Rekisteröidy')
 
     def validate_email(self, email):
