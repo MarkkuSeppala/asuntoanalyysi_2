@@ -13,11 +13,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def create_admin_user(username, email, password):
+def create_admin_user(email, password):
     """Luo admin-käyttäjän tai päivittää olemassa olevan käyttäjän suoraan tietokantaan käyttäen SQL-komentoja"""
     try:
         # SQL-lauseke käyttäjän tarkistamiseen
-        check_sql = f"SELECT id, is_admin FROM users WHERE username = '{username}';"
+        check_sql = f"SELECT id, is_admin FROM users WHERE email = '{email}';"
         
         # Toteuta käyttäen psql-komentoa
         db_url = os.environ.get('DATABASE_URL')
@@ -27,7 +27,7 @@ def create_admin_user(username, email, password):
             
         # Suorita SQL-komento psql:llä
         check_cmd = f'psql "{db_url}" -c "{check_sql}" -t'
-        logger.info(f"Tarkistetaan käyttäjä: {username}")
+        logger.info(f"Tarkistetaan käyttäjä sähköpostilla: {email}")
         
         result = subprocess.run(check_cmd, shell=True, capture_output=True, text=True)
         output = result.stdout.strip()
@@ -44,7 +44,7 @@ def create_admin_user(username, email, password):
                 is_admin = parts[1].strip() == 't'  # t = true, f = false PostgreSQL:ssä
                 
                 if is_admin:
-                    logger.info(f"Käyttäjä {username} on jo admin-käyttäjä.")
+                    logger.info(f"Käyttäjä {email} on jo admin-käyttäjä.")
                     return True
                 
                 # Päivitä käyttäjäksi admin
@@ -56,7 +56,7 @@ def create_admin_user(username, email, password):
                     logger.error(f"Virhe käyttäjän päivittämisessä: {update_result.stderr}")
                     return False
                 
-                logger.info(f"Käyttäjä {username} päivitetty admin-käyttäjäksi.")
+                logger.info(f"Käyttäjä {email} päivitetty admin-käyttäjäksi.")
                 return True
         
         # Jos käyttäjää ei löydy, luo uusi
@@ -72,9 +72,9 @@ def create_admin_user(username, email, password):
         # Luodaan SQL-lauseke uuden käyttäjän lisäämiseksi
         insert_sql = f"""
         INSERT INTO users 
-        (username, email, password_hash, is_admin, created_at, is_active) 
+        (email, password_hash, is_admin, created_at, is_active) 
         VALUES 
-        ('{username}', '{email}', '{password_hash}', TRUE, CURRENT_TIMESTAMP, TRUE);
+        ('{email}', '{password_hash}', TRUE, CURRENT_TIMESTAMP, TRUE);
         """
         
         insert_cmd = f'psql "{db_url}" -c "{insert_sql}"'
@@ -84,7 +84,7 @@ def create_admin_user(username, email, password):
             logger.error(f"Virhe käyttäjän lisäämisessä: {insert_result.stderr}")
             return False
             
-        logger.info(f"Uusi admin-käyttäjä {username} luotu onnistuneesti.")
+        logger.info(f"Uusi admin-käyttäjä {email} luotu onnistuneesti.")
         return True
         
     except Exception as e:
@@ -94,14 +94,13 @@ def create_admin_user(username, email, password):
 def main():
     """Pääfunktio argumenttien käsittelyyn ja admin-käyttäjän luontiin"""
     parser = argparse.ArgumentParser(description="Luo uusi admin-käyttäjä tai aseta olemassa oleva käyttäjä admin-käyttäjäksi")
-    parser.add_argument("--username", "-u", required=True, help="Käyttäjätunnus")
-    parser.add_argument("--email", "-e", required=True, help="Sähköpostiosoite")
+    parser.add_argument("--email", "-e", required=True, help="Sähköpostiosoite (toimii käyttäjätunnuksena)")
     parser.add_argument("--password", "-p", required=True, help="Salasana")
     
     args = parser.parse_args()
     
     try:
-        success = create_admin_user(args.username, args.email, args.password)
+        success = create_admin_user(args.email, args.password)
         if not success:
             sys.exit(1)
     except Exception as e:
