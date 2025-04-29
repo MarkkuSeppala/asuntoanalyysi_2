@@ -16,9 +16,9 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        user = User.query.filter_by(email=form.email.data).first()
         
-        # Tarkistetaan käyttäjänimi ja salasana
+        # Tarkistetaan sähköposti ja salasana
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember.data)
             next_page = request.args.get('next')
@@ -26,7 +26,7 @@ def login():
             # Ohjataan käyttäjä sinne mihin hän oli menossa, tai etusivulle
             return redirect(next_page or url_for('index'))
         else:
-            flash('Kirjautuminen epäonnistui. Tarkista käyttäjätunnus ja salasana.', 'danger')
+            flash('Kirjautuminen epäonnistui. Tarkista sähköposti ja salasana.', 'danger')
     
     return render_template('login.html', form=form)
 
@@ -39,11 +39,22 @@ def register():
     
     form = RegistrationForm()
     if form.validate_on_submit():
-        # Luodaan uusi käyttäjä
+        # Tarkistetaan että käyttöehdot on hyväksytty
+        if not form.accept_tos.data:
+            flash('Sinun täytyy hyväksyä käyttöehdot jatkaaksesi.', 'danger')
+            return render_template('register.html', form=form)
+        
+        # Luodaan uusi käyttäjä kaikilla tiedoilla
         user = User(
-            username=form.username.data,
             email=form.email.data,
-            password=form.password.data
+            password=form.password.data,
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
+            street_address=form.street_address.data,
+            postal_code=form.postal_code.data,
+            city=form.city.data,
+            state="",  # Oletuksena tyhjä, Suomessa ei käytetä
+            country="Suomi"  # Oletuksena Suomi
         )
         
         # Lisätään käyttäjä tietokantaan

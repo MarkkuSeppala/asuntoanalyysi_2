@@ -2,90 +2,446 @@
 
 {% block title %}Rekisteröidy{% endblock %}
 
+{% block extra_css %}
+<style>
+    .register-section {
+        padding: 60px 0;
+        background-color: var(--primary-color);
+    }
+    
+    .register-card {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        border: none;
+    }
+    
+    .register-header {
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-light));
+        padding: 25px 30px;
+        position: relative;
+    }
+    
+    .register-header h3 {
+        color: white;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    
+    .register-header p {
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 0;
+    }
+    
+    .register-body {
+        padding: 35px 30px;
+        background: white;
+    }
+    
+    .form-control {
+        padding: 12px 15px;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+    
+    .form-control:focus {
+        box-shadow: 0 0 0 3px rgba(18, 52, 88, 0.15);
+        border-color: var(--accent-color);
+    }
+    
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #333;
+    }
+    
+    .form-check-label {
+        font-size: 0.95rem;
+        color: #555;
+    }
+    
+    .tos-link {
+        color: var(--accent-color);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    
+    .tos-link:hover {
+        color: var(--accent-light);
+        text-decoration: underline;
+    }
+    
+    .tos-modal .modal-content {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    }
+    
+    .tos-modal .modal-header {
+        background-color: var(--accent-color);
+        color: white;
+        border-radius: 12px 12px 0 0;
+    }
+    
+    .tos-modal .modal-body {
+        max-height: 60vh;
+        overflow-y: auto;
+        padding: 25px;
+    }
+    
+    .submit-btn {
+        padding: 13px 20px;
+        font-weight: 600;
+        border-radius: 10px;
+        border: none;
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-light));
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(18, 52, 88, 0.2);
+    }
+    
+    .submit-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(18, 52, 88, 0.3);
+    }
+    
+    .card-footer {
+        background-color: #f9f9f9;
+        border-top: 1px solid rgba(0,0,0,0.05);
+        padding: 20px;
+    }
+    
+    .form-floating > .form-control {
+        padding: 1.5rem 1rem;
+    }
+    
+    .form-floating > label {
+        padding: 1rem;
+    }
+    
+    .form-floating-group {
+        position: relative;
+    }
+    
+    .form-floating-group input {
+        height: calc(3.5rem + 2px);
+        line-height: 1.25;
+    }
+    
+    .form-floating-group label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        padding: 1rem 0.75rem;
+        pointer-events: none;
+        border: 1px solid transparent;
+        transform-origin: 0 0;
+        transition: opacity .1s ease-in-out,transform .1s ease-in-out;
+        color: #6c757d;
+    }
+    
+    .form-floating-group input:focus ~ label,
+    .form-floating-group input:not(:placeholder-shown) ~ label {
+        opacity: .65;
+        transform: scale(.85) translateY(-0.5rem) translateX(0.15rem);
+    }
+    
+    .invalid-feedback {
+        font-size: 0.85rem;
+        color: #dc3545;
+        margin-top: 0.25rem;
+    }
+    
+    /* Responsiivisuus */
+    @media (max-width: 768px) {
+        .register-header {
+            padding: 20px;
+        }
+        
+        .register-body {
+            padding: 25px 20px;
+        }
+        
+        .form-control {
+            padding: 10px 12px;
+            font-size: 0.95rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0">Rekisteröidy</h3>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> Luo itsellesi käyttäjätili, jotta voit käyttää asuntoanalyysi-sovellusta.
+<section class="register-section py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <div class="register-card card shadow">
+                    <div class="register-header">
+                        <h3>Rekisteröidy Kotolyysi-palveluun</h3>
+                        <p>Täytä tietosi alla oleviin kenttiin aloittaaksesi asuntoanalyysien tekemisen.</p>
                     </div>
-                    
-                    <form method="POST" action="">
-                        {{ form.hidden_tag() }}
-                        
-                        <div class="mb-3">
-                            {{ form.username.label(class="form-label") }}
-                            {% if form.username.errors %}
-                                {{ form.username(class="form-control is-invalid") }}
-                                <div class="invalid-feedback">
-                                    {% for error in form.username.errors %}
-                                        {{ error }}
-                                    {% endfor %}
+                    <div class="register-body">
+                        <form method="POST" action="" id="registerForm">
+                            {{ form.hidden_tag() }}
+                            
+                            <div class="row">
+                                <!-- Henkilötiedot -->
+                                <div class="col-md-6 mb-3">
+                                    {{ form.first_name.label(class="form-label") }}
+                                    {% if form.first_name.errors %}
+                                        {{ form.first_name(class="form-control is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.first_name.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.first_name(class="form-control") }}
+                                    {% endif %}
                                 </div>
-                            {% else %}
-                                {{ form.username(class="form-control") }}
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3">
-                            {{ form.email.label(class="form-label") }}
-                            {% if form.email.errors %}
-                                {{ form.email(class="form-control is-invalid") }}
-                                <div class="invalid-feedback">
-                                    {% for error in form.email.errors %}
-                                        {{ error }}
-                                    {% endfor %}
+                                
+                                <div class="col-md-6 mb-3">
+                                    {{ form.last_name.label(class="form-label") }}
+                                    {% if form.last_name.errors %}
+                                        {{ form.last_name(class="form-control is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.last_name.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.last_name(class="form-control") }}
+                                    {% endif %}
                                 </div>
-                            {% else %}
-                                {{ form.email(class="form-control") }}
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3">
-                            {{ form.password.label(class="form-label") }}
-                            {% if form.password.errors %}
-                                {{ form.password(class="form-control is-invalid") }}
-                                <div class="invalid-feedback">
-                                    {% for error in form.password.errors %}
-                                        {{ error }}
-                                    {% endfor %}
+                            </div>
+                            
+                            <!-- Käyttäjätiedot -->
+                            <div class="mb-3">
+                                {{ form.username.label(class="form-label") }}
+                                {% if form.username.errors %}
+                                    {{ form.username(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.username.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.username(class="form-control") }}
+                                {% endif %}
+                                <small class="form-text text-muted">Valitse käyttäjätunnus joka on 3-20 merkkiä pitkä.</small>
+                            </div>
+                            
+                            <!-- Osoitetiedot -->
+                            <div class="mb-3">
+                                {{ form.street_address.label(class="form-label") }}
+                                {% if form.street_address.errors %}
+                                    {{ form.street_address(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.street_address.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.street_address(class="form-control") }}
+                                {% endif %}
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    {{ form.postal_code.label(class="form-label") }}
+                                    {% if form.postal_code.errors %}
+                                        {{ form.postal_code(class="form-control is-invalid", maxlength="5", pattern="[0-9]{5}") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.postal_code.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.postal_code(class="form-control", maxlength="5", pattern="[0-9]{5}") }}
+                                    {% endif %}
                                 </div>
-                            {% else %}
-                                {{ form.password(class="form-control") }}
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-4">
-                            {{ form.confirm_password.label(class="form-label") }}
-                            {% if form.confirm_password.errors %}
-                                {{ form.confirm_password(class="form-control is-invalid") }}
-                                <div class="invalid-feedback">
-                                    {% for error in form.confirm_password.errors %}
-                                        {{ error }}
-                                    {% endfor %}
+                                
+                                <div class="col-md-8 mb-3">
+                                    {{ form.city.label(class="form-label") }}
+                                    {% if form.city.errors %}
+                                        {{ form.city(class="form-control is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.city.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.city(class="form-control") }}
+                                    {% endif %}
                                 </div>
-                            {% else %}
-                                {{ form.confirm_password(class="form-control") }}
-                            {% endif %}
+                            </div>
+                            
+                            <!-- Sähköposti -->
+                            <div class="mb-3">
+                                {{ form.email.label(class="form-label") }}
+                                {% if form.email.errors %}
+                                    {{ form.email(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.email.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.email(class="form-control") }}
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Salasana -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.password.label(class="form-label") }}
+                                    {% if form.password.errors %}
+                                        {{ form.password(class="form-control is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.password.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.password(class="form-control") }}
+                                    {% endif %}
+                                    <small class="form-text text-muted">Salasanan tulee olla vähintään 8 merkkiä pitkä.</small>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    {{ form.confirm_password.label(class="form-label") }}
+                                    {% if form.confirm_password.errors %}
+                                        {{ form.confirm_password(class="form-control is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.confirm_password.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.confirm_password(class="form-control") }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Käyttöehdot -->
+                            <div class="mb-4 mt-3">
+                                <div class="form-check">
+                                    {% if form.accept_tos.errors %}
+                                        {{ form.accept_tos(class="form-check-input is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.accept_tos.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.accept_tos(class="form-check-input") }}
+                                    {% endif %}
+                                    <label class="form-check-label" for="accept_tos">
+                                        Olen lukenut ja hyväksyn 
+                                        <a href="#" class="tos-link" data-bs-toggle="modal" data-bs-target="#tosModal">käyttöehdot</a>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                {{ form.submit(class="btn btn-primary submit-btn") }}
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer text-center">
+                        <div class="small">
+                            Onko sinulla jo tili? <a href="{{ url_for('auth.login') }}" class="fw-bold">Kirjaudu sisään</a>
                         </div>
-                        
-                        <div class="d-grid">
-                            {{ form.submit(class="btn btn-primary") }}
-                        </div>
-                    </form>
-                </div>
-                <div class="card-footer text-center">
-                    <div class="small">
-                        Onko sinulla jo tili? <a href="{{ url_for('auth.login') }}" class="fw-bold">Kirjaudu sisään</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</section>
+
+<!-- Käyttöehdot Modal -->
+<div class="modal fade tos-modal" id="tosModal" tabindex="-1" aria-labelledby="tosModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="tosModalLabel">Käyttöehdot</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Sulje"></button>
+            </div>
+            <div class="modal-body">
+                <pre style="white-space: pre-wrap; font-family: inherit;">
+{% include 'kayttoehdot.txt' %}
+                </pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Sulje</button>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Lomakkeen validointi
+    const registerForm = document.getElementById('registerForm');
+    
+    // Lisätään kuvake submit-painikkeeseen
+    const submitBtn = document.querySelector('input[type="submit"]');
+    if (submitBtn) {
+        submitBtn.classList.add('btn', 'btn-primary', 'submit-btn');
+        // Luodaan span-elementti kuvaketta varten
+        const iconSpan = document.createElement('span');
+        iconSpan.innerHTML = '<i class="fas fa-user-plus me-2"></i>';
+        // Lisätään kuvake napin eteen
+        submitBtn.parentNode.insertBefore(iconSpan, submitBtn);
+    }
+    
+    registerForm.addEventListener('submit', function(event) {
+        if (!registerForm.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        // Tarkista että salasanat täsmäävät
+        const password = document.getElementById('password');
+        const confirmPassword = document.getElementById('confirm_password');
+        
+        if (password && confirmPassword && password.value !== confirmPassword.value) {
+            confirmPassword.setCustomValidity('Salasanat eivät täsmää');
+            event.preventDefault();
+            event.stopPropagation();
+        } else if (confirmPassword) {
+            confirmPassword.setCustomValidity('');
+        }
+        
+        registerForm.classList.add('was-validated');
+    }, false);
+    
+    // Puhdista custom validointi kun käyttäjä muuttaa salasanoja
+    const passwordField = document.getElementById('password');
+    const confirmPasswordField = document.getElementById('confirm_password');
+    
+    if (passwordField && confirmPasswordField) {
+        passwordField.addEventListener('input', function() {
+            if (this.value === confirmPasswordField.value) {
+                confirmPasswordField.setCustomValidity('');
+            } else {
+                confirmPasswordField.setCustomValidity('Salasanat eivät täsmää');
+            }
+        });
+        
+        confirmPasswordField.addEventListener('input', function() {
+            if (this.value === passwordField.value) {
+                this.setCustomValidity('');
+            } else {
+                this.setCustomValidity('Salasanat eivät täsmää');
+            }
+        });
+    }
+});
+</script>
 {% endblock %} 

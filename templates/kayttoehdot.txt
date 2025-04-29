@@ -1,0 +1,74 @@
+Käyttöehdot
+Voimassa alkaen: [päivämäärä]
+
+Nämä käyttöehdot koskevat palvelua [Palvelun nimi], jonka tarjoaa [Yrityksen nimi, Y-tunnus] (”Palveluntarjoaja”). Käyttämällä palvelua hyväksyt nämä ehdot ja sitoudut noudattamaan niitä.
+
+Lue ehdot huolellisesti ennen palvelun käyttöä.
+
+1. Palvelun kuvaus
+[Palvelun nimi] on verkkopohjainen ohjelmistopalvelu (SaaS), jonka kautta käyttäjät voivat hyödyntää analyysityökaluja [esimerkiksi: asuntojen myynti-ilmoitusten arviointiin ja vertailuun]. Palvelu on saatavilla selaimen kautta eikä vaadi erillistä asennusta.
+
+2. Käyttöoikeus
+Palveluntarjoaja myöntää käyttäjälle henkilökohtaisen, ei-yksinomaisen, ei-siirrettävän ja rajoitetun oikeuden käyttää palvelua näiden käyttöehtojen mukaisesti.
+
+Käyttöoikeus on sidottu voimassa olevaan tilaukseen ja palvelun ehtojen noudattamiseen.
+
+3. Rekisteröityminen ja käyttäjätili
+Palvelun käyttö edellyttää rekisteröitymistä. Käyttäjän tulee antaa oikeat ja ajantasaiset tiedot sekä huolehtia käyttäjätunnuksen ja salasanan turvallisuudesta.
+
+Käyttäjä vastaa kaikesta käyttäjätilinsä kautta tapahtuvasta toiminnasta.
+
+Palveluntarjoajalla on oikeus sulkea käyttäjätili, mikäli ehtoja rikotaan tai tilin käyttö aiheuttaa vahinkoa Palveluntarjoajalle tai kolmansille osapuolille.
+
+4. Maksut ja laskutus
+Palvelu on maksullinen, ellei toisin ilmoiteta. Tilauksesta veloitetaan valitun laskutusjakson mukainen hinta.
+
+Maksut käsitellään turvallisesti kolmannen osapuolen maksupalveluntarjoajan kautta. Palveluntarjoaja ei tallenna maksukorttitietoja.
+
+Käyttäjä voi lopettaa tilauksensa milloin tahansa. Tilauksen päättymisen jälkeen käyttöoikeus säilyy maksetun kauden loppuun.
+
+Maksuja ei palauteta kesken laskutusjakson, ellei pakottavasta lainsäädännöstä muuta johdu.
+
+5. Palvelun käyttöä koskevat rajoitukset
+Käyttäjä sitoutuu olemaan:
+
+käyttämättä palvelua lainvastaisiin tarkoituksiin
+
+kopioimatta, muuttamatta, levittämättä tai edelleenmyymättä palvelua tai sen osia
+
+yrittämättä murtaa, kiertää tai muutoin häiritä palvelun suojausjärjestelyjä
+
+käyttämättä palvelua automatisoiduilla työkaluilla (kuten bottien tai skriptien avulla), ellei siihen ole kirjallista lupaa
+
+6. Immateriaalioikeudet
+Kaikki palveluun liittyvät oikeudet, mukaan lukien tekijänoikeudet, tavaramerkit, ja liikesalaisuudet, kuuluvat Palveluntarjoajalle tai sen lisenssinantajille.
+
+Käyttäjällä ei ole oikeutta käyttää palvelun sisältöä muutoin kuin näissä ehdoissa erikseen sallituin tavoin.
+
+7. Tietosuoja ja evästeet
+Käyttäjän henkilötietojen käsittelystä kerrotaan tarkemmin [linkki tietosuojaselosteeseen].
+
+Palvelu voi käyttää evästeitä (cookies) ja muita seurantatekniikoita käyttäjäkokemuksen parantamiseksi ja analytiikkaa varten. Evästeiden käyttö kuvataan tarkemmin tietosuojaselosteessa.
+
+8. Palvelun saatavuus ja muutokset
+Palveluntarjoaja pyrkii tarjoamaan palvelun mahdollisimman keskeytyksettä. Palvelu voi kuitenkin olla tilapäisesti poissa käytöstä huoltotöiden, päivitysten tai muiden teknisten syiden vuoksi.
+
+Palveluntarjoaja pidättää oikeuden muuttaa palvelun sisältöä, hinnoittelua tai näitä ehtoja. Merkittävistä muutoksista ilmoitetaan käyttäjille kohtuullisessa ajassa etukäteen.
+
+9. Vastuunrajoitus
+Palvelu tarjotaan "sellaisena kuin se on" ja "saatavuuden mukaan". Palveluntarjoaja ei takaa palvelun virheettömyyttä, keskeytyksetöntä saatavuutta tai sitä, että palvelu vastaisi käyttäjän erityisiä tarpeita.
+
+Palveluntarjoaja ei vastaa välillisistä vahingoista, kuten tulonmenetyksistä tai tietojen katoamisesta.
+
+Pakottavan lainsäädännön mukaiset vastuut, kuten kuluttajansuojalain mukaiset oikeudet, säilyvät ennallaan.
+
+10. Sopimuksen voimassaolo ja irtisanominen
+Sopimus astuu voimaan, kun käyttäjä rekisteröityy palveluun ja hyväksyy nämä ehdot.
+
+Käyttäjä voi irtisanoa tilauksensa milloin tahansa palvelun asetuksista. Palveluntarjoaja voi irtisanoa sopimuksen välittömästi, mikäli käyttäjä rikkoo olennaisesti näitä ehtoja.
+
+11. Sovellettava laki ja riitojen ratkaisu
+Näihin käyttöehtoihin sovelletaan Suomen lakia.
+
+Mahdolliset erimielisyydet pyritään ensisijaisesti ratkaisemaan neuvotteluteitse. Ellei sovintoon päästä, ratkaistaan riita Varsinais-Suomen käräjäoikeudessa.
+

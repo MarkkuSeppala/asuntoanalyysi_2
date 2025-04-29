@@ -27,7 +27,7 @@
     /* Hero section */
     .hero-section {
         background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        padding: 100px 0 120px;
+        padding: 20px 0 120px;
         margin-bottom: 70px;
         color: var(--neutral-color);
         position: relative;
@@ -42,7 +42,7 @@
         right: 0;
         width: 60%;
         height: 100%;
-        background-image: url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1073&q=80');
+        background-image: url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1070&q=80');
         background-size: cover;
         background-position: center;
         opacity: 0.1;
@@ -217,6 +217,9 @@
         transition: var(--transition-normal);
         border-bottom: 4px solid transparent;
         height: 100%;
+        max-width: 1140px;
+        margin-left: auto;
+        margin-right: auto;
     }
     
     .info-card:hover {
@@ -232,6 +235,9 @@
         color: var(--accent-color);
         padding: 25px 30px;
         position: relative;
+        max-width: 1140px;
+        margin-left: auto;
+        margin-right: auto;
     }
     
     .info-header::after {
@@ -246,6 +252,9 @@
     
     .info-body {
         padding: 35px;
+        max-width: 1140px;
+        margin-left: auto;
+        margin-right: auto;
     }
     
     /* Steps list - modernimpi vaihelistaus */
@@ -590,10 +599,18 @@
         
         .form-header, .info-header {
             padding: 20px 25px;
+            max-width: 960px;
         }
         
         .form-body, .info-body {
             padding: 25px;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .info-card {
+            max-width: 960px;
         }
     }
     
@@ -612,10 +629,18 @@
         
         .form-header, .info-header {
             padding: 18px 20px;
+            max-width: 720px;
         }
         
         .form-body, .info-body {
             padding: 20px;
+            max-width: 720px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .info-card {
+            max-width: 720px;
         }
         
         .step-item {
@@ -655,6 +680,22 @@
         
         .hero-subtitle {
             font-size: 1.05rem;
+        }
+        
+        .form-header, .info-header {
+            padding: 15px 18px;
+            max-width: 540px;
+        }
+        
+        .form-body, .info-body {
+            padding: 15px;
+            max-width: 540px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .info-card {
+            max-width: 540px;
         }
         
         .btn-accent {

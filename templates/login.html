@@ -18,9 +18,9 @@
                     <form method="POST">
                         {{ form.hidden_tag() }}
                         <div class="form-group mb-3">
-                            {{ form.username.label(class="form-label") }}
-                            {{ form.username(class="form-control") }}
-                            {% for error in form.username.errors %}
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control") }}
+                            {% for error in form.email.errors %}
                                 <span class="text-danger">{{ error }}</span>
                             {% endfor %}
                         </div>
