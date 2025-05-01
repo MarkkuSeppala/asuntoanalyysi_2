@@ -21,12 +21,26 @@ import requests
 import glob
 import shutil
 import PyPDF2
+import logging
+import traceback
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+
+# Asetetaan lokitus
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    handlers=[
+        logging.FileHandler("logs/etuovi_downloader.log"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 def setup_driver(headless=True, download_dir=None):
     """Set up and return a configured Chrome WebDriver.
@@ -35,28 +49,52 @@ def setup_driver(headless=True, download_dir=None):
         headless (bool): Whether to run in headless mode. Set to False if having trouble locating elements.
         download_dir (str): Directory where files will be downloaded.
     """
-    chrome_options = Options()
-    if headless:
-        chrome_options.add_argument("--headless")  # Run in headless mode
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--window-size=1920,1080")  # Set larger window size
-    
-    # Set PDF download preferences
-    if not download_dir:
-        download_dir = os.getcwd()
+    try:
+        logger.info("Alustetaan Chrome WebDriver...")
+        chrome_options = Options()
         
-    prefs = {
-        "download.default_directory": download_dir,
-        "download.prompt_for_download": False,
-        "plugins.always_open_pdf_externally": True,
-        "download.directory_upgrade": True,
-    }
-    chrome_options.add_experimental_option("prefs", prefs)
-    
-    # Initialize the Chrome WebDriver with the system's Chrome browser
-    driver = webdriver.Chrome(options=chrome_options)
-    return driver
+        # Docker-ympäristöön tarvittavat asetukset
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--disable-extensions')
+        chrome_options.add_argument('--disable-infobars')
+        chrome_options.add_argument('--disable-notifications')
+        chrome_options.add_argument('--disable-software-rasterizer')
+        chrome_options.add_argument('--disable-setuid-sandbox')
+        chrome_options.add_argument('--disable-web-security')
+        chrome_options.add_argument('--ignore-certificate-errors')
+        chrome_options.add_argument('--ignore-ssl-errors')
+        chrome_options.add_argument('--window-size=1920,1080')
+        
+        if headless:
+            logger.info("Käytetään headless-moodia")
+            chrome_options.add_argument("--headless=new")  # Uudempi headless-moodi
+        
+        # Set PDF download preferences
+        if not download_dir:
+            download_dir = os.getcwd()
+            logger.info(f"Käytetään oletuslataushakemistoa: {download_dir}")
+            
+        prefs = {
+            "download.default_directory": download_dir,
+            "download.prompt_for_download": False,
+            "plugins.always_open_pdf_externally": True,
+            "download.directory_upgrade": True,
+        }
+        chrome_options.add_experimental_option("prefs", prefs)
+        logger.info("PDF-latausasetukset konfiguroitu")
+        
+        # Initialize the Chrome WebDriver with the system's Chrome browser
+        service = Service()
+        logger.info("Alustetaan Chrome-palvelu...")
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        logger.info("Chrome WebDriver alustettu onnistuneesti")
+        return driver
+    except Exception as e:
+        logger.error(f"Virhe Chrome WebDriverin alustamisessa: {e}")
+        logger.error(traceback.format_exc())
+        raise
 
 def download_pdf(url, output_filename=None, headless=False):
     """
@@ -71,78 +109,95 @@ def download_pdf(url, output_filename=None, headless=False):
     Returns:
         str: The path to the downloaded PDF file.
     """
+    logger.info(f"Aloitetaan PDF:n lataus URL:sta {url}")
+    
     if not output_filename:
         # Extract property ID from URL for default filename
         property_id = url.split('/')[-1]
         output_filename = f"etuovi_{property_id}.pdf"
+        logger.info(f"Luodaan oletustiedostonimi: {output_filename}")
     
     # Create a temporary download directory
     temp_download_dir = os.path.join(os.getcwd(), "temp_downloads")
     os.makedirs(temp_download_dir, exist_ok=True)
+    logger.info(f"Luotu väliaikainen lataushakemisto: {temp_download_dir}")
     
     # Clear any existing files in the temp directory
     for file in glob.glob(os.path.join(temp_download_dir, "*.pdf")):
-        os.remove(file)
+        try:
+            os.remove(file)
+            logger.info(f"Poistettu vanha tiedosto: {file}")
+        except Exception as e:
+            logger.warning(f"Vanhan tiedoston poistaminen epäonnistui: {e}")
     
-    driver = setup_driver(headless=headless, download_dir=temp_download_dir)
-    
+    driver = None
     try:
-        print(f"Navigating to {url}")
+        driver = setup_driver(headless=headless, download_dir=temp_download_dir)
+        
+        logger.info(f"Navigoidaan osoitteeseen: {url}")
         driver.get(url)
         
         # Wait for the page to load
+        logger.info("Odotetaan sivun latautumista...")
         WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.TAG_NAME, "body"))
         )
+        logger.info("Sivu ladattu onnistuneesti")
         
         # Scroll down to make the PDF button visible (multiple scrolls to ensure it's in view)
-        print("Scrolling to find the PDF button...")
-        for _ in range(3):
+        logger.info("Skrollataan sivua PDF-painikkeen löytämiseksi...")
+        for i in range(3):
             driver.execute_script("window.scrollBy(0, 300);")
             time.sleep(1)
+            logger.debug(f"Skrollaus {i+1}/3 suoritettu")
         
         # Find the "TULOSTA PDF" button using Strategy #5 (most effective based on user feedback)
-        print("Looking for the PDF button...")
+        logger.info("Etsitään PDF-painiketta...")
         pdf_button = None
         
         # Strategy 5: Find by scanning all buttons for PDF-related content
         try:
             all_buttons = driver.find_elements(By.TAG_NAME, 'button')
+            logger.info(f"Löydettiin {len(all_buttons)} painiketta")
+            
             for button in all_buttons:
                 try:
-                    if "Tulosta" in button.get_attribute("innerHTML") or "PDF" in button.get_attribute("innerHTML") or "print" in button.get_attribute("innerHTML").lower():
+                    button_html = button.get_attribute("innerHTML")
+                    if "Tulosta" in button_html or "PDF" in button_html or "print" in button_html.lower():
                         pdf_button = button
-                        print("Found PDF button by scanning all buttons")
+                        logger.info("PDF-painike löydetty painikkeiden skannauksella")
                         break
-                except:
+                except Exception as e:
+                    logger.warning(f"Painikkeen tarkistus epäonnistui: {e}")
                     continue
         except Exception as e:
-            print(f"Could not find button by scanning all buttons: {str(e)}")
+            logger.error(f"Painikkeiden etsiminen epäonnistui: {e}")
+            logger.error(traceback.format_exc())
         
         if not pdf_button:
-            raise Exception("Could not find the PDF button")
+            raise Exception("PDF-painiketta ei löytynyt sivulta")
         
         # Click the PDF button
-        print("Clicking the PDF button...")
+        logger.info("Klikataan PDF-painiketta...")
         driver.execute_script("arguments[0].scrollIntoView(true);", pdf_button)
         time.sleep(1)
         driver.execute_script("arguments[0].click();", pdf_button)
         
         # Wait for the PDF to load in a new tab or iframe
-        time.sleep(5)  # Allow time for the PDF to load
+        logger.info("Odotetaan PDF:n latautumista...")
+        time.sleep(5)
         
         # Check if a new tab was opened
         if len(driver.window_handles) > 1:
-            # Switch to the new tab
+            logger.info("Uusi välilehti avattu, siirrytään siihen")
             driver.switch_to.window(driver.window_handles[1])
-            print("Switched to new tab")
         
         # Get the current URL (which might be the PDF URL)
         current_url = driver.current_url
-        print(f"Current URL after clicking: {current_url}")
+        logger.info(f"Nykyinen URL klikkauksen jälkeen: {current_url}")
         
         # Wait for the download to complete
-        print("Waiting for download to complete...")
+        logger.info("Odotetaan latauksen valmistumista...")
         max_wait_time = 30  # Maximum wait time in seconds
         start_time = time.time()
         
@@ -152,12 +207,12 @@ def download_pdf(url, output_filename=None, headless=False):
             if pdf_files:
                 # Found a downloaded PDF file
                 downloaded_file = pdf_files[0]  # Take the first PDF file found
-                print(f"Found downloaded file: {downloaded_file}")
+                logger.info(f"Ladattu tiedosto löydetty: {downloaded_file}")
                 
                 # Copy the file to the desired output location
                 output_path = os.path.join(os.getcwd(), output_filename)
                 shutil.copy2(downloaded_file, output_path)
-                print(f"PDF saved as {output_path}")
+                logger.info(f"PDF tallennettu polkuun: {output_path}")
                 
                 return os.path.abspath(output_path)
             
@@ -167,7 +222,7 @@ def download_pdf(url, output_filename=None, headless=False):
         # If we reach here, no PDF file was found in the download directory
         # Try to download directly from the blob URL if available
         if "blob:" in current_url:
-            print(f"No downloaded file found. Attempting to download from blob URL: {current_url}")
+            logger.info(f"Ladattua tiedostoa ei löytynyt. Yritetään ladata blob-URL:sta: {current_url}")
             
             # Use JavaScript to get the PDF data
             pdf_content = driver.execute_script("""
@@ -206,50 +261,58 @@ def download_pdf(url, output_filename=None, headless=False):
                 with open(output_path, "wb") as f:
                     import base64
                     f.write(base64.b64decode(base64_data))
-                print(f"PDF saved as {output_path}")
+                logger.info(f"PDF tallennettu blob-URL:sta polkuun: {output_path}")
                 
                 return os.path.abspath(output_path)
             else:
-                raise Exception("Failed to extract PDF content from blob URL")
+                raise Exception("PDF-sisällön purkaminen blob-URL:sta epäonnistui")
         else:
             # If it's a direct PDF URL, download it with requests
-            print(f"No downloaded file found. Downloading PDF from URL: {current_url}")
+            logger.info(f"Ladattua tiedostoa ei löytynyt. Ladataan PDF suoraan URL:sta: {current_url}")
             response = requests.get(current_url, stream=True)
             output_path = os.path.join(os.getcwd(), output_filename)
             with open(output_path, "wb") as f:
                 for chunk in response.iter_content(chunk_size=1024):
                     if chunk:
                         f.write(chunk)
-            print(f"PDF saved as {output_path}")
+            logger.info(f"PDF tallennettu suoraan URL:sta polkuun: {output_path}")
             
             return os.path.abspath(output_path)
     
     except Exception as e:
-        print(f"Error: {str(e)}")
+        logger.error(f"Virhe PDF:n lataamisessa: {e}")
+        logger.error(traceback.format_exc())
         raise
     
     finally:
         # Close the browser
-        driver.quit()
+        if driver:
+            try:
+                driver.quit()
+                logger.info("Selain suljettu")
+            except Exception as e:
+                logger.warning(f"Selaimen sulkeminen epäonnistui: {e}")
         
         # Clean up the temporary download directory
         try:
             shutil.rmtree(temp_download_dir)
+            logger.info(f"Väliaikainen lataushakemisto poistettu: {temp_download_dir}")
         except Exception as e:
-            print(f"Warning: Could not remove temporary directory: {str(e)}")
+            logger.warning(f"Väliaikaisen lataushakemiston poistaminen epäonnistui: {e}")
 
 def convert_pdf_to_text(pdf_path):
     """
     Convert a PDF file to text format.
     
     Args:
-        pdf_path (str): Path to the PDF file.
+        pdf_path (str): Path to the PDF file
     
     Returns:
-        str: Path to the created text file.
+        str: Path to the created text file
     """
+    logger.info(f"Muunnetaan PDF tekstiksi: {pdf_path}")
+    
     try:
-        print(f"Converting PDF to text: {pdf_path}")
         # Create output text file path by changing extension
         text_path = os.path.splitext(pdf_path)[0] + '.txt'
         
@@ -262,17 +325,19 @@ def convert_pdf_to_text(pdf_path):
             with open(text_path, 'w', encoding='utf-8') as text_file:
                 # Extract text from each page and write to text file
                 for page_num in range(len(pdf_reader.pages)):
+                    logger.info(f"Käsitellään sivu {page_num + 1}/{len(pdf_reader.pages)}")
                     page = pdf_reader.pages[page_num]
                     text = page.extract_text()
                     text_file.write(f"--- Page {page_num + 1} ---\n")
                     text_file.write(text)
                     text_file.write('\n\n')
         
-        print(f"PDF successfully converted to text: {text_path}")
+        logger.info(f"PDF muunnettu onnistuneesti tekstiksi: {text_path}")
         return text_path
     
     except Exception as e:
-        print(f"Error converting PDF to text: {str(e)}")
+        logger.error(f"Virhe PDF:n muuntamisessa tekstiksi: {e}")
+        logger.error(traceback.format_exc())
         raise
 
 def main():
@@ -285,17 +350,19 @@ def main():
     args = parser.parse_args()
     
     try:
+        logger.info(f"Aloitetaan PDF:n lataus URL:sta {args.url}")
         pdf_path = download_pdf(args.url, args.output, headless=not args.no_headless)
-        print(f"PDF downloaded successfully: {pdf_path}")
+        logger.info(f"PDF ladattu onnistuneesti: {pdf_path}")
         
         # Convert PDF to text unless --no-text flag is used
         if not args.no_text:
             text_path = convert_pdf_to_text(pdf_path)
-            print(f"Text file created: {text_path}")
+            logger.info(f"Tekstitiedosto luotu: {text_path}")
         
         return 0
     except Exception as e:
-        print(f"Failed to download PDF or convert to text: {str(e)}")
+        logger.error(f"PDF:n lataus tai muuntaminen tekstiksi epäonnistui: {e}")
+        logger.error(traceback.format_exc())
         return 1
 
 if __name__ == "__main__":
