@@ -112,6 +112,10 @@ class Kohde(db.Model):
     analysis_id = db.Column(db.Integer, db.ForeignKey('analyses.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     risk_level = db.Column(db.Numeric(3, 1), nullable=True)  # Riskitaso asteikolla 1-10, 1 desimaalin tarkkuudella
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Käyttäjä, jolle kohde kuuluu
+    
+    # Käyttäjäsuhde
+    user = db.relationship('User', backref=db.backref('kohteet', lazy=True))
     
     def __repr__(self):
         return f'<Kohde {self.osoite}>' 

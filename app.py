@@ -327,24 +327,24 @@ Ilmoitus-ID: {property_id}
 @app.route('/analyze', methods=['POST'])
 @login_required
 def analyze():
-    """Käsittelee käyttäjän syöttämän URL:n ja palauttaa analyysin"""
+    """Analysointi-reitti, joka ottaa vastaan URL:n ja palauttaa analyysin"""
     try:
-        # Tarkistetaan onko käyttäjä oikeutettu tekemään API-kutsun
-        if not current_user.can_make_api_call():
-            return render_template('error.html', 
-                                error_title="API-kutsujen rajoitus", 
-                                error_message="Olet käyttänyt kaikki API-kutsusi (2). Päivitä tilisi admin-tasoon jatkaaksesi käyttöä."), 403
+        # Luodaan sessio ID jokaiselle analyysi-pyynnölle
+        import uuid
+        session_id = str(uuid.uuid4())
+        logger.info(f"Aloitetaan analyysi käyttäjälle {current_user.id}, sessio {session_id}")
         
-        # Haetaan URL käyttäjän lomakkeesta
         url = request.form.get('url')
         
         if not url:
-            return jsonify({'error': 'URL-osoite puuttuu'}), 400
+            flash('URL-osoite on pakollinen', 'danger')
+            return redirect(url_for('index'))
         
         # Tarkistetaan, että URL on hyväksytty URL (Oikotie tai Etuovi)
         if ('oikotie.fi' not in url and 'asunnot.oikotie.fi' not in url and 
             'etuovi.com' not in url):
-            return jsonify({'error': 'Syötä kelvollinen Oikotie- tai Etuovi-asuntolinkin URL'}), 400
+            flash('Syötä kelvollinen Oikotie- tai Etuovi-asuntolinkin URL', 'danger')
+            return redirect(url_for('index'))
         
         # Haetaan asunnon tiedot URL:n perusteella
         logger.info(f"Haetaan tietoja URL:sta: {url}")
@@ -352,11 +352,8 @@ def analyze():
         
         if not success or not markdown_data:
             logger.error("Asuntoilmoituksen noutaminen epäonnistui")
-            return render_template('error.html', 
-                                  error_title="Virhe ilmoituksen haussa", 
-                                  error_message="Ilmoituksen hakemisessa tapahtui virhe. Ole hyvä, yritä myöhemmin uudelleen."), 500
-        
-        logger.debug(f"Markdown-datan pituus: {len(markdown_data)} merkkiä")
+            flash("Ilmoituksen hakemisessa tapahtui virhe. Ole hyvä, yritä myöhemmin uudelleen.", 'danger')
+            return redirect(url_for('index'))
         
         # Haetaan kohteen perustiedot ensin KAT API:n avulla
         property_data = None
@@ -369,7 +366,11 @@ def analyze():
             if property_data:
                 # Tallennetaan kohteet-tauluun ilman analysis_id:tä, liitetään myöhemmin
                 logger.info("Tallennetaan kohteen tiedot tietokantaan")
-                kohde_id = kat_api_call.save_property_data_to_db(property_data)
+                
+                # Varmistetaan että kohde tallennetaan käyttäjäkohtaisesti
+                logger.info(f"Kohde tallennetaan käyttäjälle {current_user.id}, sessio {session_id}")
+                kohde_id = kat_api_call.save_property_data_to_db(property_data, user_id=current_user.id)
+                
                 if kohde_id:
                     logger.info(f"Kohde tallennettu tietokantaan ID:llä {kohde_id}")
                     # Haetaan kohteen tyyppi
@@ -377,32 +378,77 @@ def analyze():
                     if kohde and kohde.tyyppi:
                         kohde_tyyppi = kohde.tyyppi
                         logger.info(f"Kohteen tyyppi: {kohde_tyyppi}")
+                    
+                    # Linkitetään kohde käyttäjään manuaalisesti päivittämällä kohteen tiedot
+                    try:
+                        if kohde:
+                            # Varmistetaan että kohde on sidottu käyttäjään päivittämällä analysis myöhemmin
+                            logger.info(f"Kohde {kohde_id} merkitty käyttäjälle {current_user.id}")
+                    except Exception as e:
+                        logger.error(f"Virhe kohteen käyttäjäsidonnaisuuden päivityksessä: {e}")
                 else:
                     logger.warning("Kohteen tallentaminen epäonnistui")
             else:
                 logger.warning("Kohteen perustietoja ei saatu")
         except Exception as e:
             logger.error(f"Virhe kohteen tietojen käsittelyssä: {e}")
-            logger.error(traceback.format_exc())
+        
+        # Tarkistetaan, onko kohde jo analysoitu tällä käyttäjällä
+        existing_analysis = None
+        try:
+            existing_analysis = Analysis.query.filter_by(
+                property_url=url, 
+                user_id=current_user.id
+            ).first()
+            
+            if existing_analysis:
+                logger.info(f"Käyttäjällä {current_user.id} on jo analyysi tälle URL:lle: {existing_analysis.id}")
+                
+                # Tarkistetaan onko analyysi tuore (alle 7 päivää vanha)
+                from datetime import datetime, timedelta
+                if existing_analysis.created_at > datetime.utcnow() - timedelta(days=7):
+                    logger.info(f"Käytetään olemassa olevaa analyysiä {existing_analysis.id} (alle 7 päivää vanha)")
+                    
+                    analysis_response = existing_analysis.content
+                    saved_file = existing_analysis.filename
+                    analysis_id = existing_analysis.id
+                    
+                    # Haetaan olemassa oleva riskianalyysi
+                    riski_data = None
+                    try:
+                        risk_db = RiskAnalysis.query.filter_by(
+                            analysis_id=analysis_id, 
+                            user_id=current_user.id
+                        ).first()
+                        
+                        if risk_db and risk_db.risk_data:
+                            riski_data = json.loads(risk_db.risk_data)
+                            logger.info(f"Käytetään olemassa olevaa riskianalyysiä analyysille {analysis_id}")
+                        else:
+                            # Jos riskianalyysiä ei löydy, tehdään se nyt
+                            logger.info(f"Olemassa olevalle analyysille ei löydy riskianalyysiä, tehdään se nyt")
+                            riski_data_json = riskianalyysi(analysis_response, analysis_id, current_user.id)
+                            if riski_data_json:
+                                riski_data = json.loads(riski_data_json)
+                    except Exception as e:
+                        logger.error(f"Virhe riskianalyysin hakemisessa: {e}")
+                    
+                    # Ohjataan käyttäjä suoraan analyysin sivulle
+                    return redirect(url_for('view_analysis', analysis_id=analysis_id))
+        except Exception as e:
+            logger.error(f"Virhe tarkistettaessa olemassa olevia analyysejä: {e}")
         
         # Käytetään OpenAI API:a analyysin tekemiseen
-        logger.info("Tehdään OpenAI API -kutsu analyysia varten")
+        logger.info(f"Tehdään OpenAI API -kutsu analyysia varten käyttäjälle {current_user.id}, sessio {session_id}")
         analysis_response, saved_file, db_analysis_id = api_call.get_analysis(markdown_data, url, kohde_tyyppi, current_user.id)
         
         if not analysis_response:
             logger.error("API-kutsu palautti tyhjän vastauksen")
-            return jsonify({'error': 'API-analyysi epäonnistui'}), 500
+            flash("Analyysin muodostamisessa tapahtui virhe. Ole hyvä, yritä myöhemmin uudelleen.", 'danger')
+            return redirect(url_for('index'))
             
         # Varmistetaan että vastaus on puhdistettu (API:ssa puhdistus tehdään jo, tämä on varmuuden vuoksi)
         analysis_response = api_call.sanitize_markdown_response(analysis_response)
-        
-        # Sanitoidaan sisältö ennen template-renderöintiä_
-        sanitized_markdown = _sanitize_content(markdown_data)
-        sanitized_analysis = _sanitize_content(analysis_response)
-        
-        # Kasvatetaan käyttäjän API-kutsujen määrää, jos ei ole admin
-        if not current_user.is_admin:
-            current_user.increment_api_calls()
         
         # Käytetään suoraan API:n palauttamaa analysis_id:tä jos se on saatavilla
         analysis_id = db_analysis_id
@@ -422,19 +468,25 @@ def analyze():
                 kohde = Kohde.query.get(kohde_id)
                 if kohde:
                     kohde.analysis_id = analysis_id
+                    
+                    # Varmistetaan että kohde on sidottu käyttäjään
+                    if not kohde.user_id:
+                        kohde.user_id = current_user.id
+                        
                     db.session.commit()
                     logger.info("Kohteen analysis_id päivitetty onnistuneesti")
                 else:
                     logger.warning(f"Kohdetta ID:llä {kohde_id} ei löytynyt")
             except Exception as e:
                 logger.error(f"Virhe kohteen analysis_id:n päivittämisessä: {e}")
-                logger.error(traceback.format_exc())
+                # Session rollback virheen sattuessa
+                db.session.rollback()
         
         # Tehdään riskianalyysi API-vastauksesta, jos analyysi on löydetty
         riski_data = None
         if analysis_id:
             try:
-                logger.info("Tehdään riskianalyysi kohteesta")
+                logger.info(f"Tehdään riskianalyysi kohteesta, analyysi {analysis_id}, käyttäjä {current_user.id}")
                 riski_data_json = riskianalyysi(analysis_response, analysis_id, current_user.id)
                 logger.info(f"Saatiin riskianalyysin JSON vastaus pituudella: {len(riski_data_json)}")
                 riski_data = json.loads(riski_data_json)
@@ -443,11 +495,17 @@ def analyze():
                 logger.error(f"Virhe riskianalyysissä: {e}")
                 logger.error(traceback.format_exc())
         
-        # Redirect to the analysis page if we have an analysis ID
+        # Ohjataan käyttäjä analyysin sivulle sen sijaan että renderöidään results.html
+        logger.info(f"Analyysi valmis käyttäjälle {current_user.id}, sessio {session_id}")
+        
         if analysis_id:
             return redirect(url_for('view_analysis', analysis_id=analysis_id))
         else:
-            # Renderöidään asunnon tiedot ja analyysi
+            # Jos jostain syystä analysis_id ei ole saatavilla, renderöidään results.html
+            # Sanitoidaan sisältö ennen template-renderöintiä
+            sanitized_markdown = _sanitize_content(markdown_data)
+            sanitized_analysis = _sanitize_content(analysis_response)
+            
             return render_template('results.html', 
                             property_data=sanitized_markdown, 
                             analysis=sanitized_analysis,
@@ -508,7 +566,7 @@ def api_analyze():
             if property_data:
                 # Tallennetaan kohteet-tauluun ilman analysis_id:tä, liitetään myöhemmin
                 logger.info("API: Tallennetaan kohteen tiedot tietokantaan")
-                kohde_id = kat_api_call.save_property_data_to_db(property_data)
+                kohde_id = kat_api_call.save_property_data_to_db(property_data, user_id=current_user.id)
                 if kohde_id:
                     logger.info(f"API: Kohde tallennettu tietokantaan ID:llä {kohde_id}")
                     # Haetaan kohteen tyyppi
@@ -623,18 +681,47 @@ def view_analysis(analysis_id):
     try:
         # Haetaan analyysi tietokannasta
         analysis = Analysis.query.get_or_404(analysis_id)
+        logger.info(f"Analyysi {analysis_id} haettu käyttäjälle {current_user.id}, otsikko: {analysis.title}")
         
         # Tarkistetaan että käyttäjällä on oikeus nähdä tämä analyysi
         if analysis.user_id != current_user.id:
+            logger.warning(f"Käyttäjä {current_user.id} yritti katsoa analyysiä {analysis_id}, joka kuuluu käyttäjälle {analysis.user_id}")
             flash('Sinulla ei ole oikeutta tähän analyysiin.', 'danger')
             return redirect(url_for('list_analyses'))
         
         # Haetaan kohteen tiedot kohteet-taulusta, jos ne ovat saatavilla
         kohde = Kohde.query.filter_by(analysis_id=analysis_id).first()
-        osoite = kohde.osoite if kohde else None
+        
+        if kohde:
+            logger.info(f"Kohde löytyi analyysille {analysis_id}: ID={kohde.id}, osoite={kohde.osoite}, tyyppi={kohde.tyyppi}")
+            # Käytetään user_id-kenttää tarkistamaan onko kohde sidottu käyttäjään
+            if kohde.user_id and kohde.user_id != current_user.id:
+                logger.warning(f"Kohde {kohde.id} ei kuulu käyttäjälle {current_user.id}, vaan käyttäjälle {kohde.user_id}")
+        else:
+            logger.warning(f"Kohdetta ei löytynyt analyysille {analysis_id}")
+        
+        osoite = kohde.osoite if kohde and kohde.osoite else None
+        
+        if not osoite or osoite == "Tuntematon":
+            logger.warning(f"Analyysille {analysis_id} ei löytynyt kelvollista osoitetta")
+            # Yritetään löytää osoite analyysin sisällöstä
+            if kohde and not kohde.osoite and analysis.content:
+                # Etsitään osoitetta analyysin sisällöstä ensimmäiseltä riviltä
+                first_line = analysis.content.strip().split('\n')[0] if '\n' in analysis.content else analysis.content
+                if first_line and len(first_line) < 100:  # Varmistetaan että ensimmäinen rivi on järkevä
+                    logger.info(f"Yritetään päivittää osoitetietoa analyysin sisällöstä: '{first_line}'")
+                    kohde.osoite = first_line
+                    try:
+                        db.session.commit()
+                        osoite = first_line
+                        logger.info(f"Päivitettiin osoite kohteelle {kohde.id}: {osoite}")
+                    except Exception as e:
+                        db.session.rollback()
+                        logger.error(f"Virhe osoitteen päivittämisessä: {e}")
         
         # Käytetään kohteen osoitetta otsikkona, jos se on saatavilla
         title = osoite or analysis.title or "Asuntoanalyysi"
+        logger.info(f"Käytetään otsikkoa: {title}")
         
         # Haetaan mahdollinen riskianalyysi
         risk_analysis = None
@@ -643,6 +730,8 @@ def view_analysis(analysis_id):
             if risk_db and risk_db.risk_data:
                 risk_analysis = json.loads(risk_db.risk_data)
                 logger.info(f"Riskianalyysi löydetty analyysille {analysis_id}")
+            else:
+                logger.warning(f"Riskianalyysiä ei löytynyt analyysille {analysis_id}")
         except Exception as e:
             logger.error(f"Virhe riskianalyysin hakemisessa: {e}")
             
@@ -752,7 +841,7 @@ ID: {property_id}
                     if property_data:
                         # Tallennetaan kohteet-tauluun ilman analysis_id:tä, liitetään myöhemmin
                         logger.info("PDF: Tallennetaan kohteen tiedot tietokantaan")
-                        kohde_id = kat_api_call.save_property_data_to_db(property_data)
+                        kohde_id = kat_api_call.save_property_data_to_db(property_data, user_id=current_user.id)
                         if kohde_id:
                             logger.info(f"PDF: Kohde tallennettu tietokantaan ID:llä {kohde_id}")
                             # Haetaan kohteen tyyppi

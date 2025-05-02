@@ -527,6 +527,27 @@
         <div id="mapContainer"></div>
     </div>
 </div>
+
+<!-- Debug-tietoja osoitteesta, vain kehittäjille nähtäväksi -->
+<div class="container container-narrow mt-3">
+    <div class="alert alert-info">
+        <strong>Debug-tiedot:</strong><br>
+        Osoite: {{ kohde.osoite }}<br>
+        Kohteen ID: {{ kohde.id }}<br>
+        Kohteen tyyppi: {{ kohde.tyyppi }}<br>
+        Käyttäjä: {{ kohde.user_id }}
+    </div>
+</div>
+{% else %}
+<!-- Debug-tietoja jos kohdetta ei löydy -->
+<div class="container container-narrow mt-3">
+    <div class="alert alert-warning">
+        <strong>Debug: Kohdetta ei löydy!</strong><br>
+        Analysis ID: {{ analysis.id }}<br>
+        Title: {{ analysis.title }}<br>
+        Created: {{ analysis.created_at }}
+    </div>
+</div>
 {% endif %}
 
 <div class="container container-narrow">
@@ -620,7 +641,7 @@
         </div>
         <div class="card-body">
             <div id="analysisContent" class="analysis-content"></div>
-            <div id="analysisRawContent" data-content="{{ analysis.content|safe }}" style="display: none;"></div>
+            <div id="analysisRawContent" style="display: none;">{{ (analysis.content or "")|tojson|safe }}</div>
         </div>
     </div>
     {% endif %}
@@ -634,8 +655,9 @@
         const analysisContent = document.getElementById('analysisContent');
         
         try {
-            // Haetaan sisältö elementistä datasetinä
-            const content = document.getElementById('analysisRawContent').dataset.content;
+            // Haetaan sisältö elementistä ja parsitaan se JSON-muodosta
+            const contentElement = document.getElementById('analysisRawContent');
+            const content = JSON.parse(contentElement.textContent || contentElement.innerText);
             
             if (content && content.trim()) {
                 analysisContent.innerHTML = marked.parse(content);

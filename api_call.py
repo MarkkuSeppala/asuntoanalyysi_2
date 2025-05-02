@@ -335,7 +335,7 @@ Käytä ainoastaan tavallisia välilyöntejä.
     logger.error(f"Kaikki {max_retries} yritystä epäonnistuivat")
     return ERROR_MESSAGES["general"], "", None
 
-def save_analysis_to_file(analysis: str, markdown_data: str, property_url: str = None, user_id=None) -> str:
+def save_analysis_to_file(analysis: str, markdown_data: str, property_url: str = None, user_id=None) -> tuple:
     """
     Tallentaa analyysin tekstitiedostoon analyses-hakemistoon ja tietokantaan.
     
@@ -346,23 +346,34 @@ def save_analysis_to_file(analysis: str, markdown_data: str, property_url: str =
         user_id (int, optional): Käyttäjän ID, jolle analyysi tallennetaan
         
     Returns:
-        str: Tallennetun tiedoston polku
+        tuple: (Tallennetun tiedoston polku, analyysin ID tietokannassa)
     """
     try:
-        # Luodaan yksilöllinen tiedostonimi aikaleiman ja datan tiivisteen avulla
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')  # Added milliseconds for uniqueness
+        # Luodaan täysin yksilöllinen tiedostonimi aikaleiman, käyttäjä ID:n ja session ID:n avulla
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')  # Millisekunnit mukaan yksilöllisyyttä varten
         
-        # Luodaan tiiviste koko datasta tunnistamista varten
-        if property_url:
-            # Include property_url in hash to ensure uniqueness between different properties
-            hash_input = (property_url + markdown_data).encode('utf-8')
-        else:
-            hash_input = markdown_data.encode('utf-8')
-            
-        hash_digest = hashlib.md5(hash_input).hexdigest()[:10]  # Increased hash length for uniqueness
+        # Luodaan yksilöllinen tunniste käyttäjäkohtaista tiedostoa varten
+        import uuid
+        session_id = str(uuid.uuid4())
         
-        # Luodaan tiedoston nimi
-        filename = f"analyysi_{timestamp}_{hash_digest}.txt"
+        # Muodostetaan tiiviste, joka sisältää myös käyttäjä-ID:n ja aikaleiman
+        # sekä randomisoitua dataa varmistamaan yksilöllisyys
+        hash_input = (
+            f"{property_url or 'unknown'}-{user_id or 'anonymous'}-{timestamp}-{session_id}"
+            + markdown_data
+        ).encode('utf-8')
+        
+        hash_digest = hashlib.md5(hash_input).hexdigest()[:15]  # Pidempi hash parantaa yksilöllisyyttä
+        
+        # Käyttäjäkohtainen hakemisto analyysille, jos käyttäjä on tiedossa
+        user_dir = ""
+        if user_id:
+            user_dir = f"user_{user_id}/"
+            user_analyses_dir = os.path.join(ANALYSES_DIR, user_dir)
+            os.makedirs(user_analyses_dir, exist_ok=True)
+        
+        # Luodaan tiedoston nimi - lisätään session_id varmuuden vuoksi
+        filename = f"{user_dir}analyysi_{timestamp}_{hash_digest}_{session_id}_{user_id or 'anon'}.txt"
         filepath = os.path.join(ANALYSES_DIR, filename)
         
         # Etsitään osoitetta tai otsikkoa markdown-datasta
@@ -372,52 +383,119 @@ def save_analysis_to_file(analysis: str, markdown_data: str, property_url: str =
                 address_or_title = line[2:].strip()
                 break
         
-        # Tallennetaan analyysi tiedostoon
-        with open(filepath, "w", encoding="utf-8") as file:
-            # Kirjoitetaan otsikko ja aikaleima
-            file.write(f"# Asuntoanalyysi {timestamp}\n\n")
+        # Tallennetaan analyysi tiedostoon käyttäen tiedoston lukitusta jos mahdollista
+        try:
+            # Kokeillaan ensin filelock-kirjastoa
+            import filelock
+            lock_file = f"{filepath}.lock"
+            file_lock = filelock.FileLock(lock_file, timeout=30)  # 30 sekunnin timeout
             
-            if address_or_title:
-                file.write(f"Kohde: {address_or_title}\n\n")
+            with file_lock:
+                with open(filepath, "w", encoding="utf-8") as file:
+                    # Kirjoitetaan otsikko ja aikaleima
+                    file.write(f"# Asuntoanalyysi {timestamp}\n\n")
+                    
+                    if address_or_title:
+                        file.write(f"Kohde: {address_or_title}\n\n")
+                        
+                    # Kirjoitetaan varsinainen analyysi
+                    file.write("## ANALYYSI\n\n")
+                    file.write(analysis)
+                    
+                    # Lisätään alaviite ja käyttäjä ID, jos saatavilla
+                    file.write(f"\n\n---\nGeneroitu {datetime.now().strftime('%d.%m.%Y klo %H:%M:%S')}\n")
+                    if user_id:
+                        file.write(f"Käyttäjä: {user_id}\n")
+            
+            # Siivotaan lukitustiedosto
+            try:
+                if os.path.exists(lock_file):
+                    os.remove(lock_file)
+            except Exception as lock_err:
+                logger.warning(f"Lukitustiedoston poistaminen epäonnistui: {lock_err}")
                 
-            # Kirjoitetaan varsinainen analyysi
-            file.write("## ANALYYSI\n\n")
-            file.write(analysis)
-            
-            # Lisätään alaviite
-            file.write(f"\n\n---\nGeneroitu {datetime.now().strftime('%d.%m.%Y klo %H:%M:%S')}\n")
+        except ImportError:
+            # Jos filelock ei ole asennettu, käytetään suoraa tiedoston kirjoitusta
+            # Tämä on turvallista, koska tiedostonimi on jo uniikki
+            logger.warning("filelock-kirjastoa ei löydy, käytetään suoraa tiedostokirjoitusta")
+            with open(filepath, "w", encoding="utf-8") as file:
+                # Kirjoitetaan otsikko ja aikaleima
+                file.write(f"# Asuntoanalyysi {timestamp}\n\n")
+                
+                if address_or_title:
+                    file.write(f"Kohde: {address_or_title}\n\n")
+                    
+                # Kirjoitetaan varsinainen analyysi
+                file.write("## ANALYYSI\n\n")
+                file.write(analysis)
+                
+                # Lisätään alaviite ja käyttäjä ID, jos saatavilla
+                file.write(f"\n\n---\nGeneroitu {datetime.now().strftime('%d.%m.%Y klo %H:%M:%S')}\n")
+                if user_id:
+                    file.write(f"Käyttäjä: {user_id}\n")
         
         # Tallennetaan analyysi tietokantaan, jos käyttäjän ID on annettu tai käyttäjä on kirjautunut
+        analysis_id = None
         effective_user_id = user_id
-        if not effective_user_id and current_user and current_user.is_authenticated:
+        if not effective_user_id and current_user and hasattr(current_user, 'is_authenticated') and current_user.is_authenticated:
             effective_user_id = current_user.id
             
         if effective_user_id:
             try:
-                # Luodaan uusi analyysi
-                db_analysis = Analysis(
-                    filename=filename,
-                    title=address_or_title or f"Analyysi {timestamp}",
-                    property_url=property_url,
-                    content=analysis,
-                    user_id=effective_user_id
-                )
+                # Tarkistetaan, onko tälle URL:lle ja käyttäjälle jo olemassa analyysi
+                existing_analysis = None
+                if property_url:
+                    existing_analysis = Analysis.query.filter_by(
+                        property_url=property_url, 
+                        user_id=effective_user_id
+                    ).order_by(Analysis.created_at.desc()).first()
                 
-                # Lisätään tietokantaan ja sitoutetaan heti
-                db.session.add(db_analysis)
-                db.session.commit()
-                
-                logger.info(f"Analyysi tallennettu tietokantaan käyttäjälle {effective_user_id}")
-                return filepath, db_analysis.id  # Return analysis_id also
+                if existing_analysis:
+                    # Päivitetään olemassa oleva analyysi omassa transaktio-kontekstissa
+                    try:
+                        existing_analysis.content = analysis
+                        existing_analysis.filename = filename
+                        existing_analysis.updated_at = datetime.utcnow()
+                        db.session.commit()
+                        logger.info(f"Päivitetty olemassa oleva analyysi ID {existing_analysis.id} käyttäjälle {effective_user_id}")
+                        analysis_id = existing_analysis.id
+                    except Exception as update_err:
+                        db.session.rollback()
+                        logger.error(f"Virhe päivitettäessä olemassa olevaa analyysiä: {update_err}")
+                else:
+                    # Luodaan uusi analyysi erillisessä istunnossa
+                    try:
+                        # Luodaan uusi analyysi
+                        db_analysis = Analysis(
+                            filename=filename,
+                            title=address_or_title or f"Analyysi {timestamp}",
+                            property_url=property_url,
+                            content=analysis,
+                            user_id=effective_user_id
+                        )
+                        
+                        # Lisätään tietokantaan ja sitoutetaan
+                        db.session.add(db_analysis)
+                        db.session.commit()
+                        
+                        # Haetaan luodun analyysin ID
+                        analysis_id = db_analysis.id
+                        logger.info(f"Analyysi tallennettu tietokantaan ID:llä {analysis_id} käyttäjälle {effective_user_id}")
+                    except Exception as s_err:
+                        db.session.rollback()
+                        logger.error(f"Virhe analyysin tallentamisessa tietokantaan: {s_err}")
+                        
             except Exception as db_err:
                 logger.error(f"Virhe analyysin tallentamisessa tietokantaan: {db_err}")
                 # Jatketaan, vaikka tietokantaan tallennus epäonnistuisi
         
         logger.info(f"Analyysi tallennettu tiedostoon: {filepath}")
-        return filepath, None  # Return None for analysis_id if not saved to database
+        return filepath, analysis_id
         
     except Exception as e:
+        import traceback
         logger.error(f"Virhe analyysin tallentamisessa tiedostoon: {e}")
+        logger.error(f"Stack trace: {traceback.format_exc()}")
         return "", None
 
 def log_request_details(data: Dict[str, Any]) -> None:

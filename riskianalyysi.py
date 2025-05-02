@@ -44,6 +44,40 @@ def riskianalyysi(kohde_teksti, analysis_id=None, user_id=None):
     Returns:
     str: JSON-muotoinen analyysi riskeistä
     """
+    logger.info(f"Aloitetaan riskianalyysi analyysille {analysis_id}, käyttäjälle {user_id}")
+    
+    # Luodaan yksilöllinen sessiotunniste tätä pyyntöä varten
+    import uuid
+    request_id = str(uuid.uuid4())
+    logger.info(f"Riskianalyysin pyyntö-ID: {request_id}")
+    
+    # Käyttäjän varmistus
+    effective_user_id = user_id
+    if not effective_user_id and current_user and hasattr(current_user, 'id') and current_user.id:
+        effective_user_id = current_user.id
+        logger.info(f"Käyttäjä ID haettu current_user:sta: {effective_user_id}")
+    
+    # Varmistetaan analysis_id ja user_id yhdistelmän oikeellisuus
+    if analysis_id and effective_user_id:
+        try:
+            # Tarkistetaan kuuluuko analyysi käyttäjälle
+            analysis = Analysis.query.get(analysis_id)
+            if analysis and analysis.user_id != effective_user_id:
+                logger.warning(f"Analyysi {analysis_id} ei kuulu käyttäjälle {effective_user_id}, vaan käyttäjälle {analysis.user_id}")
+                # Etsi oikea analyysi käyttäjälle, jos mahdollista
+                correct_analysis = None
+                if hasattr(analysis, 'property_url') and analysis.property_url:
+                    correct_analysis = Analysis.query.filter_by(
+                        property_url=analysis.property_url,
+                        user_id=effective_user_id
+                    ).first()
+                
+                if correct_analysis:
+                    logger.info(f"Löydettiin käyttäjälle {effective_user_id} kuuluva analyysi samalle kohteelle: {correct_analysis.id}")
+                    analysis_id = correct_analysis.id
+        except Exception as auth_err:
+            logger.error(f"Virhe analyysi-käyttäjä-tarkistuksessa: {auth_err}")
+    
     # Tarkistetaan onko kyseessä omakotitalo
     on_omakotitalo = False
     
@@ -113,46 +147,96 @@ Varmista että riskimittarin osa-alueiden osuus_prosenttia-arvojen summa on tasa
             logger.warning("Käytetään kovakoodattua oletuspromptia.")
 
     try:
-        logger.info("Tehdään riskianalyysi")
-        response = client.responses.create(
-            model="gpt-4.1-mini",
-            input=[
-                {
-                "role": "system",
-                "content": [
-                    {
-                    "type": "input_text",
-                    "text": prompt
+        logger.info(f"Tehdään riskianalyysi käyttäjälle {effective_user_id}, analyysille {analysis_id}, pyyntö {request_id}")
+        
+        # Luodaan yksilöllinen session ID tätä riskianalyysiä varten
+        session_id = str(uuid.uuid4())
+        logger.info(f"Riskianalyysin session ID: {session_id}")
+        
+        # Kokeillaan 3 kertaa, jos OpenAI API epäonnistuu
+        max_retries = 3
+        retry_count = 0
+        last_error = None
+        
+        while retry_count < max_retries:
+            try:
+                response = client.responses.create(
+                    model="gpt-4.1-mini",
+                    input=[
+                        {
+                        "role": "system",
+                        "content": [
+                            {
+                            "type": "input_text",
+                            "text": prompt
 
+                            }
+                        ]
+                        },
+                        {
+                        "role": "user",
+                        "content": [
+                            {
+                            "type": "input_text",
+                            "text": kohde_teksti,
+                            }
+                        ]
+                        }
+                    ],
+                    text={
+                        "format": {
+                        "type": "json_object"
+                        }
+                    },
+                    reasoning={},
+                    tools=[],
+                    temperature=0.9,
+                    max_output_tokens=2048,
+                    top_p=0.9,
+                    store=True
+                )
+                
+                # Onnistui, jatketaan käsittelyä
+                break
+                
+            except Exception as api_error:
+                retry_count += 1
+                last_error = api_error
+                wait_time = 2 ** retry_count  # Eksponentiaalinen viive
+                logger.warning(f"OpenAI API-virhe riskianalyysissa (yritys {retry_count}/{max_retries}): {api_error}")
+                logger.info(f"Odotetaan {wait_time}s ennen uudelleenyritystä")
+                
+                if retry_count >= max_retries:
+                    logger.error(f"OpenAI API-virhe riskianalyysissa, kaikki yritykset epäonnistuivat: {last_error}")
+                    # Luodaan virhevastaus
+                    import datetime
+                    default_json = {
+                        "kokonaisriskitaso": 5.0,
+                        "riskimittari": [
+                            {
+                                "osa_alue": "Kokonaisriski",
+                                "riski_taso": 5.0,
+                                "osuus_prosenttia": 100,
+                                "kuvaus": "OpenAI API-virhe: riskitasoa ei voitu määrittää. Tämä on oletusarvio."
+                            }
+                        ],
+                        "meta": {
+                            "user_id": effective_user_id,
+                            "analysis_id": analysis_id,
+                            "error": str(last_error),
+                            "request_id": request_id,
+                            "timestamp": str(datetime.datetime.now())
+                        }
                     }
-                ]
-                },
-                {
-                "role": "user",
-                "content": [
-                    {
-                    "type": "input_text",
-                    "text": kohde_teksti,
-                    }
-                ]
-                }
-            ],
-            text={
-                "format": {
-                "type": "json_object"
-                }
-            },
-            reasoning={},
-            tools=[],
-            temperature=0.9,
-            max_output_tokens=2048,
-            top_p=0.9,
-            store=True
-        )
+                    return json.dumps(default_json, ensure_ascii=False)
+                
+                # Odota ennen uudelleenyritystä
+                import time
+                time.sleep(wait_time)
         
         # Tarkistetaan saatu vastaus
         json_text = response.output_text
-        logger.info(f"Saatu riskianalyysi: {json_text[:100]}...")
+        logger.info(f"Saatu riskianalyysi sessionille {session_id}, pyyntö {request_id}: {json_text[:100]}...")
         
         # Varmistetaan että vastaus on validia JSON
         try:
@@ -167,8 +251,6 @@ Varmista että riskimittarin osa-alueiden osuus_prosenttia-arvojen summa on tasa
                 alkuperainen = json_data["kokonaisriskitaso"]
                 json_data["kokonaisriskitaso"] = round(float(json_data["kokonaisriskitaso"]), 1)
                 logger.info(f"Kokonaisriskitaso: {alkuperainen} -> {json_data['kokonaisriskitaso']}")
-                
-                # Varmistetaan että kokonaisriskitaso ei ole aina 6.0 testauksen aikana
                 
             if "riskimittari" not in json_data or not isinstance(json_data["riskimittari"], list):
                 logger.warning("Riskimittari puuttuu tai ei ole listana, korjataan")
@@ -193,44 +275,81 @@ Varmista että riskimittarin osa-alueiden osuus_prosenttia-arvojen summa on tasa
                 if "kuvaus" not in riski:
                     riski["kuvaus"] = f"Riskitaso kategorialle {riski['osa_alue']}"
             
+            # Lisätään metadata tunnistusta varten
+            import datetime
+            json_data["meta"] = {
+                "user_id": effective_user_id,
+                "analysis_id": analysis_id,
+                "session_id": session_id,
+                "request_id": request_id,
+                "timestamp": str(datetime.datetime.now())
+            }
+            
             # Muodostetaan JSON-muotoinen tulos
             json_result = json.dumps(json_data, ensure_ascii=False)
             
             # Jos analysis_id on annettu, tallennetaan riskianalyysi tietokantaan
             if analysis_id:
+                # Käytämme paikallista tietokantatransaktiohallintaa
+                # Tehdään jokaiselle käsittelyvaiheelle oma yritys ja virheenhallinta
+                
+                # 1. Tarkistetaan olemassa oleva riskianalyysi
+                existing_risk = None
+                
                 try:
-                    # Tarkistetaan onko tälle analyysille jo olemassa riskianalyysi
-                    existing_risk = RiskAnalysis.query.filter_by(analysis_id=analysis_id).first()
-                    
+                    # Jos käyttäjä ID on tiedossa, etsitään sekä analysis_id että user_id perusteella
+                    if effective_user_id:
+                        existing_risk = RiskAnalysis.query.filter_by(
+                            analysis_id=analysis_id,
+                            user_id=effective_user_id
+                        ).first()
+                    else:
+                        # Muuten etsitään vain analysis_id:n perusteella
+                        existing_risk = RiskAnalysis.query.filter_by(
+                            analysis_id=analysis_id
+                        ).first()
+                        
+                    logger.info(f"Olemassa oleva riskianalyysi haettu: {existing_risk.id if existing_risk else 'ei löytynyt'}")
+                except Exception as query_err:
+                    logger.error(f"Virhe haettaessa olemassa olevaa riskianalyysiä: {query_err}")
+                
+                # 2. Päivitetään olemassa oleva tai luodaan uusi riskianalyysi
+                try:
                     if existing_risk:
-                        # Päivitetään olemassa olevaa riskianalyysiä
+                        # Päivitetään olemassa olevaa riskianalyysiä, tärkeää lisätä user_id jos puuttuu
                         existing_risk.risk_data = json_result
-                        logger.info(f"Päivitettiin riskianalyysi analyysille {analysis_id}")
+                        if effective_user_id and not existing_risk.user_id:
+                            existing_risk.user_id = effective_user_id
+                            
+                        db.session.commit()
+                        logger.info(f"Päivitettiin riskianalyysi {existing_risk.id} analyysille {analysis_id}, käyttäjälle {effective_user_id}")
                     else:
                         # Luodaan uusi riskianalyysi
                         new_risk = RiskAnalysis(
                             analysis_id=analysis_id,
                             risk_data=json_result,
-                            user_id=user_id
+                            user_id=effective_user_id
                         )
                         db.session.add(new_risk)
-                        logger.info(f"Luotiin uusi riskianalyysi analyysille {analysis_id}")
-                    
-                    # Päivitetään kohteen riskitaso
-                    try:
-                        kohde = Kohde.query.filter_by(analysis_id=analysis_id).first()
-                        if kohde:
-                            kohde.risk_level = json_data["kokonaisriskitaso"]
-                            logger.info(f"Päivitettiin kohteen {kohde.id} riskitaso: {kohde.risk_level}")
-                    except Exception as kohde_error:
-                        logger.error(f"Virhe tallennettaessa riskitasoa kohteeseen: {kohde_error}")
-                    
-                    # Tallennetaan muutokset tietokantaan
-                    db.session.commit()
-                    logger.info("Riskianalyysi tallennettu tietokantaan")
+                        db.session.commit()
+                        logger.info(f"Luotiin uusi riskianalyysi analyysille {analysis_id}, käyttäjälle {effective_user_id}")
                 except Exception as db_error:
-                    logger.error(f"Virhe tallennettaessa riskianalyysiä tietokantaan: {db_error}")
                     db.session.rollback()
+                    logger.error(f"Virhe tallennettaessa riskianalyysiä tietokantaan: {db_error}")
+                
+                # 3. Päivitetään kohteen riskitaso erillisessä transaktioissa
+                try:
+                    kohde = Kohde.query.filter_by(analysis_id=analysis_id).first()
+                    if kohde:
+                        try:
+                            kohde.risk_level = json_data["kokonaisriskitaso"]
+                            db.session.commit()
+                            logger.info(f"Päivitettiin kohteen {kohde.id} riskitaso: {kohde.risk_level}")
+                        except Exception as kohde_save_err:
+                            db.session.rollback()
+                            logger.error(f"Virhe tallennettaessa kohteen riskitasoa: {kohde_save_err}")
+                except Exception as kohde_err:
+                    logger.error(f"Virhe haettaessa kohdetta analyysille {analysis_id}: {kohde_err}")
             
             # Palautetaan korjattu JSON-teksti
             return json_result
@@ -238,6 +357,7 @@ Varmista että riskimittarin osa-alueiden osuus_prosenttia-arvojen summa on tasa
         except json.JSONDecodeError as e:
             logger.error(f"Vastaus ei ole validia JSON: {e}")
             # Palautetaan virheen sijasta yksinkertainen oletusriski JSON
+            import datetime
             default_json = {
                 "kokonaisriskitaso": 5.0,
                 "riskimittari": [
@@ -247,13 +367,21 @@ Varmista että riskimittarin osa-alueiden osuus_prosenttia-arvojen summa on tasa
                         "osuus_prosenttia": 100,
                         "kuvaus": "Kohteen riskitason arviointiin liittyi ongelmia. Tämä on oletusarvio."
                     }
-                ]
+                ],
+                "meta": {
+                    "user_id": effective_user_id,
+                    "analysis_id": analysis_id,
+                    "error": "JSON decode error",
+                    "request_id": request_id,
+                    "timestamp": str(datetime.datetime.now())
+                }
             }
             return json.dumps(default_json, ensure_ascii=False)
     
     except Exception as e:
         logger.exception(f"Virhe riskianalyysissä: {e}")
         # Palautetaan virheen sijasta yksinkertainen oletusriski JSON
+        import datetime
         default_json = {
             "kokonaisriskitaso": 5.0,
             "riskimittari": [
@@ -263,7 +391,14 @@ Varmista että riskimittarin osa-alueiden osuus_prosenttia-arvojen summa on tasa
                     "osuus_prosenttia": 100,
                     "kuvaus": "Kohteen riskitason arviointiin liittyi virhe. Tämä on oletusarvio."
                 }
-            ]
+            ],
+            "meta": {
+                "user_id": effective_user_id,
+                "analysis_id": analysis_id,
+                "error": str(e),
+                "request_id": request_id,
+                "timestamp": str(datetime.datetime.now())
+            }
         }
         return json.dumps(default_json, ensure_ascii=False)
     

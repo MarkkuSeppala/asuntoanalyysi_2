@@ -99,13 +99,14 @@ Käytä AINA rakennustyyppi-avainta (ei tyyppi, talotyyppi tai muita variaatioit
         logger.error(f"Virhe kiinteistön tietojen hakemisessa: {e}")
         return ""
 
-def save_property_data_to_db(property_data: str, analysis_id: int = None) -> int:
+def save_property_data_to_db(property_data: str, analysis_id: int = None, user_id: int = None) -> int:
     """
     Tallentaa kiinteistön tiedot tietokantaan
     
     Args:
         property_data (str): Kiinteistön tiedot JSON-merkkijonona
         analysis_id (int, optional): Sen analyysin ID, johon tämä kohde liittyy
+        user_id (int, optional): Käyttäjän ID, jolle kohde kuuluu
         
     Returns:
         int: Luodun kohteen ID tai None, jos tallennus epäonnistui
@@ -223,10 +224,11 @@ def save_property_data_to_db(property_data: str, analysis_id: int = None) -> int
             tyyppi=tyyppi,
             hinta=hinta,
             rakennusvuosi=rakennusvuosi,
-            analysis_id=analysis_id
+            analysis_id=analysis_id,
+            user_id=user_id
         )
         
-        logger.info(f"Luotu kohde: osoite={osoite}, tyyppi={tyyppi}, hinta={hinta}, rakennusvuosi={rakennusvuosi}")
+        logger.info(f"Luotu kohde: osoite={osoite}, tyyppi={tyyppi}, hinta={hinta}, rakennusvuosi={rakennusvuosi}, user_id={user_id}")
         
         # Lisätään tietokantaan
         db.session.add(kohde)
