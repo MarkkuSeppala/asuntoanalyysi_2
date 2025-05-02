@@ -387,7 +387,7 @@ def analyze():
         
         # Käytetään OpenAI API:a analyysin tekemiseen
         logger.info("Tehdään OpenAI API -kutsu analyysia varten")
-        analysis_response = api_call.get_analysis(markdown_data, url, kohde_tyyppi)
+        analysis_response, saved_file, db_analysis_id = api_call.get_analysis(markdown_data, url, kohde_tyyppi, current_user.id)
         
         if not analysis_response:
             logger.error("API-kutsu palautti tyhjän vastauksen")
@@ -404,22 +404,17 @@ def analyze():
         if not current_user.is_admin:
             current_user.increment_api_calls()
         
-        # Haetaan analyysi tietokannasta URL:n perusteella tai luodaan uusi
-        analysis = Analysis.query.filter_by(property_url=url, user_id=current_user.id).first()
-        analysis_id = None
-
-        if analysis:
-            # Käytetään olemassa olevaa analyysiä
-            analysis_id = analysis.id
-            logger.info(f"Käytetään olemassa olevaa analyysiä ID: {analysis_id}")
-        else:
-            # Tätä voi tapahtua, koska api_call.get_analysis tallentaa analyysin tietokantaan
-            # Yritetään hakea juuri luotu analyysi URL:n perusteella
+        # Käytetään suoraan API:n palauttamaa analysis_id:tä jos se on saatavilla
+        analysis_id = db_analysis_id
+        
+        # Jos analysis_id ei ole saatavilla, yritetään hakea se tietokannasta
+        if not analysis_id:
+            # Haetaan analyysi tietokannasta URL:n perusteella
             analysis = Analysis.query.filter_by(property_url=url, user_id=current_user.id).first()
             if analysis:
                 analysis_id = analysis.id
-                logger.info(f"Löydettiin juuri luotu analyysi ID: {analysis_id}")
-
+                logger.info(f"Käytetään olemassa olevaa analyysiä ID: {analysis_id}")
+        
         # Jos meillä on nyt kohde_id ja analysis_id, päivitetään kohteen analysis_id
         if kohde_id and analysis_id:
             try:
@@ -434,13 +429,13 @@ def analyze():
             except Exception as e:
                 logger.error(f"Virhe kohteen analysis_id:n päivittämisessä: {e}")
                 logger.error(traceback.format_exc())
-
+        
         # Tehdään riskianalyysi API-vastauksesta, jos analyysi on löydetty
         riski_data = None
         if analysis_id:
             try:
                 logger.info("Tehdään riskianalyysi kohteesta")
-                riski_data_json = riskianalyysi(analysis_response, analysis_id)
+                riski_data_json = riskianalyysi(analysis_response, analysis_id, current_user.id)
                 logger.info(f"Saatiin riskianalyysin JSON vastaus pituudella: {len(riski_data_json)}")
                 riski_data = json.loads(riski_data_json)
                 logger.info(f"Riskianalyysi valmis: {riski_data.get('kokonaisriskitaso', 'N/A')}/10")
@@ -529,8 +524,13 @@ def api_analyze():
             logger.error(f"API: Virhe kohteen tietojen käsittelyssä: {e}")
         
         # Käytetään OpenAI API:a analyysin tekemiseen
-        analysis_response = api_call.get_analysis(markdown_data, url, kohde_tyyppi)
+        logger.info("Tehdään OpenAI API -kutsu analyysia varten")
+        analysis_response, saved_file, db_analysis_id = api_call.get_analysis(markdown_data, url, kohde_tyyppi, current_user.id)
         
+        if not analysis_response:
+            logger.error("API-kutsu palautti tyhjän vastauksen")
+            return jsonify({'error': 'API-analyysi epäonnistui'}), 500
+            
         # Varmistetaan että vastaus on puhdistettu (API:ssa puhdistus tehdään jo)
         analysis_response = api_call.sanitize_markdown_response(analysis_response)
         
@@ -538,42 +538,38 @@ def api_analyze():
         if not current_user.is_admin:
             current_user.increment_api_calls()
         
-        # Haetaan analyysi tietokannasta URL:n perusteella tai luodaan uusi
-        analysis = Analysis.query.filter_by(property_url=url, user_id=current_user.id).first()
-        analysis_id = None
-        riski_data = None
+        # Käytetään suoraan API:n palauttamaa analysis_id:tä jos se on saatavilla
+        analysis_id = db_analysis_id
         
-        if analysis:
-            # Käytetään olemassa olevaa analyysiä
-            analysis_id = analysis.id
-            logger.info(f"API: Käytetään olemassa olevaa analyysiä ID: {analysis_id}")
-        else:
-            # Tätä voi tapahtua, koska api_call.get_analysis tallentaa analyysin tietokantaan
-            # Yritetään hakea juuri luotu analyysi URL:n perusteella
+        # Jos analysis_id ei ole saatavilla, yritetään hakea se tietokannasta
+        if not analysis_id:
+            # Haetaan analyysi tietokannasta URL:n perusteella
             analysis = Analysis.query.filter_by(property_url=url, user_id=current_user.id).first()
             if analysis:
                 analysis_id = analysis.id
-                logger.info(f"API: Löydettiin juuri luotu analyysi ID: {analysis_id}")
+                logger.info(f"Käytetään olemassa olevaa analyysiä ID: {analysis_id}")
         
         # Jos meillä on nyt kohde_id ja analysis_id, päivitetään kohteen analysis_id
         if kohde_id and analysis_id:
             try:
-                logger.info(f"API: Päivitetään kohteen {kohde_id} analysis_id = {analysis_id}")
+                logger.info(f"Päivitetään kohteen {kohde_id} analysis_id = {analysis_id}")
                 kohde = Kohde.query.get(kohde_id)
                 if kohde:
                     kohde.analysis_id = analysis_id
                     db.session.commit()
-                    logger.info("API: Kohteen analysis_id päivitetty onnistuneesti")
+                    logger.info("Kohteen analysis_id päivitetty onnistuneesti")
                 else:
-                    logger.warning(f"API: Kohdetta ID:llä {kohde_id} ei löytynyt")
+                    logger.warning(f"Kohdetta ID:llä {kohde_id} ei löytynyt")
             except Exception as e:
-                logger.error(f"API: Virhe kohteen analysis_id:n päivittämisessä: {e}")
-                
+                logger.error(f"Virhe kohteen analysis_id:n päivittämisessä: {e}")
+                logger.error(traceback.format_exc())
+        
         # Tehdään riskianalyysi API-vastauksesta, jos analyysi on löydetty
+        riski_data = None
         if analysis_id:
             try:
                 logger.info("API: Tehdään riskianalyysi kohteesta")
-                riski_data_json = riskianalyysi(analysis_response, analysis_id)
+                riski_data_json = riskianalyysi(analysis_response, analysis_id, current_user.id)
                 logger.info(f"API: Saatiin riskianalyysin JSON vastaus pituudella: {len(riski_data_json)}")
                 riski_data = json.loads(riski_data_json)
                 logger.info(f"API: Riskianalyysi valmis: {riski_data.get('kokonaisriskitaso', 'N/A')}/10")
@@ -587,6 +583,10 @@ def api_analyze():
             'analysis': analysis_response,
             'source': source
         }
+        
+        # Lisätään analyysin ID vastaukseen, jos se on saatavilla
+        if analysis_id:
+            response_data['analysis_id'] = analysis_id
         
         # Lisätään perustiedot vastaukseen, jos ne on saatavilla
         if property_data:
@@ -770,7 +770,7 @@ ID: {property_id}
                 
                 # Use OpenAI API to analyze the data
                 logger.info("Tehdään OpenAI API -kutsu analyysia varten")
-                analysis_response = api_call.get_analysis(markdown_data, property_id, kohde_tyyppi)
+                analysis_response, saved_file, db_analysis_id = api_call.get_analysis(markdown_data, property_id, kohde_tyyppi, current_user.id)
                 
                 if not analysis_response:
                     logger.error("API-kutsu palautti tyhjän vastauksen")
@@ -823,7 +823,7 @@ ID: {property_id}
                 if analysis_id:
                     try:
                         logger.info("Tehdään riskianalyysi kohteesta")
-                        riski_data_json = riskianalyysi(analysis_response, analysis_id)
+                        riski_data_json = riskianalyysi(analysis_response, analysis_id, current_user.id)
                         logger.info(f"Saatiin riskianalyysin JSON vastaus pituudella: {len(riski_data_json)}")
                         riski_data = json.loads(riski_data_json)
                         logger.info(f"Riskianalyysi valmis: {riski_data.get('kokonaisriskitaso', 'N/A')}/10")

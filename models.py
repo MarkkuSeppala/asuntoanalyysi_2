@@ -87,11 +87,15 @@ class RiskAnalysis(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     analysis_id = db.Column(db.Integer, db.ForeignKey('analyses.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     risk_data = db.Column(db.Text, nullable=False)  # JSON-muotoinen riskianalyysi
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Määritellään suhde Analysis-tauluun
     analysis = db.relationship('Analysis', backref=db.backref('risk_analysis', lazy=True, uselist=False))
+    
+    # Määritellään suhde User-tauluun
+    user = db.relationship('User', backref=db.backref('risk_analyses', lazy=True))
     
     def __repr__(self):
         return f'<RiskAnalysis for Analysis {self.analysis_id}>'

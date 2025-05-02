@@ -32,13 +32,14 @@ api_key = os.environ.get("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
 
 
-def riskianalyysi(kohde_teksti, analysis_id=None):
+def riskianalyysi(kohde_teksti, analysis_id=None, user_id=None):
     """
     Analysoi asuntokohteen riskitason OpenAI API:n avulla ja tallentaa tuloksen tietokantaan.
     
     Parameters:
     kohde_teksti (str): API-kutsussa tuotettu analyysi kohteesta
     analysis_id (int, optional): Analysis-taulun ID, johon riskianalyysi liitetään
+    user_id (int, optional): Käyttäjän ID, jolle riskianalyysi tehdään
     
     Returns:
     str: JSON-muotoinen analyysi riskeistä
@@ -209,7 +210,8 @@ Varmista että riskimittarin osa-alueiden osuus_prosenttia-arvojen summa on tasa
                         # Luodaan uusi riskianalyysi
                         new_risk = RiskAnalysis(
                             analysis_id=analysis_id,
-                            risk_data=json_result
+                            risk_data=json_result,
+                            user_id=user_id
                         )
                         db.session.add(new_risk)
                         logger.info(f"Luotiin uusi riskianalyysi analyysille {analysis_id}")

@@ -84,7 +84,7 @@ def sanitize_markdown_response(text: str) -> str:
     logger.debug("Sanitoitu markdown-vastaus")
     return text.strip()
 
-def get_analysis(markdown_data: str, property_url: str = None, kohde_tyyppi: str = None) -> str:
+def get_analysis(markdown_data: str, property_url: str = None, kohde_tyyppi: str = None, user_id=None) -> tuple:
     """
     Lähettää asunnon tiedot markdown-muodossa OpenAI:lle ja pyytää analyysin.
     
@@ -92,13 +92,14 @@ def get_analysis(markdown_data: str, property_url: str = None, kohde_tyyppi: str
         markdown_data (str): Asunnon tiedot markdown-muodossa
         property_url (str, optional): Analysoitavan asunnon URL
         kohde_tyyppi (str, optional): Kiinteistön tyyppi (esim. "Omakotitalo", "Kerrostalo", "Rivitalo")
+        user_id (int, optional): Käyttäjän ID, jolle analyysi tallennetaan
         
     Returns:
-        str: OpenAI:n tuottama analyysi
+        tuple: (OpenAI:n tuottama analyysi, tallennetun tiedoston polku, analyysin ID tietokannassa)
     """
     if not markdown_data:
         logger.error("Markdown-data puuttuu")
-        return ERROR_MESSAGES["invalid_request"]
+        return ERROR_MESSAGES["invalid_request"], "", None
     
     # Valitaan prompt-tiedosto kiinteistön tyypin mukaan
     prompt_file = "prompt_analyysi_okt.txt" if kohde_tyyppi and "omakotitalo" in kohde_tyyppi.lower() else "prompt_analyysi_kt.txt"
@@ -283,29 +284,29 @@ Käytä ainoastaan tavallisia välilyöntejä.
                 sanitized_response = sanitize_markdown_response(response.output_text)
                 
                 # Tallennetaan analyysi tiedostoon ja tietokantaan
-                saved_file = save_analysis_to_file(sanitized_response, markdown_data, property_url)
+                saved_file, analysis_id = save_analysis_to_file(sanitized_response, markdown_data, property_url, user_id)
                 
-                return sanitized_response
+                return sanitized_response, saved_file, analysis_id
             else:
                 logger.error("OpenAI API ei palauttanut odotettua vastausta")
-                return ERROR_MESSAGES["general"]
+                return ERROR_MESSAGES["general"], "", None
                 
         except requests.exceptions.Timeout:
             logger.warning(f"Pyyntö aikakatkaistiin (yritys {retry_count + 1}/{max_retries})")
             if retry_count == max_retries - 1:
-                return ERROR_MESSAGES["timeout"]
+                return ERROR_MESSAGES["timeout"], "", None
                 
         except requests.exceptions.ConnectionError:
             logger.error(f"Yhteysvirhe (yritys {retry_count + 1}/{max_retries})")
             if retry_count == max_retries - 1:
-                return ERROR_MESSAGES["general"]
+                return ERROR_MESSAGES["general"], "", None
                 
         except requests.exceptions.HTTPError as http_err:
             status_code = getattr(http_err.response, 'status_code', None)
             
             if status_code == 401:
                 logger.error("Tunnistautumisvirhe: Virheellinen API-avain")
-                return ERROR_MESSAGES["auth_error"]
+                return ERROR_MESSAGES["auth_error"], "", None
             elif status_code == 429:
                 logger.warning(f"Liian monta pyyntöä - rajaa rajoitettu (yritys {retry_count + 1}/{max_retries})")
                 # Odota pidempään rate limit -virheissä
@@ -315,15 +316,15 @@ Käytä ainoastaan tavallisia välilyöntejä.
                 continue
             else:
                 logger.error(f"HTTP-virhe: {http_err}")
-                return ERROR_MESSAGES["api_error"]
+                return ERROR_MESSAGES["api_error"], "", None
                 
         except json.JSONDecodeError:
             logger.error("Virheellinen JSON-vastaus OpenAI API:lta")
-            return ERROR_MESSAGES["api_error"]
+            return ERROR_MESSAGES["api_error"], "", None
             
         except Exception as e:
             logger.exception(f"Odottamaton virhe: {str(e)}")
-            return ERROR_MESSAGES["general"]
+            return ERROR_MESSAGES["general"], "", None
             
         # Eksponentiaalinen backoff uudelleenyritysten välillä
         time.sleep(backoff_time)
@@ -332,9 +333,9 @@ Käytä ainoastaan tavallisia välilyöntejä.
         
     # Jos kaikki yritykset epäonnistuvat
     logger.error(f"Kaikki {max_retries} yritystä epäonnistuivat")
-    return ERROR_MESSAGES["general"]
+    return ERROR_MESSAGES["general"], "", None
 
-def save_analysis_to_file(analysis: str, markdown_data: str, property_url: str = None) -> str:
+def save_analysis_to_file(analysis: str, markdown_data: str, property_url: str = None, user_id=None) -> str:
     """
     Tallentaa analyysin tekstitiedostoon analyses-hakemistoon ja tietokantaan.
     
@@ -342,17 +343,23 @@ def save_analysis_to_file(analysis: str, markdown_data: str, property_url: str =
         analysis (str): Analyysi teksti
         markdown_data (str): Alkuperäinen markdown-muotoinen data, josta analyysi tehtiin
         property_url (str, optional): Analysoitavan asunnon URL
+        user_id (int, optional): Käyttäjän ID, jolle analyysi tallennetaan
         
     Returns:
         str: Tallennetun tiedoston polku
     """
     try:
         # Luodaan yksilöllinen tiedostonimi aikaleiman ja datan tiivisteen avulla
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')  # Added milliseconds for uniqueness
         
-        # Luodaan tiiviste datan alusta tunnistamista varten
-        data_preview = markdown_data[:100] if markdown_data else ""
-        hash_digest = hashlib.md5(data_preview.encode('utf-8')).hexdigest()[:8]
+        # Luodaan tiiviste koko datasta tunnistamista varten
+        if property_url:
+            # Include property_url in hash to ensure uniqueness between different properties
+            hash_input = (property_url + markdown_data).encode('utf-8')
+        else:
+            hash_input = markdown_data.encode('utf-8')
+            
+        hash_digest = hashlib.md5(hash_input).hexdigest()[:10]  # Increased hash length for uniqueness
         
         # Luodaan tiedoston nimi
         filename = f"analyysi_{timestamp}_{hash_digest}.txt"
@@ -380,8 +387,12 @@ def save_analysis_to_file(analysis: str, markdown_data: str, property_url: str =
             # Lisätään alaviite
             file.write(f"\n\n---\nGeneroitu {datetime.now().strftime('%d.%m.%Y klo %H:%M:%S')}\n")
         
-        # Tallennetaan analyysi tietokantaan, jos käyttäjä on kirjautunut
-        if current_user and current_user.is_authenticated:
+        # Tallennetaan analyysi tietokantaan, jos käyttäjän ID on annettu tai käyttäjä on kirjautunut
+        effective_user_id = user_id
+        if not effective_user_id and current_user and current_user.is_authenticated:
+            effective_user_id = current_user.id
+            
+        if effective_user_id:
             try:
                 # Luodaan uusi analyysi
                 db_analysis = Analysis(
@@ -389,24 +400,25 @@ def save_analysis_to_file(analysis: str, markdown_data: str, property_url: str =
                     title=address_or_title or f"Analyysi {timestamp}",
                     property_url=property_url,
                     content=analysis,
-                    user_id=current_user.id
+                    user_id=effective_user_id
                 )
                 
-                # Lisätään tietokantaan
+                # Lisätään tietokantaan ja sitoutetaan heti
                 db.session.add(db_analysis)
                 db.session.commit()
                 
-                logger.info(f"Analyysi tallennettu tietokantaan käyttäjälle {current_user.username}")
+                logger.info(f"Analyysi tallennettu tietokantaan käyttäjälle {effective_user_id}")
+                return filepath, db_analysis.id  # Return analysis_id also
             except Exception as db_err:
                 logger.error(f"Virhe analyysin tallentamisessa tietokantaan: {db_err}")
                 # Jatketaan, vaikka tietokantaan tallennus epäonnistuisi
         
         logger.info(f"Analyysi tallennettu tiedostoon: {filepath}")
-        return filepath
+        return filepath, None  # Return None for analysis_id if not saved to database
         
     except Exception as e:
         logger.error(f"Virhe analyysin tallentamisessa tiedostoon: {e}")
-        return ""
+        return "", None
 
 def log_request_details(data: Dict[str, Any]) -> None:
     """
