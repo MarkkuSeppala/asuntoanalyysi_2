@@ -20,7 +20,7 @@ from config import get_config
 from riskianalyysi import riskianalyysi
 import etuovi_downloader  # Import the etuovi_downloader
 import oikotie_downloader  # Import the oikotie_downloader
-import kat_api_call  # Import the kat_api_call module
+import info_extract  # Import the info_extract module instead of kat_api_call
 
 # Asetetaan lokitus
 logging.basicConfig(
@@ -361,15 +361,23 @@ def analyze():
         kohde_tyyppi = None
         try:
             logger.info("Haetaan kohteen perustiedot KAT API:lla")
-            property_data = kat_api_call.get_property_data(markdown_data)
+            property_data_json = info_extract.get_property_data(markdown_data)
             
-            if property_data:
+            if property_data_json:
+                # Muunnetaan JSON-merkkijono sanakirjaksi
+                try:
+                    property_data = json.loads(property_data_json)
+                    logger.info("JSON-merkkijono muunnettu sanakirjaksi onnistuneesti")
+                except json.JSONDecodeError as e:
+                    logger.error(f"Virhe JSON-merkkijonon muuntamisessa sanakirjaksi: {e}")
+                    property_data = None
+                
                 # Tallennetaan kohteet-tauluun ilman analysis_id:tä, liitetään myöhemmin
                 logger.info("Tallennetaan kohteen tiedot tietokantaan")
                 
                 # Varmistetaan että kohde tallennetaan käyttäjäkohtaisesti
                 logger.info(f"Kohde tallennetaan käyttäjälle {current_user.id}, sessio {session_id}")
-                kohde_id = kat_api_call.save_property_data_to_db(property_data, user_id=current_user.id)
+                kohde_id = info_extract.save_property_data_to_db(property_data, user_id=current_user.id)
                 
                 if kohde_id:
                     logger.info(f"Kohde tallennettu tietokantaan ID:llä {kohde_id}")
@@ -561,12 +569,20 @@ def api_analyze():
         kohde_tyyppi = None
         try:
             logger.info("API: Haetaan kohteen perustiedot KAT API:lla")
-            property_data = kat_api_call.get_property_data(markdown_data)
+            property_data_json = info_extract.get_property_data(markdown_data)
             
-            if property_data:
+            if property_data_json:
+                # Muunnetaan JSON-merkkijono sanakirjaksi
+                try:
+                    property_data = json.loads(property_data_json)
+                    logger.info("JSON-merkkijono muunnettu sanakirjaksi onnistuneesti")
+                except json.JSONDecodeError as e:
+                    logger.error(f"Virhe JSON-merkkijonon muuntamisessa sanakirjaksi: {e}")
+                    property_data = None
+                
                 # Tallennetaan kohteet-tauluun ilman analysis_id:tä, liitetään myöhemmin
                 logger.info("API: Tallennetaan kohteen tiedot tietokantaan")
-                kohde_id = kat_api_call.save_property_data_to_db(property_data, user_id=current_user.id)
+                kohde_id = info_extract.save_property_data_to_db(property_data, user_id=current_user.id)
                 if kohde_id:
                     logger.info(f"API: Kohde tallennettu tietokantaan ID:llä {kohde_id}")
                     # Haetaan kohteen tyyppi
@@ -781,7 +797,7 @@ def download_analysis(analysis_id):
 @app.route('/upload-pdf', methods=['POST'])
 @login_required
 def upload_pdf():
-    """Handle PDF uploads and process them using the same pipeline as Oikotie downloader"""
+    """Handle PDF uploads and process them using info_extract to extract data"""
     try:
         # Check if the user is allowed to make API calls
         if not current_user.can_make_api_call():
@@ -809,17 +825,40 @@ def upload_pdf():
             logger.info(f"PDF-tiedosto tallennettu väliaikaisesti: {pdf_path}")
             
             try:
-                # Extract text from PDF using the same function as in oikotie_downloader
-                logger.info("Puretaan tekstiä PDF-tiedostosta...")
-                text_content = oikotie_downloader.extract_text_from_pdf(pdf_path)
-                
                 # Create property ID based on the file name and timestamp
                 file_stem = os.path.splitext(pdf_file.filename)[0]
                 property_id = f"{file_stem}_{int(time.time())}"
                 
-                # Format text into markdown
-                logger.info("Muotoillaan teksti markdown-muotoon...")
-                markdown_data = f"""# PDF-asuntoilmoitus
+                # Suorita PDF-tiedoston tietojen poiminta käyttäen info_extract-moduulia
+                logger.info("Poimitaan tietoja PDF-tiedostosta info_extract-moduulilla...")
+                extracted_data = info_extract.process_single_pdf(
+                    pdf_path=pdf_path, 
+                    kaupunki_nimi="PDF-lataus",
+                    user_id=current_user.id
+                )
+                
+                # Tarkistetaan saatiinko kohde_id suoraan process_single_pdf-funktiosta
+                kohde_id = None
+                kohde_tyyppi = None
+                
+                if extracted_data and extracted_data.get("kohde_id"):
+                    kohde_id = extracted_data.get("kohde_id")
+                    logger.info(f"PDF: Kohde tallennettu tietokantaan ID:llä {kohde_id}")
+                    
+                    # Haetaan kohteen tyyppi
+                    kohde = Kohde.query.get(kohde_id)
+                    if kohde and kohde.tyyppi:
+                        kohde_tyyppi = kohde.tyyppi
+                        logger.info(f"PDF: Kohteen tyyppi: {kohde_tyyppi}")
+                else:
+                    logger.warning("PDF: Tietojen poiminta tai tallennus suoralla metodilla epäonnistui, yritetään vaihtoehtoista tapaa")
+                    
+                    # Jos suora poiminta epäonnistui, yritetään vaihtoehtoista tapaa
+                    # Extract text from PDF for API analysis
+                    text_content = oikotie_downloader.extract_text_from_pdf(pdf_path)
+                    
+                    # Format text into markdown for analysis
+                    markdown_data = f"""# PDF-asuntoilmoitus
 
 ## Perustiedot
 Lähde: Ladattu PDF
@@ -829,33 +868,56 @@ ID: {property_id}
 ## Ilmoituksen sisältö
 {text_content}
 """
-                
-                # Haetaan kohteen perustiedot ensin KAT API:n avulla
-                property_data = None
-                kohde_id = None
-                kohde_tyyppi = None
-                try:
-                    logger.info("PDF: Haetaan kohteen perustiedot KAT API:lla")
-                    property_data = kat_api_call.get_property_data(markdown_data)
                     
-                    if property_data:
-                        # Tallennetaan kohteet-tauluun ilman analysis_id:tä, liitetään myöhemmin
-                        logger.info("PDF: Tallennetaan kohteen tiedot tietokantaan")
-                        kohde_id = kat_api_call.save_property_data_to_db(property_data, user_id=current_user.id)
-                        if kohde_id:
-                            logger.info(f"PDF: Kohde tallennettu tietokantaan ID:llä {kohde_id}")
-                            # Haetaan kohteen tyyppi
-                            kohde = Kohde.query.get(kohde_id)
-                            if kohde and kohde.tyyppi:
-                                kohde_tyyppi = kohde.tyyppi
-                                logger.info(f"PDF: Kohteen tyyppi: {kohde_tyyppi}")
+                    # Haetaan kohteen perustiedot API:lla
+                    try:
+                        logger.info("PDF: Haetaan kohteen perustiedot API:lla")
+                        property_data_json = info_extract.get_property_data(markdown_data)
+                        
+                        if property_data_json:
+                            # Muunnetaan JSON-merkkijono sanakirjaksi
+                            try:
+                                property_data = json.loads(property_data_json)
+                                logger.info("PDF: JSON-merkkijono muunnettu sanakirjaksi onnistuneesti")
+                            except json.JSONDecodeError as e:
+                                logger.error(f"PDF: Virhe JSON-merkkijonon muuntamisessa sanakirjaksi: {e}")
+                                property_data = None
+                            
+                            # Tallenna tiedot tietokantaan jos ne ovat saatavilla
+                            if property_data:
+                                logger.info("PDF: Tallennetaan kohteen tiedot tietokantaan")
+                                kohde_id = info_extract.save_property_data_to_db(property_data, user_id=current_user.id)
+                                if kohde_id:
+                                    logger.info(f"PDF: Kohde tallennettu tietokantaan ID:llä {kohde_id}")
+                                    # Haetaan kohteen tyyppi
+                                    kohde = Kohde.query.get(kohde_id)
+                                    if kohde and kohde.tyyppi:
+                                        kohde_tyyppi = kohde.tyyppi
+                                        logger.info(f"PDF: Kohteen tyyppi: {kohde_tyyppi}")
+                                else:
+                                    logger.warning("PDF: Kohteen tallentaminen tietokantaan epäonnistui")
+                            else:
+                                logger.warning("PDF: Kohteen tietojen muuntaminen sanakirjaksi epäonnistui")
                         else:
-                            logger.warning("PDF: Kohteen tallentaminen epäonnistui")
-                    else:
-                        logger.warning("PDF: Kohteen perustietoja ei saatu")
-                except Exception as e:
-                    logger.error(f"PDF: Virhe kohteen tietojen käsittelyssä: {e}")
-                    logger.error(traceback.format_exc())
+                            logger.warning("PDF: Kohteen perustietoja ei saatu API:sta")
+                    except Exception as e:
+                        logger.error(f"PDF: Virhe kohteen tietojen käsittelyssä: {e}")
+                        logger.error(traceback.format_exc())
+                
+                # Käytetään samaa markdown_data-muuttujaa OpenAI API:n kutsuun
+                if 'markdown_data' not in locals():
+                    # Jos markdown_data ei ole vielä määritelty, määritellään se nyt
+                    text_content = oikotie_downloader.extract_text_from_pdf(pdf_path)
+                    markdown_data = f"""# PDF-asuntoilmoitus
+
+## Perustiedot
+Lähde: Ladattu PDF
+Tiedostonimi: {pdf_file.filename}
+ID: {property_id}
+
+## Ilmoituksen sisältö
+{text_content}
+"""
                 
                 # Use OpenAI API to analyze the data
                 logger.info("Tehdään OpenAI API -kutsu analyysia varten")

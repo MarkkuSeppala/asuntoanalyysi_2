@@ -114,6 +114,8 @@ class Kohde(db.Model):
     tyyppi = db.Column(db.String(50), nullable=True)  # omakotitalo, kerrostalo, rivitalo, erillistalo, paritalo
     hinta = db.Column(db.Numeric, nullable=True)
     rakennusvuosi = db.Column(db.Integer, nullable=True)
+    neliot = db.Column(db.Float, nullable=True)  # Asuinpinta-ala neliömetreinä
+    huoneet = db.Column(db.Integer, nullable=True)  # Huoneiden lukumäärä
     analysis_id = db.Column(db.Integer, db.ForeignKey('analyses.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     risk_level = db.Column(db.Numeric(3, 1), nullable=True)  # Riskitaso asteikolla 1-10, 1 desimaalin tarkkuudella
