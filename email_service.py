@@ -161,12 +161,9 @@ def send_verification_email(to_email, verification_token, first_name=None):
             subject='Tervetuloa Kotiko.io-palveluun - Vahvista sähköpostiosoitteesi',
             html_content=HtmlContent(html_content)
         )
-
-        print(f"Message: {message}")
         
         # Lähetä viesti käyttäen SendGrid API:a
         api_key = os.environ.get('SENDGRID_API_KEY')
-        print(f"API Key: {api_key} rivi 167")
         sg = SendGridAPIClient(api_key=api_key)
         response = sg.send(message)
         
