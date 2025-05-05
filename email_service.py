@@ -158,7 +158,7 @@ def send_verification_email(to_email, verification_token, first_name=None):
         )
         
         # Lähetä viesti käyttäen SendGrid API:a
-        sg = SendGridAPIClient(current_app.config.get('SENDGRID_API_KEY'))
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
         response = sg.send(message)
         
         # Tarkista vastaus
@@ -299,7 +299,7 @@ def send_password_reset_email(to_email, reset_token, first_name=None):
         )
         
         # Lähetä viesti käyttäen SendGrid API:a
-        sg = SendGridAPIClient(current_app.config.get('SENDGRID_API_KEY'))
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
         response = sg.send(message)
         
         # Tarkista vastaus
