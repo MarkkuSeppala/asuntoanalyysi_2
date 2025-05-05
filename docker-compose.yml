@@ -14,6 +14,9 @@ services:
       - FLASK_APP=app.py
       - FLASK_ENV=development
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/asuntoanalyysi
+      - SENDGRID_API_KEY=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
+      - SITE_URL=https://kotiko.io
+      - MAIL_DEFAULT_SENDER=noreply@kotiko.io
     depends_on:
       - db
     restart: unless-stopped

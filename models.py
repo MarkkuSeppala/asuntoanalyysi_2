@@ -19,6 +19,11 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     api_calls_count = db.Column(db.Integer, default=0)
     
+    # Email verification fields
+    is_verified = db.Column(db.Boolean, default=False)
+    verification_token = db.Column(db.String(100), nullable=True)
+    verification_token_created_at = db.Column(db.DateTime, nullable=True)
+    
     # Henkilötiedot
     first_name = db.Column(db.String(50))
     last_name = db.Column(db.String(50))

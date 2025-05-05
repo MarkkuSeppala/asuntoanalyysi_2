@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Lähetä vahvistusviesti uudelleen{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Lähetä vahvistusviesti uudelleen</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Syötä sähköpostiosoitteesi, johon lähetämme uuden vahvistuslinkin.</p>
+
+                    <form method="POST" action="{{ url_for('auth.resend_verification') }}">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Sähköpostiosoite</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-paper-plane me-2"></i> Lähetä vahvistusviesti
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <hr class="my-4">
+                    
+                    <p class="mb-0">
+                        <a href="{{ url_for('auth.login') }}" class="text-decoration-none">
+                            <i class="fa fa-arrow-left me-1"></i> Palaa kirjautumiseen
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,5 +1,6 @@
 import os
 from datetime import timedelta
+import datetime
  
 class Config:
     """Perus konfiguraatio kaikille ympäristöille"""
@@ -51,10 +52,21 @@ class Config:
     # Tuotannossa CSRF-suojaus
     WTF_CSRF_ENABLED = True
     SESSION_COOKIE_HTTPONLY = True
+    
+    # Sähköpostiasetukset
+    SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@kotiko.io')
+    
+    # Sivuston URL ja nimi
+    SITE_URL = os.environ.get('SITE_URL', 'http://localhost:5000')
+    SITE_NAME = 'Kotiko'
+    CURRENT_YEAR = datetime.datetime.now().year
 
 class DevelopmentConfig(Config):
     """Kehitysympäristön konfiguraatio"""
     DEBUG = True
+    SITE_URL = 'http://localhost:5000'
+    SESSION_COOKIE_SECURE = False
     
 class TestingConfig(Config):
     """Testausympäristön konfiguraatio"""
@@ -62,6 +74,8 @@ class TestingConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL', 'postgresql://postgres:postgres@localhost/asuntoanalyysi_test')
     WTF_CSRF_ENABLED = False  # Testeissä ei tarvita CSRF-suojausta
+    SITE_URL = 'http://localhost:5000'
+    SESSION_COOKIE_SECURE = False
     
 class ProductionConfig(Config):
     """Tuotantoympäristön konfiguraatio"""
@@ -80,6 +94,9 @@ class ProductionConfig(Config):
     # Tuotannossa CSRF-suojaus
     WTF_CSRF_ENABLED = True
     SESSION_COOKIE_HTTPONLY = True
+    
+    # Tuotannon URL
+    SITE_URL = os.environ.get('SITE_URL', 'https://kotiko.io')
 
 def get_config():
     """Palauttaa oikean konfiguraation ympäristön perusteella"""
