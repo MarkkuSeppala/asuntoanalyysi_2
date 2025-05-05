@@ -1,8 +1,8 @@
 import os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Email, To, Content, HtmlContent
-from flask import current_app
 import logging
+import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +19,13 @@ def send_verification_email(to_email, verification_token, first_name=None):
         bool: True jos lähetys onnistui, False jos epäonnistui
     """
     try:
+        # Hae ympäristömuuttujat
+        site_url = os.environ.get('SITE_URL', 'https://kotiko.io')
+        current_year = datetime.datetime.now().year
+        mail_sender = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@kotiko.io')
+        
         # Luo verifiointilinkin osoite
-        verification_url = f"{current_app.config.get('SITE_URL', 'https://kotiko.io')}/auth/verify?token={verification_token}"
+        verification_url = f"{site_url}/auth/verify?token={verification_token}"
         
         # Käytä etunimi tai oletusarvo
         name_display = first_name if first_name else "käyttäjä"
@@ -142,7 +147,7 @@ def send_verification_email(to_email, verification_token, first_name=None):
     <p>Tarvitsetko apua? Ota meihin yhteyttä: <a href="mailto:tuki@kotiko.io">tuki@kotiko.io</a></p>
 
     <div class="footer">
-      <p>&copy; {current_app.config.get('CURRENT_YEAR', '2025')} Kotiko.io – Kaikki oikeudet pidätetään.</p>
+      <p>&copy; {current_year} Kotiko.io – Kaikki oikeudet pidätetään.</p>
     </div>
   </div>
 </body>
@@ -151,14 +156,14 @@ def send_verification_email(to_email, verification_token, first_name=None):
         
         # Luo viesti
         message = Mail(
-            from_email=Email(current_app.config.get('MAIL_DEFAULT_SENDER', 'noreply@kotiko.io')),
+            from_email=Email(mail_sender),
             to_emails=To(to_email),
             subject='Tervetuloa Kotiko.io-palveluun - Vahvista sähköpostiosoitteesi',
             html_content=HtmlContent(html_content)
         )
-        api_key = os.environ.get('SENDGRID_API_KEY')
-        print(f"API Key: {api_key}")
+        
         # Lähetä viesti käyttäen SendGrid API:a
+        api_key = os.environ.get('SENDGRID_API_KEY')
         sg = SendGridAPIClient(api_key=api_key)
         response = sg.send(message)
         
@@ -187,8 +192,13 @@ def send_password_reset_email(to_email, reset_token, first_name=None):
         bool: True jos lähetys onnistui, False jos epäonnistui
     """
     try:
+        # Hae ympäristömuuttujat
+        site_url = os.environ.get('SITE_URL', 'https://kotiko.io')
+        current_year = datetime.datetime.now().year
+        mail_sender = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@kotiko.io')
+        
         # Luo nollauslinkin osoite
-        reset_url = f"{current_app.config.get('SITE_URL', 'https://kotiko.io')}/auth/reset-password?token={reset_token}"
+        reset_url = f"{site_url}/auth/reset-password?token={reset_token}"
         
         # Käytä etunimi tai oletusarvo
         name_display = first_name if first_name else "käyttäjä"
@@ -284,7 +294,7 @@ def send_password_reset_email(to_email, reset_token, first_name=None):
     <p>Tarvitsetko apua? Ota meihin yhteyttä: <a href="mailto:tuki@kotiko.io">tuki@kotiko.io</a></p>
 
     <div class="footer">
-      <p>&copy; {current_app.config.get('CURRENT_YEAR', '2025')} Kotiko.io – Kaikki oikeudet pidätetään.</p>
+      <p>&copy; {current_year} Kotiko.io – Kaikki oikeudet pidätetään.</p>
     </div>
   </div>
 </body>
@@ -293,14 +303,15 @@ def send_password_reset_email(to_email, reset_token, first_name=None):
         
         # Luo viesti
         message = Mail(
-            from_email=Email(current_app.config.get('MAIL_DEFAULT_SENDER', 'noreply@kotiko.io')),
+            from_email=Email(mail_sender),
             to_emails=To(to_email),
             subject='Salasanan nollaus - Kotiko.io',
             html_content=HtmlContent(html_content)
         )
         
         # Lähetä viesti käyttäen SendGrid API:a
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        api_key = os.environ.get('SENDGRID_API_KEY')
+        sg = SendGridAPIClient(api_key=api_key)
         response = sg.send(message)
         
         # Tarkista vastaus
