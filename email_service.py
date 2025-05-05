@@ -157,6 +157,7 @@ def send_verification_email(to_email, verification_token, first_name=None):
             html_content=HtmlContent(html_content)
         )
         api_key = os.environ.get('SENDGRID_API_KEY')
+        print(f"API Key: {api_key}")
         # Lähetä viesti käyttäen SendGrid API:a
         sg = SendGridAPIClient(api_key=api_key)
         response = sg.send(message)
