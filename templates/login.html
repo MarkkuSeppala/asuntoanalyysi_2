@@ -35,10 +35,22 @@
                             {{ form.remember(class="form-check-input") }}
                             {{ form.remember.label(class="form-check-label") }}
                         </div>
-                        <div class="d-grid gap-2">
+                        <div class="d-grid gap-2 mb-3">
                             {{ form.submit(class="btn btn-primary btn-block") }}
                         </div>
                     </form>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="text-center mb-3">
+                        <p>Tai kirjaudu sisään käyttäen:</p>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('oauth.google_login') }}" class="btn btn-outline-danger">
+                            <i class="fab fa-google me-2"></i> Google-kirjautuminen
+                        </a>
+                    </div>
                 </div>
                 <div class="card-footer text-center">
                     <p class="mb-0">Ei vielä käyttäjätiliä? <a href="{{ url_for('auth.register') }}" class="fw-bold">Rekisteröidy tästä</a></p>

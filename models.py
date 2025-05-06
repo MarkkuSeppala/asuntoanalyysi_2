@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy_utils import JSONType
 
 db = SQLAlchemy()
 
@@ -13,7 +14,7 @@ class User(UserMixin, db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
-    password_hash = db.Column(db.String(256), nullable=False)
+    password_hash = db.Column(db.String(256), nullable=True)  # Muutettu nullable=True, koska Google OAuth käyttäjillä ei ole salasanaa
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
     is_admin = db.Column(db.Boolean, default=False)
@@ -34,6 +35,10 @@ class User(UserMixin, db.Model):
     state = db.Column(db.String(80), nullable=False)
     country = db.Column(db.String(80), nullable=False)
     
+    # Google OAuth tiedot
+    is_oauth_user = db.Column(db.Boolean, default=False)
+    oauth_provider = db.Column(db.String(20), nullable=True)
+    
     # Analyysit, jotka käyttäjä on tehnyt
     analyses = db.relationship('Analysis', backref='user', lazy=True)
     
@@ -42,6 +47,36 @@ class User(UserMixin, db.Model):
     
     # Maksut
     payments = db.relationship('Payment', backref='user', lazy=True, cascade="all, delete")
+    
+    def __init__(self, email, first_name, last_name, street_address, postal_code, 
+                 city, state, country, password=None, is_oauth_user=False, 
+                 oauth_provider=None, is_verified=False):
+        self.email = email
+        self.first_name = first_name
+        self.last_name = last_name
+        self.street_address = street_address
+        self.postal_code = postal_code
+        self.city = city
+        self.state = state
+        self.country = country
+        self.is_oauth_user = is_oauth_user
+        self.oauth_provider = oauth_provider
+        self.is_verified = is_verified
+        
+        # Aseta salasana vain jos se on annettu (ei OAuth-käyttäjille)
+        if password:
+            self.set_password(password)
+    
+    def set_password(self, password):
+        """Asettaa salatun salasanan"""
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        """Tarkistaa salasanan"""
+        # Jos käyttäjä on OAuth-käyttäjä, salasanan tarkistus epäonnistuu aina
+        if self.is_oauth_user:
+            return False
+        return self.password_hash and check_password_hash(self.password_hash, password)
     
     @property
     def password(self):
@@ -52,10 +87,6 @@ class User(UserMixin, db.Model):
     def password(self, password):
         """Asettaa salasanan hash-arvon."""
         self.password_hash = generate_password_hash(password)
-    
-    def check_password(self, password):
-        """Tarkistaa salasanan oikeellisuuden."""
-        return check_password_hash(self.password_hash, password)
     
     def increment_api_calls(self):
         """Kasvattaa API-kutsujen laskuria."""
@@ -258,4 +289,61 @@ class Kohde(db.Model):
     user = db.relationship('User', backref=db.backref('kohteet', lazy=True))
     
     def __repr__(self):
-        return f'<Kohde {self.osoite}>' 
+        return f'<Kohde {self.osoite}>'
+
+class OAuth(db.Model):
+    """Google OAuth tiedot käyttäjälle"""
+    __tablename__ = 'oauth'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    provider = db.Column(db.String(50), nullable=False)  # 'google', etc.
+    provider_user_id = db.Column(db.String(256), nullable=False, unique=True)
+    token = db.Column(JSONType, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    user = db.relationship('User', backref=db.backref('oauth_accounts', lazy=True, cascade="all, delete"))
+    
+    @classmethod
+    def get_or_create(cls, provider, provider_user_id, token, user=None, email=None, 
+                     first_name=None, last_name=None):
+        """Hakee tai luo OAuth-tilin"""
+        oauth = cls.query.filter_by(provider=provider, provider_user_id=provider_user_id).first()
+        
+        if oauth:
+            # Päivitä token jos se on muuttunut
+            if oauth.token != token:
+                oauth.token = token
+                db.session.commit()
+            return oauth
+        
+        # Jos käyttäjä on jo olemassa, liitä OAuth-tili siihen
+        if not user and email:
+            user = User.query.filter_by(email=email).first()
+        
+        # Jos käyttäjää ei löydy, luo uusi
+        if not user:
+            # Luo uusi käyttäjä OAuth-tunnuksilla
+            # Aseta oletusosoite, koska nämä kentät ovat pakollisia
+            user = User(
+                email=email,
+                first_name=first_name or "",
+                last_name=last_name or "",
+                street_address="Google OAuth",
+                postal_code="00000",
+                city="Google City",
+                state="",
+                country="Suomi",
+                is_oauth_user=True,
+                oauth_provider=provider,
+                is_verified=True  # Google-kirjautuminen vahvistaa sähköpostin
+            )
+            db.session.add(user)
+            db.session.flush()  # Tämä generoi user.id:n
+        
+        # Luo OAuth-tili
+        oauth = cls(provider=provider, provider_user_id=provider_user_id, token=token, user_id=user.id)
+        db.session.add(oauth)
+        db.session.commit()
+        
+        return oauth 

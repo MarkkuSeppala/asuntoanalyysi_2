@@ -22,22 +22,46 @@
                     <div class="row mb-4">
                         <div class="col-md-4 text-center">
                             <img src="https://via.placeholder.com/150" alt="Profiilikuva" class="img-fluid rounded-circle mb-3">
-                            <h5>{{ current_user.username }}</h5>
+                            <h5>{{ current_user.first_name }} {{ current_user.last_name }}</h5>
                             <p class="text-muted">Jäsen {{ current_user.created_at.strftime('%d.%m.%Y') }} alkaen</p>
+                            
+                            {% if current_user.is_oauth_user %}
+                            <div class="badge bg-danger p-2 mb-2">
+                                <i class="fab fa-google me-1"></i> Google-kirjautuminen
+                            </div>
+                            {% endif %}
                         </div>
                         <div class="col-md-8">
                             <h5 class="border-bottom pb-2">Käyttäjätiedot</h5>
                             <div class="mb-3">
-                                <label class="fw-bold">Käyttäjätunnus:</label>
-                                <p>{{ current_user.username }}</p>
+                                <label class="fw-bold">Nimi:</label>
+                                <p>{{ current_user.first_name }} {{ current_user.last_name }}</p>
                             </div>
                             <div class="mb-3">
                                 <label class="fw-bold">Sähköposti:</label>
                                 <p>{{ current_user.email }}</p>
                             </div>
                             <div class="mb-3">
+                                <label class="fw-bold">Osoite:</label>
+                                <p>
+                                    {{ current_user.street_address }}<br>
+                                    {{ current_user.postal_code }} {{ current_user.city }}<br>
+                                    {{ current_user.country }}
+                                </p>
+                            </div>
+                            <div class="mb-3">
                                 <label class="fw-bold">Liittynyt:</label>
                                 <p>{{ current_user.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="fw-bold">Kirjautumistapa:</label>
+                                <p>
+                                    {% if current_user.is_oauth_user %}
+                                    <span class="badge bg-danger">{{ current_user.oauth_provider|upper }}</span> OAuth-kirjautuminen
+                                    {% else %}
+                                    <span class="badge bg-primary">Tavallinen</span> Sähköposti ja salasana
+                                    {% endif %}
+                                </p>
                             </div>
                         </div>
                     </div>

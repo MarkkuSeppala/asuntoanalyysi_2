@@ -48,6 +48,8 @@ def get_property_data(markdown_data: str) -> str:
 - tyyppi (asunnon tyyppi, joka PITÄÄ palauttaa avainsanalla "rakennustyyppi")
 - hinta (velaton myyntihinta)
 - rakennusvuosi
+- huoneet (huoneiden lukumäärä)
+- neliot (asuinpinta-ala neliömetreinä)
 
 Rakennustyypin tulee olla jokin seuraavista: "omakotitalo", "kerrostalo", "rivitalo", "erillistalo", "paritalo"
 Käytä aina samaa avainta "rakennustyyppi" tyypin määrittämiseen.
@@ -63,7 +65,9 @@ Lähetä tieto JSON-muodossa
   },
   "rakennustyyppi": "kerrostalo",
   "hinta": "145000",
-  "rakennusvuosi": "2005"
+  "rakennusvuosi": "2005",
+  "huoneet": 3,
+  "neliot": 120
 }
 </esimerkki>
 
@@ -143,6 +147,30 @@ def save_property_data_to_db(property_data: str, analysis_id: int = None, user_i
         except:
             logger.warning(f"Hintaa ei voitu muuntaa numeeriseksi: {hinta_str}")
             hinta = None
+        
+        # Haetaan huoneiden lukumäärä
+        huoneet = None
+        try:
+            huoneet_value = data_dict.get("huoneet")
+            if huoneet_value is not None:
+                huoneet = int(huoneet_value)
+                logger.info(f"Huoneiden lukumäärä: {huoneet}")
+        except:
+            logger.warning(f"Huoneiden lukumäärää ei voitu muuntaa kokonaisluvuksi: {data_dict.get('huoneet')}")
+            huoneet = None
+            
+        # Haetaan neliöt
+        neliot = None
+        try:
+            neliot_value = data_dict.get("neliot")
+            if neliot_value is not None:
+                # Varmistetaan että neliömäärä on numeerinen
+                neliot_str = str(neliot_value).replace(",", ".").strip()
+                neliot = float(neliot_str)
+                logger.info(f"Neliömäärä: {neliot}")
+        except:
+            logger.warning(f"Neliömäärää ei voitu muuntaa liukuluvuksi: {data_dict.get('neliot')}")
+            neliot = None
         
         # Haetaan rakennustyyppi eri mahdollisista avaimista
         tyyppi = None
@@ -225,10 +253,12 @@ def save_property_data_to_db(property_data: str, analysis_id: int = None, user_i
             hinta=hinta,
             rakennusvuosi=rakennusvuosi,
             analysis_id=analysis_id,
-            user_id=user_id
+            user_id=user_id,
+            huoneet=huoneet,
+            neliot=neliot
         )
         
-        logger.info(f"Luotu kohde: osoite={osoite}, tyyppi={tyyppi}, hinta={hinta}, rakennusvuosi={rakennusvuosi}, user_id={user_id}")
+        logger.info(f"Luotu kohde: osoite={osoite}, tyyppi={tyyppi}, hinta={hinta}, rakennusvuosi={rakennusvuosi}, huoneet={huoneet}, neliot={neliot}, user_id={user_id}")
         
         # Lisätään tietokantaan
         db.session.add(kohde)

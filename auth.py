@@ -23,6 +23,11 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         
+        # Jos käyttäjä on OAuth-käyttäjä, ohjaa käyttämään Google-kirjautumista
+        if user and user.is_oauth_user:
+            flash(f'Tämä sähköpostiosoite on rekisteröity {user.oauth_provider}-kirjautumisella. Käytä sitä kirjautuaksesi.', 'warning')
+            return render_template('login.html', form=form)
+        
         # Tarkistetaan sähköposti ja salasana
         if user and user.check_password(form.password.data):
             # Tarkista että sähköposti on vahvistettu
@@ -53,6 +58,16 @@ def register():
         if not form.accept_tos.data:
             flash('Sinun täytyy hyväksyä käyttöehdot jatkaaksesi.', 'danger')
             return render_template('register.html', form=form)
+        
+        # Tarkista onko sähköposti jo käytössä
+        existing_user = User.query.filter_by(email=form.email.data).first()
+        if existing_user:
+            # Jos käyttäjä on jo olemassa ja käyttää OAuth:ta
+            if existing_user.is_oauth_user:
+                flash(f'Tämä sähköpostiosoite on jo rekisteröity {existing_user.oauth_provider} -kirjautumisella. Käytä sitä kirjautuaksesi.', 'warning')
+            else:
+                flash('Tämä sähköpostiosoite on jo rekisteröity. Käytä kirjautumissivua.', 'danger')
+            return redirect(url_for('auth.login'))
         
         # Luodaan uusi käyttäjä kaikilla tiedoilla
         user = User(

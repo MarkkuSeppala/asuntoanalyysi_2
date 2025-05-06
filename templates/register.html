@@ -311,30 +311,39 @@
                                 </div>
                             </div>
                             
-                            <!-- Käyttöehdot -->
-                            <div class="mb-4 mt-3">
+                            <!-- Käyttöehdot ja painike -->
+                            <div class="mb-4">
                                 <div class="form-check">
+                                    {{ form.accept_tos(class="form-check-input") }}
+                                    <label class="form-check-label" for="accept_tos">
+                                        Hyväksyn <a href="#" class="tos-link" data-bs-toggle="modal" data-bs-target="#tosModal">käyttöehdot</a>
+                                    </label>
                                     {% if form.accept_tos.errors %}
-                                        {{ form.accept_tos(class="form-check-input is-invalid") }}
-                                        <div class="invalid-feedback">
+                                        <div class="invalid-feedback d-block">
                                             {% for error in form.accept_tos.errors %}
                                                 {{ error }}
                                             {% endfor %}
                                         </div>
-                                    {% else %}
-                                        {{ form.accept_tos(class="form-check-input") }}
                                     {% endif %}
-                                    <label class="form-check-label" for="accept_tos">
-                                        Olen lukenut ja hyväksyn 
-                                        <a href="#" class="tos-link" data-bs-toggle="modal" data-bs-target="#tosModal">käyttöehdot</a>
-                                    </label>
                                 </div>
                             </div>
                             
-                            <div class="d-grid gap-2">
+                            <div class="d-grid gap-2 mb-4">
                                 {{ form.submit(class="btn btn-primary submit-btn") }}
                             </div>
                         </form>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="text-center mb-3">
+                            <p>Tai rekisteröidy käyttäen:</p>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('oauth.google_login') }}" class="btn btn-outline-danger">
+                                <i class="fab fa-google me-2"></i> Google-rekisteröityminen
+                            </a>
+                        </div>
                     </div>
                     <div class="card-footer text-center">
                         <div class="small">

@@ -1,7 +1,21 @@
 import os
 from datetime import timedelta
 import datetime
+import json
  
+# Lataa Google OAuth asetukset
+google_oauth_config = {
+    "web": {
+        "client_id": "299087554173-nr6kp1jlb0gqqdn7hdkn6dsndbma467h.apps.googleusercontent.com",
+        "project_id": "gold-subset-459012-n4",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_secret": "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",
+        "redirect_uris": ["https://www.kotiko.io/"]
+    }
+}
+
 class Config:
     """Perus konfiguraatio kaikille ympäristöille"""
     SECRET_KEY = os.environ.get('SECRET_KEY', 'kehitys-avain-vaihda-tuotannossa')
@@ -29,6 +43,10 @@ class Config:
             'keepalives_count': 5   # Kuinka monta kertaa yritetään
         }
     }
+    
+    # Google OAuth asetukset
+    GOOGLE_OAUTH_CLIENT_ID = google_oauth_config["web"]["client_id"]
+    GOOGLE_OAUTH_CLIENT_SECRET = google_oauth_config["web"]["client_secret"]
     
     # Asetetaan sessioiden kesto
     PERMANENT_SESSION_LIFETIME = timedelta(days=30)

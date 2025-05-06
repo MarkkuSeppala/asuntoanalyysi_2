@@ -17,11 +17,12 @@ from flask_migrate import Migrate
 import api_call
 from models import db, User, Analysis, RiskAnalysis, Kohde, Product, Payment, Subscription
 from auth import auth
+from oauth import oauth_bp, init_google_blueprint  # Päivitetty import
 from config import get_config
 from riskianalyysi import riskianalyysi
 import etuovi_downloader  # Import the etuovi_downloader
 import oikotie_downloader  # Import the oikotie_downloader
-import info_extract  # Import the info_extract module instead of kat_api_call
+import info_extract  # Käytetään info_extract-moduulia kat_api_call-moduulin kautta
 
 # Asetetaan lokitus
 logging.basicConfig(
@@ -107,6 +108,8 @@ def load_user(user_id):
 
 # Rekisteröidään blueprint-komponentit
 app.register_blueprint(auth, url_prefix='/auth')
+app.register_blueprint(oauth_bp, url_prefix='/oauth')
+init_google_blueprint(app)  # Alustetaan Google OAuth blueprint
 
 # Luodaan tietokantafunktio, joka suoritetaan ennen ensimmäistä pyyntöä
 def create_tables():
