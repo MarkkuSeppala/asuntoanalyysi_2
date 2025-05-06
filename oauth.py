@@ -45,10 +45,7 @@ def init_google_blueprint(app):
         client_secret=client_secret,
         scope=["profile", "email"],
         redirect_to="oauth.google_login_callback",
-        # redirect_url parametri ei toimi oikein, se pitäisi olla redirect_uri
-        # ja sen pitäisi vastata täsmälleen Google Consolessa määritettyä osoitetta
-        redirect_uri=config_redirect_uri,  # Tässä pitäisi käyttää redirect_uri-parametria
-        # Varmista, että istuntotietoja käsitellään oikein - tämä on tärkeää state-parametrin kannalta
+        redirect_url=config_redirect_uri,
         reprompt_consent=False,
         # Päivitetään istuntoasetukset
         storage_kwargs={
