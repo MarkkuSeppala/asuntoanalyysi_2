@@ -3,15 +3,15 @@ from datetime import timedelta
 import datetime
 import json
  
-# Haetaan Google OAuth asetukset ympäristömuuttujista
+# Google OAuth asetukset haetaan ympäristömuuttujista
 google_oauth_config = {
     "web": {
-        "client_id": os.environ.get("GOOGLE_CLIENT_ID", "299087554173-nr6kp1jlb0gqqdn7hdkn6dsndbma467h.apps.googleusercontent.com"),
-        "project_id": os.environ.get("GOOGLE_PROJECT_ID", "gold-subset-459012-n4"),
+        "client_id": os.environ.get("GOOGLE_CLIENT_ID", ""),
+        "project_id": os.environ.get("GOOGLE_PROJECT_ID", ""),
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token",
         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_secret": os.environ.get("GOOGLE_CLIENT_SECRET", "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"),
+        "client_secret": os.environ.get("GOOGLE_CLIENT_SECRET", ""),
         "redirect_uris": [os.environ.get("GOOGLE_REDIRECT_URI", "https://www.kotiko.io/")]
     }
 }
@@ -45,8 +45,8 @@ class Config:
     }
     
     # Google OAuth asetukset
-    GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', google_oauth_config["web"]["client_id"])
-    GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', google_oauth_config["web"]["client_secret"])
+    GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
+    GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
     
     # Asetetaan sessioiden kesto
     PERMANENT_SESSION_LIFETIME = timedelta(days=30)
