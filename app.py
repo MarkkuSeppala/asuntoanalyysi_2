@@ -143,7 +143,11 @@ def load_user(user_id):
 # Rekisteröidään blueprint-komponentit
 app.register_blueprint(auth, url_prefix='/auth')
 app.register_blueprint(oauth_bp, url_prefix='/oauth')
-init_google_blueprint(app)  # Alustetaan Google OAuth blueprint
+
+# HUOM: Alustetaan vain oma OAuth toteutus, ei Flask-Dance:n versiota
+custom_result = init_google_blueprint(app)  # Alustetaan Google OAuth blueprint
+if custom_result is None:
+    logger.info("Käytetään omaa Google OAuth implementaatiota Flask-Dance sijaan")
 
 # Luodaan tietokantafunktio, joka suoritetaan ennen ensimmäistä pyyntöä
 def create_tables():
