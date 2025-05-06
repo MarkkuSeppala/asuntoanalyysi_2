@@ -118,25 +118,18 @@ Tehtävänäsi on tehdä ostajalle analyysi myynnisssä olevasta kohteesta.
 **TÄMÄ ON TÄRKEÄÄ:**
 Perhedy tietoihin huolellisesi. Tee kohteen tiedoista implisiittisiä päätelmiä ostajalle tärkeistä asioista.
 
-Analyysin alussa on yhteenveto. Tee siitä hyvin napakka ja jopa räväkkä. On tärkeää, että kiinnittää huomiota.
-Kerro suorasanaisesti kohteen puutteet ja vahvuudet. Vältä toistoa.
-
 Laadi teksi asiantuntijamaiseen tyyliin. Kerro kuitenkin suoraan kohteen puutteet ja negatiiviset asiat.
 Vältä ilmoitustekstin toistoa, ilman että siinä on mielestäsi jotain huomioitavaa. Ota huomioon, että lukija on jo perehtynyt ilmoituksen sisältöön ja odottaa nyt sinulta huomioita, jotka eivät suoraan ilmene tekstistä.
 Koosta analyysin loppuun kolmen kysymyksen kysymyslista. Tee sellaisia kysymyksiä, jotka ovat oikeasti merkittäviä ostajalle.
 Älä kommentoi välitysliikettä tai välittäjää.
 
+Kirjoita teksti hyvällä suomenkielisellä kirjoitustyylillä.
+
 Alla kuvaus vastauksen rakenteesta.
 
-<rakennekuvaus>
-**KOHDE:**
-\"Katuosoite, Kaupunki\"
+Voit painottaa tekstistä sanoja boldilla.
 
-<yhteenveto>
-*Hinta:* (kerro pyyntihinta ja esitä tässä myös oma hinta-arviosi, mutta huomioi, että ostajat olettavat saavansa aina ostotilanteessa noin 5% alennuksen.)
-*Sijainti:*
-*Taloyhtiö ja rakennus:*
-</yhteenveto>
+<rakennekuvaus>
 
 *1. Sijainti ja alueellinen konteksti*
 Anna tässä rehellinen kuvaus alueesta, jossa kiinteistö sijaitsee. Kerro suoraan, jos alue on maineeltaan kyseenalainen.
@@ -187,25 +180,18 @@ Tehtävänäsi on tehdä ostajalle analyysi myynnisssä olevasta kohteesta.
 **TÄMÄ ON TÄRKEÄÄ:**
 Perhedy tietoihin huolellisesi. Tee kohteen tiedoista implisiittisiä päätelmiä ostajalle tärkeistä asioista.
 
-Analyysin alussa on yhteenveto. Tee siitä hyvin napakka ja jopa räväkkä. On tärkeää, että kiinnittää huomiota.
-Kerro suorasanaisesti kohteen puutteet ja vahvuudet. Vältä toistoa.
-
 Laadi teksi asiantuntijamaiseen tyyliin. Kerro kuitenkin suoraan kohteen puutteet ja negatiiviset asiat.
 Vältä ilmoitustekstin toistoa, ilman että siinä on mielestäsi jotain huomioitavaa. Ota huomioon, että lukija on jo perehtynyt ilmoituksen sisältöön ja odottaa nyt sinulta huomioita, jotka eivät suoraan ilmene tekstistä.
 Koosta analyysin loppuun kolmen kysymyksen kysymyslista. Tee sellaisia kysymyksiä, jotka ovat oikeasti merkittäviä ostajalle.
 Älä kommentoi välitysliikettä tai välittäjää.
 
+Kirjoita teksti hyvällä suomenkielisellä kirjoitustyylillä.
+
 Alla kuvaus vastauksen rakenteesta.
 
-<rakennekuvaus>
-**KOHDE:**
-\"Katuosoite, Kaupunki\"
+Voit painottaa tekstistä sanoja boldilla.
 
-<yhteenveto>
-*Hinta:* (kerro pyyntihinta ja esitä tässä myös oma hinta-arviosi, mutta huomioi, että ostajat olettavat saavansa aina ostotilanteessa noin 5% alennuksen.)
-*Sijainti:*
-*Taloyhtiö ja rakennus:*
-</yhteenveto>
+<rakennekuvaus>
 
 *1. Sijainti ja alueellinen konteksti*
 Anna tässä rehellinen kuvaus alueesta, jossa kiinteistö sijaitsee. Kerro suoraan, jos alue on maineeltaan kyseenalainen.

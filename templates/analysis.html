@@ -15,22 +15,39 @@
         --secondary-color: #D4C9BE;
         --accent-color: #123458;
         --neutral-color: #030303;
+        --light-accent: rgba(18, 52, 88, 0.1);
+        --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        --card-shadow-hover: 0 10px 25px rgba(0, 0, 0, 0.1);
+        --card-border-radius: 12px;
+        --transition-standard: all 0.3s ease;
     }
     
     body {
         background-color: var(--primary-color);
+        color: #333;
+        line-height: 1.6;
     }
     
     .container-narrow {
         max-width: 1100px;
         margin: 0 auto;
+        padding: 0 15px;
     }
     
     .page-title {
         color: var(--accent-color);
         font-weight: 700;
         font-size: 2rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .section-title {
+        color: var(--accent-color);
+        font-weight: 600;
+        font-size: 1.6rem;
+        margin: 2rem 0 1.5rem 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--secondary-color);
     }
     
     .btn-accent {
@@ -39,7 +56,7 @@
         padding: 8px 16px;
         border-radius: 8px;
         font-weight: 600;
-        transition: all 0.3s ease;
+        transition: var(--transition-standard);
         border: none;
     }
     
@@ -57,7 +74,7 @@
         padding: 8px 16px;
         border-radius: 8px;
         font-weight: 600;
-        transition: all 0.3s ease;
+        transition: var(--transition-standard);
     }
     
     .btn-outline-accent:hover {
@@ -69,18 +86,21 @@
     
     .analysis-card {
         background-color: white;
-        border-radius: 12px;
+        border-radius: var(--card-border-radius);
         border: none;
         overflow: hidden;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s ease;
+        box-shadow: var(--card-shadow);
+        transition: var(--transition-standard);
         margin-bottom: 30px;
         border-bottom: 4px solid transparent;
+        max-width: 1000px;
+        margin-left: auto;
+        margin-right: auto;
     }
     
-    .analysis-card {
+    .analysis-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        box-shadow: var(--card-shadow-hover);
         border-bottom: 4px solid var(--accent-color);
     }
     
@@ -101,17 +121,21 @@
         padding: 25px;
         line-height: 1.6;
         font-size: 1.05rem;
+        max-width: 750px;
+        margin: 0 auto;
     }
     
     .analysis-content h1 {
-        font-size: 2rem;
+        font-size: 1.8rem;
         margin-top: 0;
         margin-bottom: 20px;
         color: var(--accent-color);
+        border-bottom: 1px solid var(--secondary-color);
+        padding-bottom: 8px;
     }
     
     .analysis-content h2 {
-        font-size: 1.6rem;
+        font-size: 1.5rem;
         margin-top: 25px;
         color: var(--accent-color);
     }
@@ -124,6 +148,7 @@
     
     .analysis-content p {
         margin-bottom: 15px;
+        max-width: 65ch;
     }
     
     .analysis-content ul, 
@@ -228,22 +253,22 @@
     
     /* Riski-korttien tyylit */
     .risk-card {
-        border-radius: 12px;
+        border-radius: var(--card-border-radius);
         border: none;
         overflow: hidden;
-        background-color: #f8f8f8; /* Vaalea harmaa tausta normaalitason korteille */
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-        min-height: 120px; /* Vähimmäiskorkeus pienelle kortille */
+        background-color: #f8f8f8; 
+        box-shadow: var(--card-shadow);
+        transition: var(--transition-standard);
+        min-height: 120px;
         margin-bottom: 20px;
-        padding: 25px 25px 45px 25px; /* Lisätty padding alaosaan laajennusindikaattorille */
+        padding: 25px 25px 45px 25px;
         position: relative;
         cursor: pointer;
     }
     
     .risk-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        box-shadow: var(--card-shadow-hover);
         border-bottom: 4px solid var(--accent-color);
     }
     
@@ -256,35 +281,42 @@
         margin-top: 0;
     }
     
+    .risk-card-content p {
+        max-width: 65ch;
+        line-height: 1.5;
+    }
+    
     /* Laajennetun kortin tyyli */
     .risk-card.expanded {
-        z-index: 10; /* Nostaa kortin muiden yläpuolelle */
+        z-index: 10;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        border-bottom: 4px solid var(--accent-color);
     }
     
     .risk-card.expanded .risk-card-content {
-        max-height: 500px; /* Kasvatettu maksimikorkeus pidemmille sisällöille */
+        max-height: 500px;
         opacity: 1;
         margin-top: 15px;
     }
     
     /* Kohonneen ja korkean riskin hohtavat kortit */
     .risk-card-elevated {
-        box-shadow: 0 5px 15px rgba(255, 193, 7, 0.505);
+        box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3);
         background-color: #fffdf0;
     }
     
     .risk-card-elevated:hover {
-        box-shadow: 0 15px 30px rgba(255, 193, 7, 0.505);
+        box-shadow: 0 15px 30px rgba(255, 193, 7, 0.4);
         border-bottom: 4px solid #ffc107;
     }
     
     .risk-card-high {
-        box-shadow: 0 5px 20px rgba(255, 50, 35, 0.59);
+        box-shadow: 0 5px 20px rgba(255, 50, 35, 0.35);
         background-color: #fff0f0;
     }
     
     .risk-card-high:hover {
-        box-shadow: 0 15px 30px rgba(255, 50, 35, 0.59);
+        box-shadow: 0 15px 30px rgba(255, 50, 35, 0.45);
         border-bottom: 4px solid #f44336;
     }
     
@@ -299,7 +331,7 @@
         background-color: rgba(241, 239, 236, 0.7);
         padding: 6px 12px;
         border-radius: 8px;
-        transition: all 0.3s ease;
+        transition: var(--transition-standard);
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     }
     
@@ -331,8 +363,8 @@
     /* Riski-korttien container */
     .risk-cards-container {
         margin-bottom: 0;
-        position: relative; /* Suhteellinen asemointi lapsielementeille */
-        background-color: white; /* Muutettu valkoiseksi */
+        position: relative;
+        background-color: white;
         border-radius: 16px;
         padding: 25px 15px;
         box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.03);
@@ -340,7 +372,7 @@
     
     .risk-card-wrapper {
         margin-bottom: 30px;
-        transition: all 0.5s ease; /* Sujuva siirtymä kun kortit liikkuvat */
+        transition: var(--transition-standard);
     }
     
     .risk-area-title {
@@ -348,7 +380,7 @@
         color: var(--accent-color);
         margin-bottom: 20px;
         font-size: 18px;
-        padding-right: 50px; /* Jättää tilaa numeroarvolle */
+        padding-right: 50px;
     }
     
     /* Kortin avaamisen indikaattori */
@@ -359,7 +391,7 @@
         transform: translateX(-50%);
         color: var(--accent-color);
         opacity: 0.7;
-        transition: all 0.3s ease;
+        transition: var(--transition-standard);
         background-color: rgba(241, 239, 236, 0.7);
         width: 36px;
         height: 36px;
@@ -426,19 +458,24 @@
     #mapContainer {
         height: 400px;
         width: 100%;
-        border-radius: 12px;
+        border-radius: var(--card-border-radius);
         overflow: hidden;
         margin-bottom: 0;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        box-shadow: var(--card-shadow);
     }
     
     .map-card {
-        width: 70%;
+        width: 80%;
         margin: 0 auto 30px auto;
         position: relative;
         z-index: 1;
-        border-radius: 12px;
+        border-radius: var(--card-border-radius);
         overflow: hidden;
+        transition: var(--transition-standard);
+    }
+    
+    .map-card:hover {
+        box-shadow: var(--card-shadow-hover);
     }
     
     /* Erityisluokka täydelle leveydelle */
@@ -458,9 +495,28 @@
         }
     }
     
+    @media (max-width: 992px) {
+        .property-details-card,
+        .map-card {
+            width: 90%;
+        }
+        
+        .risk-container .row > div {
+            margin-bottom: 20px;
+        }
+    }
+    
     @media (max-width: 768px) {
         .container-narrow {
             padding: 0 15px;
+        }
+        
+        .page-title {
+            font-size: 1.8rem;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
         }
         
         .card-header-custom {
@@ -475,11 +531,34 @@
             height: 300px;
         }
         
-        .map-card, .risk-container, .analysis-card {
-            width: 100%;
+        .property-details-card,
+        .map-card {
+            width: 95%;
+        }
+        
+        .property-detail-item {
+            min-width: 100px;
+            margin: 5px 10px;
         }
     }
     
+    @media (max-width: 576px) {
+        .risk-card-wrapper {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+        
+        .risk-chart-container {
+            width: 180px;
+            height: 180px;
+        }
+        
+        .risk-chart-score {
+            font-size: 36px;
+        }
+    }
+    
+    /* Osa-alueiden korttien tyyli */
     .risk-cards-section {
         background-color: white;
         border-radius: 18px;
@@ -487,6 +566,9 @@
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
         padding: 30px;
         border-bottom: 4px solid var(--accent-color);
+        max-width: 1000px;
+        margin-left: auto;
+        margin-right: auto;
     }
     
     .risk-cards-section-header {
@@ -505,25 +587,33 @@
     /* Kohteen perustietojen kortti */
     .property-details-card {
         background-color: white;
-        border-radius: 12px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--card-shadow);
         padding: 25px;
         margin-top: -20px;
         position: relative;
         z-index: 10;
-        margin-bottom: 30px;
+        margin-bottom: 40px;
         border-bottom: 4px solid var(--accent-color);
-        width: 70%;
+        width: 80%;
         margin-left: auto;
         margin-right: auto;
+        transition: var(--transition-standard);
+    }
+    
+    .property-details-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--card-shadow-hover);
     }
     
     .property-details-title {
         color: var(--accent-color);
         font-weight: 600;
-        margin-bottom: 20px;
-        font-size: 1.2rem;
+        margin-bottom: 25px;
+        font-size: 1.3rem;
         text-align: center;
+        border-bottom: 1px solid var(--secondary-color);
+        padding-bottom: 10px;
     }
     
     .property-details-items {
@@ -537,19 +627,31 @@
         flex-direction: column;
         align-items: center;
         margin: 10px 15px;
-        min-width: 100px;
+        min-width: 120px;
+        transition: var(--transition-standard);
+    }
+    
+    .property-detail-item:hover {
+        transform: translateY(-3px);
     }
     
     .property-detail-icon {
         margin-bottom: 10px;
-        width: 40px;
-        height: 40px;
+        width: 50px;
+        height: 50px;
         display: flex;
         align-items: center;
         justify-content: center;
-        background-color: rgba(18, 52, 88, 0.1);
+        background-color: var(--light-accent);
         border-radius: 50%;
         color: var(--accent-color);
+        transition: var(--transition-standard);
+    }
+    
+    .property-detail-item:hover .property-detail-icon {
+        background-color: var(--accent-color);
+        color: white;
+        transform: scale(1.1);
     }
     
     .property-detail-icon svg {
@@ -569,38 +671,35 @@
         text-align: center;
     }
     
-    @media (max-width: 768px) {
-        .property-details-card {
-            width: 95%;
-            padding: 15px;
-        }
-        
-        .property-detail-item {
-            min-width: 80px;
-            margin: 5px 10px;
-        }
+    /* Kokonaisriskitason kortti */
+    .risk-container {
+        max-width: 1000px;
+        margin-left: auto;
+        margin-right: auto;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container container-narrow">
-    <!-- Yläosan otsikko ja toimintopainikkeet -->
-    <div class="d-flex justify-content-between align-items-center mb-4 mt-5">
-        <h1 class="page-title">{{ title }}</h1>
-        <div>
-            <a href="{{ url_for('download_analysis', analysis_id=analysis.id) }}" class="btn btn-outline-accent me-2">
-                <i class="fas fa-download"></i> Lataa
-            </a>
-            <a href="{{ url_for('list_analyses') }}" class="btn btn-outline-accent">
+    <!-- Yläosan navigointi ja otsikko -->
+    <div class="d-flex justify-content-between align-items-center mb-4 mt-4">
+        <div class="d-flex align-items-center">
+            <a href="{{ url_for('list_analyses') }}" class="btn btn-outline-accent me-3">
                 <i class="fas fa-arrow-left"></i> Takaisin
             </a>
+            <div>
+                <h1 class="page-title m-0">Analyysin tulos</h1>
+                {% if kohde %}
+                <h4 class="text-muted mb-0">{{ title }}</h4>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
     
 <!-- Karttaelementti täysleveässä containerissa -->
-<div class="full-width-container">
+<div class="full-width-container mb-4">
     <div class="map-card shadow">
         <div id="mapContainer"></div>
     </div>
@@ -608,7 +707,7 @@
 
 <!-- Kohteen perustiedot kortti -->
 {% if kohde %}
-<div class="property-details-card shadow">
+<div class="property-details-card shadow mb-5">
     <h4 class="property-details-title">Kohteen perustiedot</h4>
     <div class="property-details-items">
         {% if kohde.hinta is not none %}
@@ -712,11 +811,12 @@
 
 <div class="container container-narrow">
     {% if risk_analysis %}
-    <div class="mb-4 risk-container">
-        <h3 class="mb-3">Riskianalyysi</h3>
+    <!-- Riskianalyysi osio -->
+    <h2 class="section-title mt-5">Riskianalyysi</h2>
+    <div class="mb-5 risk-container">
         
         <!-- Kokonaisriskitason kortti ja donut chart -->
-        <div class="row mb-4">
+        <div class="row mb-5">
             <div class="col-lg-6">
                 <div class="risk-card">
                     <h4 class="risk-area-title text-center mb-3">Kokonaisriskitaso</h4>
@@ -755,6 +855,9 @@
         
         <!-- Riskialueiden kortit -->
         <div class="risk-cards-section">
+            <div class="risk-cards-section-header">
+                <h3 class="risk-cards-section-title">Osa-alueet</h3>
+            </div>
             <div class="row risk-cards-container">
                 {% for riski in risk_analysis.riskimittari %}
                 <div class="col-lg-4 col-md-6 risk-card-wrapper">
@@ -787,15 +890,12 @@
         </div>
     </div>
 
-    <div class="analysis-card shadow">
+    <!-- Raportti osio -->
+    <h2 class="section-title mt-5">Raportti</h2>
+    <div class="analysis-card shadow mb-5">
         <div class="card-header-custom d-flex justify-content-between align-items-center">
             <div>
-                <strong>Kohde:</strong> 
-                {% if analysis.property_url %}
-                <a href="{{ analysis.property_url }}" target="_blank" class="text-decoration-none">{{ title }}</a>
-                {% else %}
-                {{ title }}
-                {% endif %}
+                <strong>Analyysin sisältö</strong> 
             </div>
             <small>Luotu: {{ analysis.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
         </div>
@@ -810,8 +910,9 @@
 
 {% block extra_js %}
 <script>
-    // Markdown-tekstin käsittely
+    // Markdown-tekstin käsittely ja UI-parannukset
     document.addEventListener('DOMContentLoaded', function() {
+        // Markdown sisällön parsiminen
         const analysisContent = document.getElementById('analysisContent');
         
         try {
@@ -821,6 +922,12 @@
             
             if (content && content.trim()) {
                 analysisContent.innerHTML = marked.parse(content);
+                
+                // Lisätään ankkurilinkkien automaattinen skrollaus
+                const headings = analysisContent.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                headings.forEach(heading => {
+                    heading.id = heading.textContent.toLowerCase().replace(/[^\w]+/g, '-');
+                });
             } else {
                 analysisContent.innerHTML = '<p class="error-message">Analyysin sisältöä ei voitu ladata.</p>';
             }
@@ -829,22 +936,41 @@
             analysisContent.innerHTML = '<p class="error-message">Virhe sisällön käsittelyssä.</p>';
         }
         
-        // Riskikorttien laajentaminen klikkauksella
+        // Riskikorttien laajentaminen klikkauksella - paranneltu versio
         const riskCards = document.querySelectorAll('.risk-card');
         riskCards.forEach(card => {
-            card.addEventListener('click', function() {
+            card.addEventListener('click', function(e) {
+                // Estä klikkaus jos klikataan linkkiä kortin sisällä
+                if (e.target.tagName === 'A' || e.target.parentElement.tagName === 'A') {
+                    return;
+                }
+                
                 // Tarkistetaan, onko tämä kortti jo auki
                 const isExpanded = this.classList.contains('expanded');
                 
-                // Suljetaan kaikki kortit
+                // Jos kortti on jo auki, suljetaan se
+                if (isExpanded) {
+                    this.classList.remove('expanded');
+                    return;
+                }
+                
+                // Suljetaan kaikki muut kortit sulavasti
                 riskCards.forEach(c => {
-                    c.classList.remove('expanded');
+                    if (c !== this && c.classList.contains('expanded')) {
+                        c.classList.remove('expanded');
+                    }
                 });
                 
-                // Jos kortti ei ollut auki, avataan se
-                if (!isExpanded) {
+                // Avataan tämä kortti viiveellä sulavan animaation saamiseksi
+                setTimeout(() => {
                     this.classList.add('expanded');
-                }
+                    
+                    // Scrollataan kortti näkyviin jos se ei mahdu ruudulle
+                    const rect = this.getBoundingClientRect();
+                    if (rect.bottom > window.innerHeight) {
+                        this.scrollIntoView({behavior: 'smooth', block: 'center'});
+                    }
+                }, 50);
             });
         });
         
@@ -932,7 +1058,7 @@
                     }
                 }
                 
-                // Varmistetaan että vaaleinkin sävy erottuu valkoisesta taustasta
+                // Varmistetaan että vaaleimmatkin sävyt erottuvat valkoisesta taustasta
                 const minOpacity = 0.35; // Vähimmäisopasiteetti, että erottuu taustasta
                 const adjustedOpacity = minOpacity + (opacity * (1 - minOpacity));
                 
