@@ -1,0 +1,14 @@
+Generic single-database configuration with an already-created "versions" directory.
+
+This directory contains Alembic migration scripts for the application's database schema.
+
+To run the migrations:
+
+1. Make sure you have Flask-Migrate installed:
+   pip install Flask-Migrate
+
+2. Use the Flask-Migrate commands to manage your migrations:
+   flask db upgrade - Upgrade the database to the latest revision
+   flask db downgrade - Downgrade the database to the previous revision
+   flask db migrate - Create a new migration script
+   flask db init - Initialize a new migration repository (only needed once) 

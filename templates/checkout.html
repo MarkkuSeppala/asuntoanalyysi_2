@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Osta {{ product.name }} - Asuntoanalyysi{% endblock %}
+
+{% block extra_head %}
+<style>
+    .checkout-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 30px;
+    }
+    
+    .product-card {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+    }
+    
+    .product-header {
+        background: linear-gradient(135deg, #123458, #436891);
+        color: white;
+        padding: 20px;
+    }
+    
+    .product-header h3 {
+        margin: 0;
+        font-size: 1.6rem;
+    }
+    
+    .product-body {
+        padding: 30px;
+        background-color: white;
+    }
+    
+    .price {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #123458;
+    }
+    
+    .price-period {
+        font-size: 1rem;
+        color: #666;
+    }
+    
+    .payment-methods {
+        margin: 30px 0;
+    }
+    
+    .payment-method {
+        padding: 15px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        cursor: pointer;
+    }
+    
+    .payment-method:hover {
+        border-color: #123458;
+    }
+    
+    .payment-method.active {
+        border-color: #123458;
+        background-color: rgba(18, 52, 88, 0.05);
+    }
+    
+    .payment-method-header {
+        display: flex;
+        align-items: center;
+    }
+    
+    .payment-method-header label {
+        margin-left: 10px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    
+    .btn-purchase {
+        padding: 15px 30px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="checkout-container">
+        <h1 class="mb-4">Viimeistele ostos</h1>
+        
+        <div class="row">
+            <div class="col-md-7">
+                <div class="product-card">
+                    <div class="product-header">
+                        <h3>{{ product.name }}</h3>
+                    </div>
+                    <div class="product-body">
+                        <div class="mb-4">
+                            <span class="price">{{ "%.2f"|format(product.price) }}€</span>
+                            {% if product.product_type == 'subscription' %}
+                            <span class="price-period">/kk</span>
+                            {% endif %}
+                        </div>
+                        
+                        <p>{{ product.description }}</p>
+                        
+                        {% if product.product_type == 'subscription' %}
+                        <ul class="list-unstyled mb-4">
+                            <li><i class="fas fa-check-circle text-success me-2"></i> Rajaton määrä analyyseja kuukaudessa</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> Peruutettavissa milloin tahansa</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> Pääsy kaikkiin ominaisuuksiin</li>
+                        </ul>
+                        {% else %}
+                        <ul class="list-unstyled mb-4">
+                            <li><i class="fas fa-check-circle text-success me-2"></i> {{ product.analyses_count }} analyysia</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> Ei vanhene</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> Pääsy kaikkiin ominaisuuksiin</li>
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-5">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="mb-4">Maksutapa</h4>
+                        
+                        <form action="{{ url_for('process_payment', product_id=product.id) }}" method="POST">
+                            <div class="payment-methods">
+                                <div class="payment-method active">
+                                    <div class="payment-method-header">
+                                        <input type="radio" name="payment_method" id="method-demo" value="demo" checked>
+                                        <label for="method-demo">Demo-maksu (ei veloitusta)</label>
+                                    </div>
+                                    <div class="mt-2 small text-muted">
+                                        Tämä on demo-maksu ilman oikeaa veloitusta. Käytä testataksesi järjestelmää.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-check mb-4">
+                                <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    Hyväksyn <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">käyttöehdot</a>
+                                </label>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-purchase">
+                                {% if product.product_type == 'subscription' %}
+                                Tilaa {{ "%.2f"|format(product.price) }}€/kk
+                                {% else %}
+                                Osta {{ "%.2f"|format(product.price) }}€
+                                {% endif %}
+                            </button>
+                        </form>
+                        
+                        <div class="mt-3 text-center">
+                            <small class="text-muted">
+                                <i class="fas fa-lock me-1"></i> Turvallinen maksu
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3 text-center">
+                    <a href="{{ url_for('products') }}" class="text-muted">
+                        <i class="fas fa-arrow-left me-1"></i> Palaa tuotteisiin
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Käyttöehdot Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="termsModalLabel">Käyttöehdot</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h4>Maksuehdot</h4>
+                <p>Tämä on demo-versio maksujärjestelmästä. Oikeassa toteutuksessa tässä olisi palvelun käyttöehdot ja maksuehdot.</p>
+                
+                <h4>Kuukausitilaus</h4>
+                <p>Kuukausitilaus on voimassa toistaiseksi. Voit peruuttaa tilauksen milloin tahansa, jolloin se jatkuu meneillään olevan laskutuskauden loppuun.</p>
+                
+                <h4>Kertaostos</h4>
+                <p>Kertaostoksella ostetut analyysit ovat käytettävissä ilman aikarajoitusta.</p>
+                
+                <h4>Palautuskäytäntö</h4>
+                <p>Jos et ole tyytyväinen palveluun, ota yhteyttä asiakaspalveluumme.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Sulje</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Maksutavan valinta
+    document.querySelectorAll('.payment-method').forEach(method => {
+        method.addEventListener('click', function() {
+            // Poista active-luokka kaikilta
+            document.querySelectorAll('.payment-method').forEach(m => {
+                m.classList.remove('active');
+            });
+            
+            // Aseta valittu aktiiviseksi
+            this.classList.add('active');
+            
+            // Valitse radio button
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+            }
+        });
+    });
+</script>
+{% endblock %} 

@@ -12,9 +12,10 @@ from flask import Flask, render_template, request, jsonify, send_from_directory,
 from flask_login import LoginManager, current_user, login_required
 import sqlalchemy
 from sqlalchemy import text, exc
+from flask_migrate import Migrate
 
 import api_call
-from models import db, User, Analysis, RiskAnalysis, Kohde
+from models import db, User, Analysis, RiskAnalysis, Kohde, Product, Payment, Subscription
 from auth import auth
 from config import get_config
 from riskianalyysi import riskianalyysi
@@ -53,6 +54,9 @@ app.config.from_object(get_config())
 
 # Alustetaan tietokanta
 db.init_app(app)
+
+# Alustetaan migraatiot
+migrate = Migrate(app, db)
 
 # Alustetaan kirjautumisenhallinta
 login_manager = LoginManager()
@@ -334,6 +338,11 @@ def analyze():
         session_id = str(uuid.uuid4())
         logger.info(f"Aloitetaan analyysi käyttäjälle {current_user.id}, sessio {session_id}")
         
+        # Tarkista käyttäjän oikeus tehdä analyysi
+        if not current_user.can_make_api_call():
+            flash('Sinulla ei ole oikeutta tehdä enempää analyysejä. Hanki lisää analyysejä ostamalla paketti.', 'danger')
+            return redirect(url_for('products'))
+            
         url = request.form.get('url')
         
         if not url:
@@ -503,6 +512,18 @@ def analyze():
                 logger.error(f"Virhe riskianalyysissä: {e}")
                 logger.error(traceback.format_exc())
         
+        # Jos käyttäjällä ei ole kuukausijäsenyyttä, vähennä jäljellä olevia analyysejä
+        active_subscription = Subscription.query.filter_by(
+            user_id=current_user.id, 
+            status='active',
+            subscription_type='monthly'
+        ).first()
+        
+        if not current_user.is_admin and not active_subscription:
+            logger.info(f"Vähennetään yksi analyysi käyttäjältä {current_user.id}. Analyysejä jäljellä ennen vähennystä: {current_user.analyses_left}")
+            current_user.decrement_analyses_left()
+            logger.info(f"Analyysejä jäljellä vähennyksen jälkeen: {current_user.analyses_left}")
+        
         # Ohjataan käyttäjä analyysin sivulle sen sijaan että renderöidään results.html
         logger.info(f"Analyysi valmis käyttäjälle {current_user.id}, sessio {session_id}")
         
@@ -538,7 +559,7 @@ def api_analyze():
         if not current_user.can_make_api_call():
             return jsonify({
                 'error': 'API-kutsujen rajoitus', 
-                'message': 'Olet käyttänyt kaikki API-kutsusi (2). Päivitä tilisi admin-tasoon jatkaaksesi käyttöä.'
+                'message': 'Sinulla ei ole oikeutta tehdä enempää analyysejä. Hanki lisää analyysejä ostamalla paketti.'
             }), 403
         
         data = request.get_json()
@@ -608,9 +629,17 @@ def api_analyze():
         # Varmistetaan että vastaus on puhdistettu (API:ssa puhdistus tehdään jo)
         analysis_response = api_call.sanitize_markdown_response(analysis_response)
         
-        # Kasvatetaan käyttäjän API-kutsujen määrää, jos ei ole admin
-        if not current_user.is_admin:
-            current_user.increment_api_calls()
+        # Jos käyttäjällä ei ole kuukausijäsenyyttä, vähennä jäljellä olevia analyysejä
+        active_subscription = Subscription.query.filter_by(
+            user_id=current_user.id, 
+            status='active',
+            subscription_type='monthly'
+        ).first()
+        
+        if not current_user.is_admin and not active_subscription:
+            logger.info(f"API: Vähennetään yksi analyysi käyttäjältä {current_user.id}. Analyysejä jäljellä ennen vähennystä: {current_user.analyses_left}")
+            current_user.decrement_analyses_left()
+            logger.info(f"API: Analyysejä jäljellä vähennyksen jälkeen: {current_user.analyses_left}")
         
         # Käytetään suoraan API:n palauttamaa analysis_id:tä jos se on saatavilla
         analysis_id = db_analysis_id
@@ -1023,6 +1052,152 @@ ID: {property_id}
         return render_template('error.html', 
                             error_title="Virhe PDF-latauksessa", 
                             error_message=f"PDF-tiedoston lataamisessa tapahtui virhe: {str(e)}"), 500
+
+# Maksujärjestelmän reitit
+@app.route('/checkout/<int:product_id>', methods=['GET'])
+@login_required
+def checkout(product_id):
+    """Näyttää maksusivun valitulle tuotteelle"""
+    try:
+        # Haetaan tuote tietokannasta
+        product = Product.query.get_or_404(product_id)
+        
+        if not product.active:
+            flash('Tuote ei ole enää saatavilla.', 'danger')
+            return redirect(url_for('products'))
+            
+        return render_template('checkout.html', product=product)
+        
+    except Exception as e:
+        logger.exception(f"Virhe maksusivun näyttämisessä: {e}")
+        flash('Maksusivun lataamisessa tapahtui virhe. Yritä uudelleen.', 'danger')
+        return redirect(url_for('products'))
+
+@app.route('/process_payment/<int:product_id>', methods=['POST'])
+@login_required
+def process_payment(product_id):
+    """Käsittelee maksun. Tämä on yksinkertaistettu versio ilman oikeaa maksukäsittelijää."""
+    try:
+        # Haetaan tuote tietokannasta
+        product = Product.query.get_or_404(product_id)
+        
+        if not product.active:
+            flash('Tuote ei ole enää saatavilla.', 'danger')
+            return redirect(url_for('products'))
+            
+        # Tämä on demo-versio ilman oikeaa maksukäsittelijää
+        # Oikeassa toteutuksessa tässä olisi integraatio maksunvälittäjään (esim. Stripe, PayPal, jne.)
+        
+        # Luodaan maksu
+        payment = Payment(
+            user_id=current_user.id,
+            product_id=product.id,
+            amount=product.price,
+            payment_method='demo',
+            transaction_id=f'demo_{int(datetime.utcnow().timestamp())}',
+            status='completed'
+        )
+        
+        db.session.add(payment)
+        
+        # Jos kyseessä on kertaostos
+        if product.product_type == 'one_time':
+            # Lisätään käyttäjälle analyysejä
+            current_user.add_analyses(product.analyses_count)
+            flash(f'Ostoksesi on käsitelty onnistuneesti! {product.analyses_count} analyysiä on lisätty tilillesi.', 'success')
+            
+        # Jos kyseessä on kuukausitilaus
+        elif product.product_type == 'subscription':
+            # Luodaan uusi tilaus
+            from datetime import timedelta
+            
+            subscription = Subscription(
+                user_id=current_user.id,
+                product_id=product.id,
+                subscription_type='monthly',
+                status='active',
+                expires_at=datetime.utcnow() + timedelta(days=30),
+                next_billing_date=datetime.utcnow() + timedelta(days=30),
+                last_payment_date=datetime.utcnow(),
+                payment_id=payment.transaction_id
+            )
+            
+            db.session.add(subscription)
+            
+            # Päivitetään maksun subscription_id
+            payment.subscription_id = subscription.id
+            
+            flash('Tilauksesi on aktivoitu onnistuneesti! Voit nyt tehdä rajattomasti analyysejä.', 'success')
+        
+        db.session.commit()
+        
+        return redirect(url_for('index'))
+        
+    except Exception as e:
+        logger.exception(f"Virhe maksun käsittelyssä: {e}")
+        db.session.rollback()
+        flash('Maksun käsittelyssä tapahtui virhe. Yritä uudelleen.', 'danger')
+        return redirect(url_for('checkout', product_id=product_id))
+
+@app.route('/my_subscription')
+@login_required
+def my_subscription():
+    """Näyttää käyttäjän tilaustiedot"""
+    try:
+        # Haetaan käyttäjän aktiivinen tilaus
+        subscription = Subscription.query.filter_by(
+            user_id=current_user.id,
+            status='active'
+        ).first()
+        
+        # Haetaan käyttäjän maksut
+        payments = Payment.query.filter_by(
+            user_id=current_user.id,
+            status='completed'
+        ).order_by(Payment.created_at.desc()).all()
+        
+        # Haetaan tuotevalikoima
+        products = Product.query.filter_by(active=True).all()
+        
+        return render_template('my_subscription.html', 
+                              subscription=subscription,
+                              payments=payments,
+                              products=products,
+                              analyses_left=current_user.analyses_left)
+        
+    except Exception as e:
+        logger.exception(f"Virhe tilaustietojen näyttämisessä: {e}")
+        flash('Tilaustietojen lataamisessa tapahtui virhe. Yritä uudelleen.', 'danger')
+        return redirect(url_for('index'))
+
+@app.route('/cancel_subscription/<int:subscription_id>', methods=['POST'])
+@login_required
+def cancel_subscription(subscription_id):
+    """Peruuttaa käyttäjän tilauksen"""
+    try:
+        # Haetaan tilaus tietokannasta
+        subscription = Subscription.query.get_or_404(subscription_id)
+        
+        # Tarkistetaan että käyttäjällä on oikeus peruuttaa tämä tilaus
+        if subscription.user_id != current_user.id:
+            flash('Sinulla ei ole oikeutta peruuttaa tätä tilausta.', 'danger')
+            return redirect(url_for('my_subscription'))
+            
+        # Peruutetaan tilaus 
+        cancel_immediately = request.form.get('cancel_immediately') == 'true'
+        subscription.cancel(immediate=cancel_immediately)
+        
+        if cancel_immediately:
+            flash('Tilauksesi on peruutettu välittömästi.', 'success')
+        else:
+            flash('Tilauksesi on merkitty peruutettavaksi nykyisen laskutuskauden lopussa.', 'success')
+            
+        return redirect(url_for('my_subscription'))
+        
+    except Exception as e:
+        logger.exception(f"Virhe tilauksen peruuttamisessa: {e}")
+        flash('Tilauksen peruuttamisessa tapahtui virhe. Yritä uudelleen.', 'danger')
+        return redirect(url_for('my_subscription'))
 
 if __name__ == '__main__':
     # Luodaan templates-kansio, jos sitä ei ole

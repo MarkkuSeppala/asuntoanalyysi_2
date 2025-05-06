@@ -222,7 +222,7 @@
                             <li><i class="fas fa-check-circle"></i> Ei sitoutumisaikaa</li>
                         </ul>
                         
-                        <a href="#" class="btn btn-primary btn-product btn-lg w-100">
+                        <a href="{{ url_for('checkout', product_id=1) }}" class="btn btn-primary btn-product btn-lg w-100">
                             <i class="fas fa-shopping-cart me-2"></i> Valitse
                         </a>
                     </div>
@@ -249,7 +249,7 @@
                             <li><i class="fas fa-check-circle"></i> Ei vanhene</li>
                         </ul>
                         
-                        <a href="#" class="btn btn-outline-primary btn-product btn-lg w-100">
+                        <a href="{{ url_for('checkout', product_id=2) }}" class="btn btn-outline-primary btn-product btn-lg w-100">
                             <i class="fas fa-shopping-cart me-2"></i> Valitse
                         </a>
                     </div>
