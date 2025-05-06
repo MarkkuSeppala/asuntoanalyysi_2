@@ -7,12 +7,14 @@ import traceback
 import time
 import tempfile
 from functools import wraps
-from datetime import datetime
-from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for, flash, send_file, abort
+from datetime import datetime, timedelta
+from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for, flash, send_file, abort, session
 from flask_login import LoginManager, current_user, login_required
 import sqlalchemy
 from sqlalchemy import text, exc
 from flask_migrate import Migrate
+import secrets
+from flask_session import Session
 
 import api_call
 from models import db, User, Analysis, RiskAnalysis, Kohde, Product, Payment, Subscription
@@ -52,6 +54,26 @@ app = Flask(__name__)
 
 # Asetetaan sovelluksen konfigurointi
 app.config.from_object(get_config())
+
+# Lisää istuntoasetukset - TÄRKEÄÄ! OAuth vaatii toimivan istunnon
+app.config['SESSION_TYPE'] = 'filesystem'  # Tallenna istunnot tiedostoihin
+app.config['SESSION_PERMANENT'] = True  # Istunto säilyy vaikka selain suljetaan
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Istunnon kesto
+app.config['SESSION_USE_SIGNER'] = True  # Allekirjoita evästeet
+app.config['SESSION_KEY_PREFIX'] = 'kotiko_session:'  # Avainten etuliite
+
+# Varmista että salaisuusavain on asetettu
+if app.config.get('SECRET_KEY') is None or app.config.get('SECRET_KEY') == 'kehitys-avain-vaihda-tuotannossa':
+    app.logger.warning("SECRET_KEY ei ole asetettu ympäristömuuttujissa! Generoidaan satunnainen avain.")
+    app.config['SECRET_KEY'] = secrets.token_hex(32)
+
+# Istunnon evästeasetukset - tärkeää OAuth:lle
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Ei salli JavaScriptin lukea evästettä
+app.config['SESSION_COOKIE_SECURE'] = app.config.get('SESSION_COOKIE_SECURE', True)  # Vain HTTPS
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Sallii redirectit
+
+# Alusta Flask-Session
+Session(app)
 
 # Alustetaan tietokanta
 db.init_app(app)
@@ -425,7 +447,6 @@ def analyze():
                 logger.info(f"Käyttäjällä {current_user.id} on jo analyysi tälle URL:lle: {existing_analysis.id}")
                 
                 # Tarkistetaan onko analyysi tuore (alle 7 päivää vanha)
-                from datetime import datetime, timedelta
                 if existing_analysis.created_at > datetime.utcnow() - timedelta(days=7):
                     logger.info(f"Käytetään olemassa olevaa analyysiä {existing_analysis.id} (alle 7 päivää vanha)")
                     
@@ -1201,6 +1222,70 @@ def cancel_subscription(subscription_id):
         logger.exception(f"Virhe tilauksen peruuttamisessa: {e}")
         flash('Tilauksen peruuttamisessa tapahtui virhe. Yritä uudelleen.', 'danger')
         return redirect(url_for('my_subscription'))
+
+# Lisätään diagnostiikkareitit kehitysympäristöön
+@app.route('/debug/session')
+def debug_session():
+    """Näyttää istunnon sisällön - KÄYTÄ VAIN KEHITYSYMPÄRISTÖSSÄ"""
+    if app.config.get('FLASK_ENV') != 'development':
+        return jsonify({"error": "Tämä reitti on saatavilla vain kehitysympäristössä"}), 403
+        
+    # Tarkista onko käyttäjä kirjautunut
+    is_logged_in = current_user.is_authenticated
+    user_info = {
+        "id": current_user.id,
+        "email": current_user.email,
+        "name": f"{current_user.first_name} {current_user.last_name}"
+    } if is_logged_in else None
+    
+    # Kerää istuntotiedot
+    session_data = {}
+    for key in session:
+        # Älä näytä arkaluontoista tietoa
+        if key in ['_google_oauth_token', 'csrf_token', '_csrf_token']:
+            session_data[key] = "***SENSUROITU***"
+        else:
+            session_data[key] = session[key]
+    
+    # Kerää evästetiedot
+    cookie_data = {}
+    for key, value in request.cookies.items():
+        if 'session' in key.lower() or 'token' in key.lower():
+            cookie_data[key] = "***SENSUROITU***"
+        else:
+            cookie_data[key] = value
+    
+    # Palauta diagnostiikkatiedot
+    return jsonify({
+        "is_logged_in": is_logged_in,
+        "user": user_info,
+        "session": session_data,
+        "cookies": cookie_data,
+        "config": {
+            "session_type": app.config.get('SESSION_TYPE'),
+            "session_permanent": app.config.get('SESSION_PERMANENT'),
+            "session_cookie_secure": app.config.get('SESSION_COOKIE_SECURE'),
+            "session_cookie_httponly": app.config.get('SESSION_COOKIE_HTTPONLY'),
+            "session_cookie_samesite": app.config.get('SESSION_COOKIE_SAMESITE')
+        },
+        "oauth": {
+            "google_authorized": hasattr(google, 'authorized') and google.authorized
+        }
+    })
+
+@app.route('/debug/clear-session')
+def debug_clear_session():
+    """Tyhjentää istunnon - KÄYTÄ VAIN KEHITYSYMPÄRISTÖSSÄ"""
+    if app.config.get('FLASK_ENV') != 'development':
+        return jsonify({"error": "Tämä reitti on saatavilla vain kehitysympäristössä"}), 403
+    
+    # Tyhjennä istunto
+    session.clear()
+    
+    return jsonify({
+        "success": True,
+        "message": "Istunto tyhjennetty onnistuneesti"
+    })
 
 if __name__ == '__main__':
     # Luodaan templates-kansio, jos sitä ei ole

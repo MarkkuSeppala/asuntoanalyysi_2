@@ -2,6 +2,18 @@
 
 Tämä dokumentti selittää, miten Google OAuth-integraatio asennetaan ja konfiguroidaan tuotantoympäristössä.
 
+## Redirect URI -ongelma
+
+**TÄRKEÄÄ**: OAuth-tunnistautumisessa redirect URI:n pitää täsmätä täsmälleen siten kuin se on määritelty Google Cloud Console:ssa.
+
+Flask-Dance käyttää seuraavaa polkua automaattisesti: `/login/google/authorized`
+
+Varmista, että olet määrittänyt Googlen OAuth Consolessa ainakin seuraavat redirect URI:t:
+- `https://www.kotiko.io/login/google/authorized` (tuotanto)
+- `http://localhost:5000/login/google/authorized` (kehitys)
+
+Jos saat virheen "Error 400: redirect_uri_mismatch", redirect URI ei täsmää Google Cloud Consolessa määriteltyjen URI:en kanssa.
+
 ## Ympäristömuuttujat
 
 Turvallisuussyistä OAuth-salaisuudet tulee asettaa ympäristömuuttujiin koodiin hardkoodaamisen sijaan. Aseta seuraavat ympäristömuuttujat:
@@ -91,6 +103,8 @@ docker-compose exec web python update_db_oauth.py
    - Tuotanto: https://www.your-domain.com/login/google/authorized
    - Kehitys: http://localhost:5000/login/google/authorized
    
+   **HUOMAA**: URI-osoitteen tulee täsmätä täsmälleen. Tarkista myös, että `http://` ja `https://` on käytetty oikein.
+   
 6. Tallenna muutokset
 
 ## Ongelmatilanteet
@@ -100,4 +114,6 @@ Jos kohtaat ongelmia OAuth-integraation kanssa, tarkista seuraavat asiat:
 1. Ympäristömuuttujat on asetettu oikein
 2. Tietokanta on päivitetty (tarkista että `oauth`-taulu on olemassa)
 3. Google Cloud Console -asetuksissa redirect URI on oikein
-4. Lokitiedostoista mahdolliset virheviestit 
+4. Lokitiedostoista mahdolliset virheviestit
+
+Jos saat virheen "Error 400: redirect_uri_mismatch", tarkista sovelluksen lokista mikä redirect URI lähetetään ja varmista, että sama URI on määritetty Google Cloud Consolessa. 
