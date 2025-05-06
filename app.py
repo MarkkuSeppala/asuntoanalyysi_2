@@ -62,8 +62,10 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Istunnon kesto
 app.config['SESSION_USE_SIGNER'] = True  # Allekirjoita evästeet
 app.config['SESSION_KEY_PREFIX'] = 'kotiko_session:'  # Avainten etuliite
 app.config['SESSION_FILE_DIR'] = os.path.join(os.getcwd(), 'flask_session')  # Määritä istuntokansio
+app.config['SESSION_FILE_THRESHOLD'] = 500  # Max number of sessions in session directory
+app.config['SESSION_FILE_MODE'] = 0o600  # Unix file mode for session files
 
-# Varmista että istuntohakemisto on olemassa
+# Varmista että istuntohakemisto on olemassa ja siihen on oikeudet
 os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 
 # Varmista että salaisuusavain on asetettu
@@ -73,11 +75,17 @@ if app.config.get('SECRET_KEY') is None or app.config.get('SECRET_KEY') == 'kehi
 
 # Istunnon evästeasetukset - tärkeää OAuth:lle
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Ei salli JavaScriptin lukea evästettä
-app.config['SESSION_COOKIE_SECURE'] = app.config.get('SESSION_COOKIE_SECURE', True)  # Vain HTTPS
-app.config['SESSION_COOKIE_SAMESITE'] = 'None' if app.config['SESSION_COOKIE_SECURE'] else 'Lax'  # Mahdollista cross-site pyynnöt
+app.config['SESSION_COOKIE_SECURE'] = True  # Vain HTTPS, pakotamme tämän tuotannossa
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'  # Välttämätön cross-site redirecteille OAuth:ssa
+
+# Määritämme istunnon cookies_kwargs asetukset
+app.config['SESSION_COOKIE_NAME'] = 'kotiko_session'  # Selkeä nimi istuntoeville
 
 # Alusta Flask-Session
 Session(app)
+
+# Tallennetaan global istuntoasetukset debug-lokitukseen
+logger.info(f"Session config: type={app.config.get('SESSION_TYPE')}, cookie_secure={app.config.get('SESSION_COOKIE_SECURE')}, samesite={app.config.get('SESSION_COOKIE_SAMESITE')}")
 
 # Alustetaan tietokanta
 db.init_app(app)

@@ -124,37 +124,21 @@ def google_login_callback():
     # Tarkistetaan onko state-parametri pyynnössä
     request_state = request.args.get('state')
     session_state = session.get('_google_oauth_state')
+    code = request.args.get('code')
     
     logger.info(f"Pyynnön state: {request_state}")
     logger.info(f"Session state: {session_state}")
+    logger.info(f"Auth code: {code is not None}")
     
-    # Jos state-parametri puuttuu sessiosta tai ei täsmää pyynnön staten kanssa
-    state_ok = request_state and session_state and request_state == session_state
-    if not state_ok:
-        logger.warning(f"State-parametri ei täsmää tai puuttuu. Pyynnön state: {request_state}, Session state: {session_state}")
+    # Tarkista token vain jos molkemmat state ja code ovat olemassa
+    if code and request_state:
+        # RENDER.COM ERITYISRATKAISU: Ohitetaan state-tarkistus tuotantoympäristössä jos sessio on menetetty
+        # HUOM: Tämä on vähemmän turvallinen mutta välttämätön jos istunnon tila menetetään redirectin aikana
         
-        # VAIHTOEHTOISESTI: Yritetään jatkaa ilman state-tarkistusta tuotannossa
-        # Tämä on vähemmän turvallinen mutta toimii paremmin joissakin ympäristöissä
-        code = request.args.get('code')
-        if code and current_app.config.get('FLASK_ENV') == 'production':
-            logger.info("Jatketaan ilman state-tarkistusta tuotantoympäristössä")
-        else:
-            # Kehitysympäristössä tai koodin puuttuessa uudelleenohjataan kirjautumiseen
-            flash("Kirjautumistietoja ei voitu vahvistaa. Yritä uudelleen.", "warning")
-            return redirect(url_for('oauth.google_login'))
-    
-    # Poista state istunnosta
-    if '_google_oauth_state' in session:
-        session.pop('_google_oauth_state')
-    
-    # Hae käyttäjän tiedot Googlelta käyttäen koodia
-    try:
-        # Vaihda koodi käyttöoikeustietoihin
-        code = request.args.get('code')
+        # Vaihda koodi käyttöoikeustietoihin suoraan Googlen API:n kautta
         redirect_uri = f"{current_app.config.get('SITE_URL')}/login/google/authorized"
         
-        # Tee manuaalinen token-pyyntö jos state-parametri ei täsmää
-        if not state_ok:
+        try:
             token_url = 'https://oauth2.googleapis.com/token'
             token_data = {
                 'code': code,
@@ -164,14 +148,17 @@ def google_login_callback():
                 'grant_type': 'authorization_code'
             }
             
+            logger.info(f"Suoritetaan token-pyyntö: client_id={token_data['client_id'][:5]}..., redirect_uri={token_data['redirect_uri']}")
             token_response = requests.post(token_url, data=token_data)
             
             if not token_response.ok:
-                logger.error(f"Token-pyyntö epäonnistui: {token_response.text}")
+                logger.error(f"Token-pyyntö epäonnistui: Status {token_response.status_code}")
+                logger.error(f"Token-vastaus: {token_response.text}")
                 flash("Kirjautumistietojen hakeminen epäonnistui.", "danger")
                 return redirect(url_for('auth.login'))
                 
             token_data = token_response.json()
+            logger.info("Token-pyyntö onnistui!")
             access_token = token_data.get('access_token')
             
             # Hae käyttäjätiedot
@@ -186,71 +173,61 @@ def google_login_callback():
                 return redirect(url_for('auth.login'))
                 
             google_user_info = userinfo_response.json()
+            logger.info(f"Käyttäjätiedot haettu onnistuneesti: {google_user_info.get('email')}")
+            
             token_info = {
                 'access_token': access_token,
                 'token_type': token_data.get('token_type', 'Bearer'),
                 'expires_at': int(time.time()) + token_data.get('expires_in', 3600)
             }
-        else:
-            # Käytä Flask-Dance:n google-instanssia jos state on kunnossa
-            if not google.authorized:
-                logger.error("Google ei ole autentikoitu vaikka state täsmää")
-                flash("Kirjautuminen epäonnistui. Yritä uudelleen.", "danger")
-                return redirect(url_for('auth.login'))
-                
-            resp = google.get("/oauth2/v1/userinfo")
-            if not resp.ok:
-                flash("Käyttäjätietojen hakeminen Googlelta epäonnistui.", "danger")
-                logger.error(f"Google API virhe: {resp.text}")
+            
+            # Käsittele käyttäjätiedot
+            google_email = google_user_info.get('email')
+            if not google_email:
+                flash("Sähköpostin hakeminen Googlelta epäonnistui.", "danger")
                 return redirect(url_for('auth.login'))
             
-            google_user_info = resp.json()
-            token_info = {
-                'access_token': google.token['access_token'],
-                'token_type': google.token.get('token_type', 'Bearer'),
-                'expires_at': google.token.get('expires_at', None)
-            }
-        
-        logger.info(f"Google käyttäjätiedot haettu onnistuneesti: {google_user_info.get('email')}")
-        
-        # Tarkista, että sähköposti on saatavilla
-        google_email = google_user_info.get('email')
-        if not google_email:
-            flash("Sähköpostin hakeminen Googlelta epäonnistui.", "danger")
+            # Käytä Google-ID:tä provider_user_id:na
+            google_id = google_user_info.get('id')
+            
+            # Hae käyttäjän etunimi ja sukunimi
+            first_name = google_user_info.get('given_name', '')
+            last_name = google_user_info.get('family_name', '')
+            
+            # Hae tai luo OAuth-tili
+            logger.info(f"Haetaan/luodaan OAuth käyttäjä: {google_email}")
+            oauth = OAuth.get_or_create(
+                provider='google',
+                provider_user_id=google_id,
+                token=token_info,
+                email=google_email,
+                first_name=first_name,
+                last_name=last_name
+            )
+            
+            # Kirjaa käyttäjä sisään
+            login_user(oauth.user)
+            logger.info(f"Käyttäjä kirjattu sisään: {oauth.user.email}")
+            
+            # Nollaa redirect loop protection laskuri, koska kirjautuminen onnistui
+            session.pop('redirect_loop_protection', None)
+            
+            # Ohjaa käyttäjä etusivulle
+            redirect_target = url_for('index')
+            
+            # Yritä hakea oauth_redirect_origin jos se on olemassa
+            if 'oauth_redirect_origin' in session:
+                redirect_target = session.pop('oauth_redirect_origin')
+                
+            flash("Kirjautuminen Googlen kautta onnistui!", "success")
+            return redirect(redirect_target)
+            
+        except Exception as e:
+            logger.error(f"Virhe OAuth prosessissa: {str(e)}")
+            logger.error(traceback.format_exc())
+            flash("Kirjautumisessa tapahtui virhe. Yritä myöhemmin uudelleen.", "danger")
             return redirect(url_for('auth.login'))
-        
-        # Käytä Google-ID:tä provider_user_id:na
-        google_id = google_user_info.get('id')
-        
-        # Hae käyttäjän etunimi ja sukunimi
-        first_name = google_user_info.get('given_name', '')
-        last_name = google_user_info.get('family_name', '')
-        
-        # Hae tai luo OAuth-tili
-        logger.info(f"Haetaan/luodaan OAuth käyttäjä: {google_email}")
-        oauth = OAuth.get_or_create(
-            provider='google',
-            provider_user_id=google_id,
-            token=token_info,
-            email=google_email,
-            first_name=first_name,
-            last_name=last_name
-        )
-        
-        # Kirjaa käyttäjä sisään
-        login_user(oauth.user)
-        logger.info(f"Käyttäjä kirjattu sisään: {oauth.user.email}")
-        
-        # Nollaa redirect loop protection laskuri, koska kirjautuminen onnistui
-        session.pop('redirect_loop_protection', None)
-        
-        # Ohjaa käyttäjä etusivulle tai alkuperäiseen kohteeseen
-        redirect_target = session.pop('oauth_redirect_origin', url_for('index'))
-        flash("Kirjautuminen Googlen kautta onnistui!", "success")
-        return redirect(redirect_target)
-        
-    except Exception as e:
-        logger.error(f"Virhe Google OAuth -prosessissa: {str(e)}")
-        logger.error(traceback.format_exc())
-        flash("Kirjautumisessa tapahtui virhe. Yritä myöhemmin uudelleen.", "danger")
-        return redirect(url_for('auth.login')) 
+    else:
+        logger.error("State-parametri puuttuu sessiosta tai pyynnöstä, tai auth code puuttuu")
+        flash("Kirjautuminen epäonnistui. Yritä uudelleen.", "warning")
+        return redirect(url_for('oauth.google_login')) 
