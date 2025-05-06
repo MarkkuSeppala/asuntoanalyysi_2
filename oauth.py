@@ -46,13 +46,7 @@ def init_google_blueprint(app):
         scope=["profile", "email"],
         redirect_to="oauth.google_login_callback",
         redirect_url=config_redirect_uri,
-        reprompt_consent=False,
-        # Päivitetään istuntoasetukset
-        storage_kwargs={
-            "secure": app.config.get("SESSION_COOKIE_SECURE", True),
-            "httponly": app.config.get("SESSION_COOKIE_HTTPONLY", True),
-            "samesite": app.config.get("SESSION_COOKIE_SAMESITE", "Lax")
-        }
+        reprompt_consent=False
     )
     app.register_blueprint(google_bp, url_prefix='/login')
     
