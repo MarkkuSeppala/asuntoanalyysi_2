@@ -2,10 +2,16 @@ services:
   - type: web
     name: asuntoanalyysi
     runtime: python
-    buildCommand: "pip install -r requirements.txt"
+    buildCommand: "pip install -r requirements.txt && python update_db_oauth.py"
     startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT --workers=4 --threads=2 --timeout=120"
     envVars:
       - key: FLASK_ENV
         value: production
       - key: PYTHON_VERSION
         value: 3.11.4
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        sync: false

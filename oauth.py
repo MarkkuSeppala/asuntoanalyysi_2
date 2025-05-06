@@ -9,7 +9,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Ympäristömuuttujat Google OAuth:lle
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # Poista tuotannossa
+# Kehitysympäristössä voidaan sallia epäturvallinen tiedonsiirto, mutta POISTA TUOTANNOSTA!
+if os.environ.get('FLASK_ENV') == 'development':
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
 
 # Luodaan blueprint Googlea varten
@@ -20,9 +22,17 @@ def init_google_blueprint(app):
     # Määritellään redirect URI sivuston URL:n perusteella
     redirect_uri = f"{app.config.get('SITE_URL', 'https://www.kotiko.io')}/login/google/authorized"
     
+    # Tarkista että client_id ja client_secret on asetettu
+    client_id = app.config.get('GOOGLE_OAUTH_CLIENT_ID')
+    client_secret = app.config.get('GOOGLE_OAUTH_CLIENT_SECRET')
+    
+    if not client_id or not client_secret:
+        logger.error("Google OAuth konfiguraatio puuttuu! Aseta GOOGLE_CLIENT_ID ja GOOGLE_CLIENT_SECRET ympäristömuuttujissa")
+        # Älä kuitenkaan kaadu, koska muu sovellus toimii ilman OAuth:akin
+    
     google_bp = make_google_blueprint(
-        client_id=app.config.get('GOOGLE_OAUTH_CLIENT_ID'),
-        client_secret=app.config.get('GOOGLE_OAUTH_CLIENT_SECRET'),
+        client_id=client_id,
+        client_secret=client_secret,
         scope=["profile", "email"],
         redirect_to="oauth.google_login_callback",
         redirect_url=redirect_uri
@@ -30,7 +40,12 @@ def init_google_blueprint(app):
     app.register_blueprint(google_bp, url_prefix='/login')
     
     # Näytä asetukset lokeissa kehitystä varten
-    logger.info(f"Google OAuth alustus: client_id={app.config.get('GOOGLE_OAUTH_CLIENT_ID')[:10]}..., redirect_uri={redirect_uri}")
+    if client_id and len(client_id) > 10:
+        masked_client_id = f"{client_id[:5]}...{client_id[-5:]}"
+    else:
+        masked_client_id = "ei asetettu"
+    
+    logger.info(f"Google OAuth alustus: client_id={masked_client_id}, redirect_uri={redirect_uri}")
     
     return google_bp
 
@@ -40,6 +55,11 @@ def google_login():
     # Jos käyttäjä on jo kirjautunut
     if current_user.is_authenticated:
         return redirect(url_for('index'))
+    
+    # Tarkistetaan että OAuth-asetukset on konfiguroitu
+    if not current_app.config.get('GOOGLE_OAUTH_CLIENT_ID') or not current_app.config.get('GOOGLE_OAUTH_CLIENT_SECRET'):
+        flash("Google-kirjautuminen ei ole käytössä. Ota yhteyttä ylläpitoon.", "danger")
+        return redirect(url_for('auth.login'))
         
     return redirect(url_for('google.login'))
 
