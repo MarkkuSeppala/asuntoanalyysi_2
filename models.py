@@ -307,43 +307,80 @@ class OAuth(db.Model):
     @classmethod
     def get_or_create(cls, provider, provider_user_id, token, user=None, email=None, 
                      first_name=None, last_name=None):
-        """Hakee tai luo OAuth-tilin"""
-        oauth = cls.query.filter_by(provider=provider, provider_user_id=provider_user_id).first()
+        """
+        Hakee olemassaolevan OAuth objektin tai luo uuden.
         
+        Arguments:
+            provider {str} -- OAuth palveluntarjoaja (esim. 'google')
+            provider_user_id {str} -- Käyttäjän ID palveluntarjoajalla
+            token {dict} -- Käyttäjän OAuth token tiedot
+            user {User} -- Käyttäjä, jolle OAuth liitetään (jos olemassa)
+            email {str} -- Käyttäjän sähköposti (vaaditaan jos user=None)
+            first_name {str} -- Käyttäjän etunimi (vaaditaan jos user=None)
+            last_name {str} -- Käyttäjän sukunimi (vaaditaan jos user=None)
+            
+        Returns:
+            OAuth -- OAuth objekti
+        """
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # Yritä hakea olemassaoleva OAuth tietue
+        oauth = cls.query.filter_by(
+            provider=provider,
+            provider_user_id=provider_user_id
+        ).first()
+        
+        # Jos OAuth tietue löytyy, päivitä token ja palauta
         if oauth:
-            # Päivitä token jos se on muuttunut
-            if oauth.token != token:
-                oauth.token = token
-                db.session.commit()
+            logger.info(f"OAuth käyttäjä löydetty: {oauth.id} (provider: {provider}, user_id: {oauth.user_id})")
+            oauth.token = token
+            db.session.commit()
             return oauth
-        
-        # Jos käyttäjä on jo olemassa, liitä OAuth-tili siihen
+            
+        # Jos käyttäjää ei ole annettu, yritä hakea sähköpostilla
         if not user and email:
+            logger.info(f"Etsitään käyttäjä sähköpostilla: {email}")
             user = User.query.filter_by(email=email).first()
-        
-        # Jos käyttäjää ei löydy, luo uusi
+            
+        # Jos käyttäjää ei löydy, luo uusi käyttäjä
         if not user:
-            # Luo uusi käyttäjä OAuth-tunnuksilla
-            # Aseta oletusosoite, koska nämä kentät ovat pakollisia
+            if not email or not first_name or not last_name:
+                logger.error("Ei voida luoda käyttäjää: puuttuvia tietoja (email, first_name, last_name)")
+                raise ValueError("Email, first name, and last name are required to create new user")
+                
+            logger.info(f"Luodaan uusi käyttäjä OAuth-kirjautumiselle: {email}")
+            # Luo käyttäjä oletusarvoilla osoitetiedoille
             user = User(
                 email=email,
-                first_name=first_name or "",
-                last_name=last_name or "",
-                street_address="Google OAuth",
+                first_name=first_name,
+                last_name=last_name,
+                street_address="Täytä osoitteesi",
                 postal_code="00000",
-                city="Google City",
-                state="",
-                country="Suomi",
+                city="Täytä kaupunkisi",
+                state="Täytä maakuntasi",
+                country="Finland",
                 is_oauth_user=True,
                 oauth_provider=provider,
-                is_verified=True  # Google-kirjautuminen vahvistaa sähköpostin
+                is_verified=True  # OAuth-käyttäjät ovat aina vahvistettuja
             )
             db.session.add(user)
-            db.session.flush()  # Tämä generoi user.id:n
+            db.session.flush()  # Hae käyttäjälle ID ennen OAuth-tietueen luontia
+            
+        # Luo uusi OAuth tietue
+        oauth = cls(
+            provider=provider,
+            provider_user_id=provider_user_id,
+            token=token,
+            user_id=user.id
+        )
         
-        # Luo OAuth-tili
-        oauth = cls(provider=provider, provider_user_id=provider_user_id, token=token, user_id=user.id)
+        # Varmista että käyttäjä on merkitty OAuth-käyttäjäksi
+        user.is_oauth_user = True
+        user.oauth_provider = provider
+        
         db.session.add(oauth)
         db.session.commit()
         
+        logger.info(f"Uusi OAuth tietue luotu: provider={provider}, user_id={user.id}")
         return oauth 
