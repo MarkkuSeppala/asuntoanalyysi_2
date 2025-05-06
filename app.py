@@ -61,6 +61,10 @@ app.config['SESSION_PERMANENT'] = True  # Istunto säilyy vaikka selain suljetaa
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Istunnon kesto
 app.config['SESSION_USE_SIGNER'] = True  # Allekirjoita evästeet
 app.config['SESSION_KEY_PREFIX'] = 'kotiko_session:'  # Avainten etuliite
+app.config['SESSION_FILE_DIR'] = os.path.join(os.getcwd(), 'flask_session')  # Määritä istuntokansio
+
+# Varmista että istuntohakemisto on olemassa
+os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 
 # Varmista että salaisuusavain on asetettu
 if app.config.get('SECRET_KEY') is None or app.config.get('SECRET_KEY') == 'kehitys-avain-vaihda-tuotannossa':
@@ -70,7 +74,7 @@ if app.config.get('SECRET_KEY') is None or app.config.get('SECRET_KEY') == 'kehi
 # Istunnon evästeasetukset - tärkeää OAuth:lle
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Ei salli JavaScriptin lukea evästettä
 app.config['SESSION_COOKIE_SECURE'] = app.config.get('SESSION_COOKIE_SECURE', True)  # Vain HTTPS
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Sallii redirectit
+app.config['SESSION_COOKIE_SAMESITE'] = 'None' if app.config['SESSION_COOKIE_SECURE'] else 'Lax'  # Mahdollista cross-site pyynnöt
 
 # Alusta Flask-Session
 Session(app)
