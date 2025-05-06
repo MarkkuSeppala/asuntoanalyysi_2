@@ -1285,7 +1285,7 @@ def debug_session():
             "session_cookie_samesite": app.config.get('SESSION_COOKIE_SAMESITE')
         },
         "oauth": {
-            "google_authorized": hasattr(google, 'authorized') and google.authorized
+            "custom_implementation": True  # Käytämme omaa OAuth toteutusta
         }
     })
 

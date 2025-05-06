@@ -147,6 +147,16 @@ def init_google_blueprint(app):
             first_name = google_user_info.get('given_name', '')
             last_name = google_user_info.get('family_name', '')
             
+            # Varmista että etunimi ja sukunimi eivät ole tyhjiä
+            if not first_name:
+                first_name = google_user_info.get('name', 'Google').split(' ')[0]
+            if not last_name:
+                name_parts = google_user_info.get('name', 'User').split(' ')
+                last_name = name_parts[-1] if len(name_parts) > 1 else 'User'
+            
+            # Logita käyttäjätiedot debuggausta varten
+            logger.info(f"Google käyttäjätiedot: email={google_email}, first_name={first_name}, last_name={last_name}")
+            
             # Hae tai luo OAuth-tili
             logger.info(f"Haetaan/luodaan OAuth käyttäjä: {google_email}")
             oauth = OAuth.get_or_create(
@@ -334,6 +344,16 @@ def google_login_callback():
             # Hae käyttäjän etunimi ja sukunimi
             first_name = google_user_info.get('given_name', '')
             last_name = google_user_info.get('family_name', '')
+            
+            # Varmista että etunimi ja sukunimi eivät ole tyhjiä
+            if not first_name:
+                first_name = google_user_info.get('name', 'Google').split(' ')[0]
+            if not last_name:
+                name_parts = google_user_info.get('name', 'User').split(' ')
+                last_name = name_parts[-1] if len(name_parts) > 1 else 'User'
+            
+            # Logita käyttäjätiedot debuggausta varten
+            logger.info(f"Google käyttäjätiedot: email={google_email}, first_name={first_name}, last_name={last_name}")
             
             # Hae tai luo OAuth-tili
             logger.info(f"Haetaan/luodaan OAuth käyttäjä: {google_email}")

@@ -345,11 +345,20 @@ class OAuth(db.Model):
             
         # Jos käyttäjää ei löydy, luo uusi käyttäjä
         if not user:
-            if not email or not first_name or not last_name:
-                logger.error("Ei voida luoda käyttäjää: puuttuvia tietoja (email, first_name, last_name)")
-                raise ValueError("Email, first name, and last name are required to create new user")
+            if not email:
+                logger.error("Ei voida luoda käyttäjää: Sähköposti puuttuu")
+                raise ValueError("Email is required to create a new user")
                 
-            logger.info(f"Luodaan uusi käyttäjä OAuth-kirjautumiselle: {email}")
+            # Varmista että first_name ja last_name ovat määritettyjä
+            if not first_name or first_name.strip() == "":
+                first_name = "Google"
+                logger.warning(f"Käytetään oletusarvoista etunimeä '{first_name}' koska sitä ei ole annettu")
+                
+            if not last_name or last_name.strip() == "":
+                last_name = "User"
+                logger.warning(f"Käytetään oletusarvoista sukunimeä '{last_name}' koska sitä ei ole annettu")
+                
+            logger.info(f"Luodaan uusi käyttäjä OAuth-kirjautumiselle: {email}, {first_name} {last_name}")
             # Luo käyttäjä oletusarvoilla osoitetiedoille
             user = User(
                 email=email,
