@@ -2,81 +2,200 @@
 
 {% block title %}Käyttäjäprofiili{% endblock %}
 
+{% block extra_css %}
+<style>
+    .profile-section {
+        padding: 60px 0;
+        background-color: var(--primary-color);
+    }
+    
+    .profile-card {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        border: none;
+    }
+    
+    .profile-header {
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-light));
+        padding: 25px 30px;
+        position: relative;
+    }
+    
+    .profile-header h4 {
+        color: white;
+        font-weight: 700;
+        margin-bottom: 0;
+    }
+    
+    .profile-body {
+        padding: 35px 30px;
+        background: white;
+    }
+    
+    .section-title {
+        font-weight: 700;
+        color: var(--accent-color);
+        border-bottom: 2px solid var(--secondary-color);
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .user-info-label {
+        font-weight: 600;
+        color: #555;
+    }
+    
+    .user-info-value {
+        margin-bottom: 15px;
+    }
+    
+    .badge {
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+    
+    .action-btn {
+        padding: 10px 20px;
+        font-weight: 600;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .analysis-count {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--accent-color);
+    }
+    
+    .subscription-badge {
+        font-size: 0.9rem;
+        padding: 6px 12px;
+        border-radius: 30px;
+        display: inline-block;
+        margin-bottom: 5px;
+    }
+    
+    .subscription-active {
+        background-color: rgba(40, 167, 69, 0.15);
+        color: #28a745;
+    }
+    
+    .subscription-inactive {
+        background-color: rgba(220, 53, 69, 0.15);
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Käyttäjäprofiili</h4>
-                </div>
-                <div class="card-body">
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ category }}">{{ message }}</div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endwith %}
-                    
-                    <div class="row mb-4">
-                        <div class="col-md-4 text-center">
-                            <img src="https://via.placeholder.com/150" alt="Profiilikuva" class="img-fluid rounded-circle mb-3">
-                            <h5>{{ current_user.first_name }} {{ current_user.last_name }}</h5>
-                            <p class="text-muted">Jäsen {{ current_user.created_at.strftime('%d.%m.%Y') }} alkaen</p>
-                            
-                            {% if current_user.is_oauth_user %}
-                            <div class="badge bg-danger p-2 mb-2">
-                                <i class="fab fa-google me-1"></i> Google-kirjautuminen
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-8">
-                            <h5 class="border-bottom pb-2">Käyttäjätiedot</h5>
-                            <div class="mb-3">
-                                <label class="fw-bold">Nimi:</label>
-                                <p>{{ current_user.first_name }} {{ current_user.last_name }}</p>
-                            </div>
-                            <div class="mb-3">
-                                <label class="fw-bold">Sähköposti:</label>
-                                <p>{{ current_user.email }}</p>
-                            </div>
-                            <div class="mb-3">
-                                <label class="fw-bold">Osoite:</label>
-                                <p>
-                                    {{ current_user.street_address }}<br>
-                                    {{ current_user.postal_code }} {{ current_user.city }}<br>
-                                    {{ current_user.country }}
-                                </p>
-                            </div>
-                            <div class="mb-3">
-                                <label class="fw-bold">Liittynyt:</label>
-                                <p>{{ current_user.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
-                            </div>
-                            <div class="mb-3">
-                                <label class="fw-bold">Kirjautumistapa:</label>
-                                <p>
-                                    {% if current_user.is_oauth_user %}
-                                    <span class="badge bg-danger">{{ current_user.oauth_provider|upper }}</span> OAuth-kirjautuminen
-                                    {% else %}
-                                    <span class="badge bg-primary">Tavallinen</span> Sähköposti ja salasana
-                                    {% endif %}
-                                </p>
-                            </div>
-                        </div>
+<section class="profile-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="profile-card card shadow">
+                    <div class="profile-header">
+                        <h4 class="mb-0">Käyttäjäprofiili</h4>
                     </div>
-                    
-                    <h5 class="border-bottom pb-2 mb-3">Viimeisimmät analyysit</h5>
-                    <!-- Tähän voisi lisätä myöhemmin käyttäjän tekemät analyysit -->
-                    <p class="text-muted">Ei vielä analyysejä.</p>
-                    
-                    <div class="mt-4 text-end">
-                        <a href="#" class="btn btn-outline-primary me-2">Muokkaa profiilia</a>
-                        <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger">Kirjaudu ulos</a>
+                    <div class="profile-body">
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <h5 class="section-title">Käyttäjätiedot</h5>
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <span class="user-info-label">Nimi:</span>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <p class="user-info-value">{{ current_user.first_name }} {{ current_user.last_name }}</p>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <span class="user-info-label">Sähköposti:</span>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <p class="user-info-value">{{ current_user.email }}</p>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <span class="user-info-label">Osoite:</span>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <p class="user-info-value">
+                                            {{ current_user.street_address }}<br>
+                                            {{ current_user.postal_code }} {{ current_user.city }}<br>
+                                            {{ current_user.country }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <span class="user-info-label">Liittynyt:</span>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <p class="user-info-value">{{ finnish_time(current_user.created_at).strftime('%d.%m.%Y %H:%M') }}</p>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <span class="user-info-label">Tilaus:</span>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <p class="user-info-value">
+                                            {% if current_user.subscription %}
+                                                <span class="subscription-badge subscription-active">
+                                                    <i class="fas fa-check-circle me-1"></i> Aktiivinen
+                                                </span><br>
+                                                <span>{{ current_user.subscription.product.name }}</span><br>
+                                                <small class="text-muted">Voimassa: {{ finnish_time(current_user.subscription.end_date).strftime('%d.%m.%Y') }}</small>
+                                            {% else %}
+                                                <span class="subscription-badge subscription-inactive">
+                                                    <i class="fas fa-times-circle me-1"></i> Ei aktiivista tilausta
+                                                </span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <span class="user-info-label">Käyttämättömiä analyyseja:</span>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <p class="user-info-value">
+                                            <span class="analysis-count">{{ current_user.analyses_remaining if current_user.analyses_remaining is defined else 0 }}</span><br>
+                                            {% if current_user.subscription %}
+                                                <small class="text-muted">Seuraava uusinta: {{ finnish_time(current_user.subscription.next_renewal_date).strftime('%d.%m.%Y') if current_user.subscription.next_renewal_date else 'Ei uusiutuva' }}</small>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 text-end">
+                            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger action-btn">
+                                <i class="fas fa-sign-out-alt me-1"></i> Kirjaudu ulos
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 {% endblock %} 

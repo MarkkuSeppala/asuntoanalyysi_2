@@ -15,6 +15,7 @@ from sqlalchemy import text, exc
 from flask_migrate import Migrate
 import secrets
 from flask_session import Session
+import pytz
 
 import api_call
 from models import db, User, Analysis, RiskAnalysis, Kohde, Product, Payment, Subscription
@@ -236,10 +237,34 @@ with app.app_context():
     except Exception as e:
         logger.error(f"Virhe risk_level-sarakkeen lisäämisessä: {e}")
 
-# Lisätään päivämäärä kaikkiin templateihin
+# Context processor lisää muuttujia ja funktioita Jinja2-templateihin
 @app.context_processor
-def inject_now():
-    return {'now': datetime.now()}
+def inject_utilities():
+    """Lisää hyödyllisiä muuttujia ja funktioita Jinja2-templateihin"""
+    
+    def finnish_time(utc_dt):
+        """Muuntaa UTC-ajan Suomen aikaan (UTC+3)"""
+        if utc_dt is None:
+            return None
+        
+        # Varmistetaan että kyseessä on datetime-objekti, jolla on timezone-tieto
+        if not isinstance(utc_dt, datetime):
+            return utc_dt
+            
+        # Jos datetime-objektilla ei ole timezone-tietoa, oletetaan että se on UTC
+        if utc_dt.tzinfo is None:
+            utc_dt = utc_dt.replace(tzinfo=pytz.UTC)
+            
+        # Muunnetaan Suomen aikaan (Europe/Helsinki)
+        finnish_tz = pytz.timezone('Europe/Helsinki')
+        finnish_dt = utc_dt.astimezone(finnish_tz)
+        
+        return finnish_dt
+    
+    return {
+        'now': datetime.utcnow(),
+        'finnish_time': finnish_time
+    }
 
 @app.route('/landing')
 def landing():

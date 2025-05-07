@@ -509,7 +509,7 @@
     
     /* Riskiluvun värit riskiluokan mukaan - aligned with risk cards thresholds */
     .risk-score-low {
-        color: #3498db;  /* Blue for low risk */
+        color: #28a745;  /* Green for low risk (was blue #3498db) */
     }
     
     .risk-score-medium {
@@ -938,7 +938,7 @@
             <div>
                 <strong>Analyysin sisältö</strong> 
             </div>
-            <small>Luotu: {{ analysis.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+            <small>Luotu: {{ finnish_time(analysis.created_at).strftime('%d.%m.%Y %H:%M') }}</small>
         </div>
         <div class="card-body">
             <div id="analysisContent" class="analysis-content"></div>

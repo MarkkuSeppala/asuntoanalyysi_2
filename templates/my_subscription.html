@@ -171,20 +171,20 @@
                     <div class="subscription-card-body">
                         <div class="info-row">
                             <span class="info-label">Tilattu</span>
-                            <span>{{ subscription.created_at.strftime('%d.%m.%Y') }}</span>
+                            <span>{{ finnish_time(subscription.created_at).strftime('%d.%m.%Y') }}</span>
                         </div>
                         
                         {% if subscription.expires_at %}
                         <div class="info-row">
                             <span class="info-label">Voimassa</span>
-                            <span>{{ subscription.expires_at.strftime('%d.%m.%Y') }} asti</span>
+                            <span>{{ finnish_time(subscription.expires_at).strftime('%d.%m.%Y') }} asti</span>
                         </div>
                         {% endif %}
                         
                         {% if subscription.next_billing_date %}
                         <div class="info-row">
                             <span class="info-label">Seuraava laskutus</span>
-                            <span>{{ subscription.next_billing_date.strftime('%d.%m.%Y') }}</span>
+                            <span>{{ finnish_time(subscription.next_billing_date).strftime('%d.%m.%Y') }}</span>
                         </div>
                         {% endif %}
                         
@@ -216,7 +216,7 @@
                             </form>
                             {% elif subscription.status == 'active' and subscription.cancel_at_period_end %}
                             <div class="alert alert-info">
-                                Tilauksesi on peruutettu ja päättyy {{ subscription.expires_at.strftime('%d.%m.%Y') }}.
+                                Tilauksesi on peruutettu ja päättyy {{ finnish_time(subscription.expires_at).strftime('%d.%m.%Y') }}.
                             </div>
                             {% endif %}
                         </div>
@@ -259,7 +259,7 @@
                         <div class="payment-item">
                             <div>
                                 <div>{{ payment.product.name }}</div>
-                                <div class="payment-date">{{ payment.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
+                                <div class="payment-date">{{ finnish_time(payment.created_at).strftime('%d.%m.%Y %H:%M') }}</div>
                             </div>
                             <div>
                                 <div>{{ "%.2f"|format(payment.amount) }}€</div>

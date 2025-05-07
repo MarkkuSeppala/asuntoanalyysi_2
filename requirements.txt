@@ -22,3 +22,5 @@ SQLAlchemy-Utils==0.41.1
 Flask-Session==0.5.0
 # Varmistetaan Blinker jotta signaalit toimivat oikein
 blinker>=1.7.0
+# Aikavyöhykkeiden käsittelyyn
+pytz==2023.3

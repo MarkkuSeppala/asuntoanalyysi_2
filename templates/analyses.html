@@ -371,8 +371,8 @@
                                     {% endif %}
                                 </td>
                                 <td class="analysis-date">
-                                    {{ analysis.created_at.strftime('%d.%m.%Y') }}
-                                    <div class="small text-muted">{{ analysis.created_at.strftime('%H:%M') }}</div>
+                                    {{ finnish_time(analysis.created_at).strftime('%d.%m.%Y') }}
+                                    <div class="small text-muted">{{ finnish_time(analysis.created_at).strftime('%H:%M') }}</div>
                                 </td>
                             </tr>
                         {% endfor %}
