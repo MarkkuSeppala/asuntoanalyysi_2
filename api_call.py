@@ -173,58 +173,8 @@ Käytä ainoastaan tavallisia välilyöntejä.
             logger.info(f"Lähetetään analyysiä OpenAI API:lle (yritys {retry_count + 1}/{max_retries})")
             logger.debug(f"Markdown datan pituus: {len(markdown_data)} merkkiä")
             
-            # Sama system-ohje kuin alkuperäisessä koodissa
-            system_prompt = """Olet kiinteistö- ja kiinteistövälityksen kokenut ammattilainen.
-Tehtävänäsi on tehdä ostajalle analyysi myynnisssä olevasta kohteesta.
-
-**TÄMÄ ON TÄRKEÄÄ:**
-Perhedy tietoihin huolellisesi. Tee kohteen tiedoista implisiittisiä päätelmiä ostajalle tärkeistä asioista.
-
-Laadi teksi asiantuntijamaiseen tyyliin. Kerro kuitenkin suoraan kohteen puutteet ja negatiiviset asiat.
-Vältä ilmoitustekstin toistoa, ilman että siinä on mielestäsi jotain huomioitavaa. Ota huomioon, että lukija on jo perehtynyt ilmoituksen sisältöön ja odottaa nyt sinulta huomioita, jotka eivät suoraan ilmene tekstistä.
-Koosta analyysin loppuun kolmen kysymyksen kysymyslista. Tee sellaisia kysymyksiä, jotka ovat oikeasti merkittäviä ostajalle.
-Älä kommentoi välitysliikettä tai välittäjää.
-
-Kirjoita teksti hyvällä suomenkielisellä kirjoitustyylillä.
-
-Alla kuvaus vastauksen rakenteesta.
-
-Voit painottaa tekstistä sanoja boldilla.
-
-<rakennekuvaus>
-
-*1. Sijainti ja alueellinen konteksti*
-Anna tässä rehellinen kuvaus alueesta, jossa kiinteistö sijaitsee. Kerro suoraan, jos alue on maineeltaan kyseenalainen.
-
-*2. Rakennus ja taloyhtiö*
-Pyri tekemään omia päätelmiäsi siitä, millainen rakennus ja taloyhtiö on kyseessä, myös sen perusteella, mitä ilmoituksessa ei ole sanottu. On tärkeää, ettei tässä kohdassa ainoastaan toisteta samoja asioita, jotka ilmenevät jo ilmoituksessa.
-
-*3. Asunto ja varustelutaso*
-*4. Markkina- ja ostotilanne*
-*5. Mahdolliset huomiot tai riskitekijät*
-Tämä on tärkeä osio. Pyri kirjoittamaan tämä osio mahdollisimman vakuuttavasti, niin että lukija kokee saaneensa arvokasta tietoa.
-
-*6. Kohteen hinta verrattuna vastaaviin*
-Anna tässä konkreettinen oma hinta-arviosi kohteesta perusteluineen.
-
-*7. Kysymyslista välittäjälle*
-Listaa tähän kolme kysymystä, jotka olisi mielestäsi tärkeä kysyä välittäjältä.
-</rakennekuvaus>
-
-**Tämä on tärkeää:**
-Kirjoita analyysi markdown-muodossa, joka on täysin yhteensopiva verkkosivujen Markdown-renderöijien kanssa. Käytä vain tavallisia ASCII-merkkejä ja vältä erikoisia UNICODE-välilyöntejä kuten narrow no-break space (U+202F).
-
-Käytä ainoastaan seuraavia muotoiluelementtejä:
-Otsikot muodossa ### ja ####
-Lihavoinnit **...**
-Yksinkertaiset listat -...
-Rivinvaihdot käyttäen kaksoisvälilyöntiä + \n (eli \n)
-Älä käytä lainausmerkkejä.
-Käytä ainoastaan tavallisia välilyöntejä.
-
-Älä käytä otsikoinnissa suurempaa kuin h3.
-"""
-
+            # Poistettu hardcoded prompt tästä, käytetään aiemmin ladattua promptia
+            
             start_time = time.time()
             
             response = client.responses.create(
@@ -252,7 +202,7 @@ Käytä ainoastaan tavallisia välilyöntejä.
                 reasoning={},
                 tools=[],
                 temperature=1,
-                max_output_tokens=2048,
+                max_output_tokens=4096,
                 top_p=1,
                 store=True
             )

@@ -75,6 +75,50 @@
             transition: all 0.3s ease;
         }
         
+        /* Tyylikkäämpi navbar */
+        .navbar-nav .nav-link {
+            position: relative;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            padding: 10px 18px !important;
+            margin: 0 5px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-nav .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .navbar-nav .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background-color: var(--secondary-color);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+            opacity: 0;
+        }
+        
+        .navbar-nav .nav-link:hover::after {
+            width: 70%;
+            opacity: 1;
+        }
+        
+        .navbar-nav .nav-link i {
+            margin-right: 8px;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-nav .nav-link:hover i {
+            transform: translateY(-2px);
+        }
+        
         .dropdown-menu {
             border: none;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
@@ -129,6 +173,10 @@
             .nav-item {
                 margin-bottom: 5px;
             }
+            
+            .navbar-brand {
+                margin-left: 0;
+            }
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -144,17 +192,26 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}"><i class="fas fa-search-location me-1"></i> Tee analyysi</a>
+                    </li>
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('list_analyses') }}"><i class="fas fa-archive me-1"></i> Arkisto</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
                         <a class="nav-link" href="#"><i class="fas fa-info-circle me-1"></i> Palvelu</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('products') }}"><i class="fas fa-shopping-cart me-1"></i> Tuotteet</a>
                     </li>
+                    {% endif %}
                 </ul>
                 <ul class="navbar-nav">
                     {% if current_user.is_authenticated %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle me-1"></i> {{ current_user.first_name }} {{ current_user.last_name }}
+                            <i class="fas fa-user-circle me-1"></i> {{ current_user.username }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                             <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i class="fas fa-id-card me-2"></i> Profiili</a></li>
@@ -174,6 +231,9 @@
             </div>
         </div>
     </nav>
+
+    <!-- Extension point for content that needs to appear right after the navbar -->
+    {% block navbar_addon %}{% endblock %}
 
     <!-- Viestit käyttäjälle -->
     <div class="container mt-3">

@@ -2,6 +2,9 @@
 
 {% block title %}{{ title|default('Asuntoanalyysi') }}{% endblock %}
 
+{% block navbar_addon %}
+{% endblock %}
+
 {% block extra_css %}
 <!-- Lisätään Markdown-tuen kirjasto ja Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -14,12 +17,15 @@
         --primary-color: #F1EFEC;
         --secondary-color: #D4C9BE;
         --accent-color: #123458;
+        --accent-hover: #1a4b7c;
         --neutral-color: #030303;
         --light-accent: rgba(18, 52, 88, 0.1);
         --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
         --card-shadow-hover: 0 10px 25px rgba(0, 0, 0, 0.1);
         --card-border-radius: 12px;
         --transition-standard: all 0.3s ease;
+        --content-max-width: 1200px;
+        --card-max-width: 1100px;
     }
     
     body {
@@ -28,10 +34,22 @@
         line-height: 1.6;
     }
     
-    .container-narrow {
-        max-width: 1100px;
+    .container-fluid {
+        padding-left: 0;
+        padding-right: 0;
+    }
+    
+    .content-container {
+        max-width: var(--content-max-width);
         margin: 0 auto;
         padding: 0 15px;
+        width: 100%;
+    }
+    
+    .card-container {
+        max-width: var(--card-max-width);
+        margin: 0 auto;
+        width: 100%;
     }
     
     .page-title {
@@ -50,6 +68,14 @@
         border-bottom: 2px solid var(--secondary-color);
     }
     
+    /* Make section-title with mt-5 larger than risk-cards-section-title */
+    .section-title.mt-5 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        padding-bottom: 0.8rem;
+        border-bottom: 3px solid var(--secondary-color);
+    }
+    
     .btn-accent {
         background-color: var(--accent-color);
         color: white;
@@ -61,7 +87,7 @@
     }
     
     .btn-accent:hover {
-        background-color: #1a4b7c;
+        background-color: var(--accent-hover);
         color: white;
         transform: translateY(-3px);
         box-shadow: 0 5px 15px rgba(18, 52, 88, 0.15);
@@ -256,7 +282,7 @@
         border-radius: var(--card-border-radius);
         border: none;
         overflow: hidden;
-        background-color: #f8f8f8; 
+        background-color: #fffbfb; 
         box-shadow: var(--card-shadow);
         transition: var(--transition-standard);
         min-height: 120px;
@@ -299,25 +325,78 @@
         margin-top: 15px;
     }
     
-    /* Kohonneen ja korkean riskin hohtavat kortit */
-    .risk-card-elevated {
-        box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3);
-        background-color: #fffdf0;
+    /* Risk card icons */
+    .risk-card-low {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.349);
+        background-color: rgb(247, 247, 247);
+        position: relative;
     }
     
-    .risk-card-elevated:hover {
-        box-shadow: 0 15px 30px rgba(255, 193, 7, 0.4);
-        border-bottom: 4px solid #ffc107;
+    /* Thumbs-up removed from low risk cards */
+    
+    .risk-card-elevated {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.349);
+        background-color: rgb(247, 247, 247);
+        position: relative;
+    }
+    
+    .risk-card-elevated:after {
+        content: "";
+        position: absolute;
+        bottom: 15px;
+        left: 25px;
+        width: 20px;
+        height: 20px;
+        opacity: 0.85;
+        z-index: 2;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FF9800' width='24px' height='24px'%3E%3Cpath d='M0 0h24v24H0V0z' fill='none'/%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+    }
+    
+    .risk-card-elevated:hover:after {
+        opacity: 1;
     }
     
     .risk-card-high {
-        box-shadow: 0 5px 20px rgba(255, 50, 35, 0.35);
-        background-color: #fff0f0;
+        box-shadow: 0 5px 15px rgba(255, 11, 11, 0.541);
+        background-color: rgb(252, 241, 241);
+        position: relative;
+    }
+    
+    .risk-card-high:after {
+        content: "";
+        position: absolute;
+        bottom: 15px;
+        left: 25px;
+        width: 20px;
+        height: 20px;
+        opacity: 0.85;
+        z-index: 2;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23F44336' width='24px' height='24px'%3E%3Cpath d='M0 0h24v24H0V0z' fill='none'/%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+    }
+    
+    .risk-card-high:hover:after {
+        opacity: 1;
+    }
+    
+    .risk-card-low:hover {
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        border-bottom: 4px solid var(--accent-color);
+    }
+    
+    .risk-card-elevated:hover {
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        border-bottom: 4px solid var(--accent-color);
     }
     
     .risk-card-high:hover {
-        box-shadow: 0 15px 30px rgba(255, 50, 35, 0.45);
-        border-bottom: 4px solid #f44336;
+        box-shadow: 0 15px 30px rgba(255, 11, 11, 0.541);
+        border-bottom: 4px solid var(--accent-color);
     }
     
     /* Riskitason numeerinen arvo oikeassa yläkulmassa */
@@ -336,12 +415,10 @@
     }
     
     /* Kohonneen ja korkean riskin arvot */
-    .risk-card-elevated .risk-value {
-        color: #ffc107;
-    }
-    
+    .risk-card-low .risk-value,
+    .risk-card-elevated .risk-value,
     .risk-card-high .risk-value {
-        color: #f44336;
+        color: var(--accent-color);
     }
     
     .risk-card:hover .risk-value {
@@ -350,13 +427,10 @@
         color: white;
     }
     
-    .risk-card-elevated:hover .risk-value {
-        background-color: #ffc107;
-        color: white;
-    }
-    
+    .risk-card-low:hover .risk-value,
+    .risk-card-elevated:hover .risk-value,
     .risk-card-high:hover .risk-value {
-        background-color: #f44336;
+        background-color: var(--accent-color);
         color: white;
     }
     
@@ -430,28 +504,29 @@
         font-weight: bold;
         color: var(--accent-color);
         text-align: center;
+        line-height: 0.7;
     }
     
-    /* Riskiluvun värit riskiluokan mukaan */
+    /* Riskiluvun värit riskiluokan mukaan - aligned with risk cards thresholds */
     .risk-score-low {
-        color: #3498db;
+        color: #3498db;  /* Blue for low risk */
     }
     
     .risk-score-medium {
-        color: #4caf50;
+        color: #ffc107;  /* Yellow/amber for medium/elevated risk, aligned with risk-level-medium */
     }
     
     .risk-score-high {
-        color: #ffc107;
+        color: #f44336;  /* Red for high risk, aligned with risk-level-high */
     }
     
-    .risk-score-critical {
-        color: #f44336;
-    }
+    /* Removed unused critical class */
     
     .risk-chart-label {
-        font-size: 14px;
+        font-size: 18px;
+        font-weight: 500;
         color: #666;
+        display: inline-block;
     }
     
     /* Kartan tyylit */
@@ -465,7 +540,7 @@
     }
     
     .map-card {
-        width: 80%;
+        width: 100%;
         margin: 0 auto 30px auto;
         position: relative;
         z-index: 1;
@@ -478,126 +553,18 @@
         box-shadow: var(--card-shadow-hover);
     }
     
-    /* Erityisluokka täydelle leveydelle */
-    .full-width-container {
-        width: 100%;
-        max-width: 100%;
-        padding: 0;
-        position: relative;
-    }
-    
-    /* Varmistetaan, että muut kortit ovat linjassa kartan kanssa isoilla näytöillä */
-    @media (min-width: 992px) {
-        .risk-container, .analysis-card {
-            width: 100%;
-            margin-left: auto;
-            margin-right: auto;
-        }
-    }
-    
-    @media (max-width: 992px) {
-        .property-details-card,
-        .map-card {
-            width: 90%;
-        }
-        
-        .risk-container .row > div {
-            margin-bottom: 20px;
-        }
-    }
-    
-    @media (max-width: 768px) {
-        .container-narrow {
-            padding: 0 15px;
-        }
-        
-        .page-title {
-            font-size: 1.8rem;
-        }
-        
-        .section-title {
-            font-size: 1.5rem;
-        }
-        
-        .card-header-custom {
-            padding: 15px 20px;
-        }
-        
-        .analysis-content {
-            padding: 20px 15px;
-        }
-        
-        #mapContainer {
-            height: 300px;
-        }
-        
-        .property-details-card,
-        .map-card {
-            width: 95%;
-        }
-        
-        .property-detail-item {
-            min-width: 100px;
-            margin: 5px 10px;
-        }
-    }
-    
-    @media (max-width: 576px) {
-        .risk-card-wrapper {
-            flex: 0 0 100%;
-            max-width: 100%;
-        }
-        
-        .risk-chart-container {
-            width: 180px;
-            height: 180px;
-        }
-        
-        .risk-chart-score {
-            font-size: 36px;
-        }
-    }
-    
-    /* Osa-alueiden korttien tyyli */
-    .risk-cards-section {
-        background-color: white;
-        border-radius: 18px;
-        margin-bottom: 40px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        padding: 30px;
-        border-bottom: 4px solid var(--accent-color);
-        max-width: 1000px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-    
-    .risk-cards-section-header {
-        text-align: center;
-        margin-bottom: 25px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    }
-    
-    .risk-cards-section-title {
-        font-weight: 600;
-        color: var(--accent-color);
-        margin-bottom: 8px;
-    }
-    
     /* Kohteen perustietojen kortti */
     .property-details-card {
         background-color: white;
         border-radius: var(--card-border-radius);
         box-shadow: var(--card-shadow);
         padding: 25px;
-        margin-top: -20px;
+        margin-top: 30px;
         position: relative;
         z-index: 10;
         margin-bottom: 40px;
         border-bottom: 4px solid var(--accent-color);
-        width: 80%;
-        margin-left: auto;
-        margin-right: auto;
+        width: 100%;
         transition: var(--transition-standard);
     }
     
@@ -677,17 +644,85 @@
         margin-left: auto;
         margin-right: auto;
     }
+
+    /* Responsive styles for map and property card */
+    @media (min-width: 1200px) {
+        .card-container {
+            max-width: var(--card-max-width);
+        }
+    }
+    
+    @media (min-width: 992px) and (max-width: 1199px) {
+        .card-container {
+            max-width: 900px;
+        }
+    }
+    
+    @media (min-width: 768px) and (max-width: 991px) {
+        .card-container {
+            max-width: 700px;
+        }
+    }
+    
+    @media (max-width: 767px) {
+        .card-container {
+            max-width: 100%;
+        }
+        
+        .content-container {
+            padding: 0 15px;
+        }
+        
+        #mapContainer {
+            height: 300px;
+        }
+    }
+
+    /* Header section alignment */
+    .header-section {
+        width: 100%;
+        padding: 0 25px;
+    }
+    
+    /* Risk indicators - thumbs up/down */
+    .risk-indicator {
+        display: flex;
+        align-items: center;
+    }
+    
+    .risk-thumb {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 30px;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+    }
+    
+    .risk-thumb:hover {
+        transform: scale(1.15);
+        box-shadow: 0 5px 18px rgba(0, 0, 0, 0.2);
+    }
+    
+    .risk-thumb-up {
+        background-color: #28a745; /* Bootstrap green */
+    }
+    
+    .risk-thumb-down {
+        background-color: #dc3545; /* Bootstrap red */
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container container-narrow">
-    <!-- Yläosan navigointi ja otsikko -->
-    <div class="d-flex justify-content-between align-items-center mb-4 mt-4">
+<div class="content-container">
+    <!-- Yläosan otsikko -->
+    <div class="d-flex justify-content-between align-items-center mb-5 mt-4 card-container header-section">
         <div class="d-flex align-items-center">
-            <a href="{{ url_for('list_analyses') }}" class="btn btn-outline-accent me-3">
-                <i class="fas fa-arrow-left"></i> Takaisin
-            </a>
             <div>
                 <h1 class="page-title m-0">Analyysin tulos</h1>
                 {% if kohde %}
@@ -695,156 +730,157 @@
                 {% endif %}
             </div>
         </div>
+        
+        {% if risk_analysis %}
+        <div class="risk-indicator">
+            {% if risk_analysis.kokonaisriskitaso <= 5.5 %}
+            <div class="risk-thumb risk-thumb-up">
+                <i class="fas fa-thumbs-up"></i>
+            </div>
+            {% elif risk_analysis.kokonaisriskitaso > 7.4 %}
+            <div class="risk-thumb risk-thumb-down">
+                <i class="fas fa-thumbs-down"></i>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
+
+    <!-- Kohteen perustiedot kortti -->
+    {% if kohde %}
+    <div class="property-details-card card-container shadow mb-5">
+        <h4 class="property-details-title">Kohteen perustiedot</h4>
+        <div class="property-details-items">
+            {% if kohde.hinta is not none %}
+            <div class="property-detail-item">
+                <div class="property-detail-icon">
+                    <i class="fas fa-euro-sign" style="font-size: 24px;"></i>
+                </div>
+                <div class="property-detail-value">
+                    {% set price = kohde.hinta|default(0)|float|round|int %}
+                    {{ '{:,}'.format(price).replace(',', ' ') }} €
+                </div>
+                <div class="property-detail-label">Hinta</div>
+            </div>
+            {% endif %}
+            
+            {% if kohde.neliot is not none %}
+            <div class="property-detail-item">
+                <div class="property-detail-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 21H3V3h18v18z"/>
+                        <path d="M3 9h18M9 21V9"/>
+                        <path d="M14 12l2 2M21 3l-6 6"/>
+                    </svg>
+                </div>
+                <div class="property-detail-value">
+                    {% set area = kohde.neliot|default(0)|float|round(1) %}
+                    {{ area }} m²
+                </div>
+                <div class="property-detail-label">Pinta-ala</div>
+            </div>
+            {% endif %}
+            
+            {% if kohde.huoneet is not none %}
+            <div class="property-detail-item">
+                <div class="property-detail-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                </div>
+                <div class="property-detail-value">
+                    {{ kohde.huoneet|default(0)|int }}
+                </div>
+                <div class="property-detail-label">Huoneet</div>
+            </div>
+            {% endif %}
+            
+            {% if kohde.rakennusvuosi %}
+            <div class="property-detail-item">
+                <div class="property-detail-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </div>
+                <div class="property-detail-value">{{ kohde.rakennusvuosi }}</div>
+                <div class="property-detail-label">Rakennusvuosi</div>
+            </div>
+            {% endif %}
+            
+            {% if kohde.tyyppi %}
+            <div class="property-detail-item">
+                <div class="property-detail-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="1 13 12 3 23 13"></polyline>
+                    </svg>
+                </div>
+                <div class="property-detail-value">{{ kohde.tyyppi|capitalize }}</div>
+                <div class="property-detail-label">Talotyyppi</div>
+            </div>
+            {% endif %}
+        </div>
+        
+        {% if analysis and analysis.property_url %}
+        <div class="property-source-link mt-4 text-center">
+            <a href="{{ analysis.property_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-accent btn-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                </svg>
+                Alkuperäinen ilmoitus
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
     
 <!-- Karttaelementti täysleveässä containerissa -->
-<div class="full-width-container mb-4">
-    <div class="map-card shadow">
-        <div id="mapContainer"></div>
+<div class="container-fluid p-0 mb-5">
+    <div class="content-container">
+        <div class="map-card card-container shadow">
+            <div id="mapContainer"></div>
+        </div>
     </div>
 </div>
 
-<!-- Kohteen perustiedot kortti -->
-{% if kohde %}
-<div class="property-details-card shadow mb-5">
-    <h4 class="property-details-title">Kohteen perustiedot</h4>
-    <div class="property-details-items">
-        {% if kohde.hinta is not none %}
-        <div class="property-detail-item">
-            <div class="property-detail-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                </svg>
-            </div>
-            <div class="property-detail-value">
-                {% set price = kohde.hinta|default(0)|float|round|int %}
-                {{ '{:,}'.format(price).replace(',', ' ') }} €
-            </div>
-            <div class="property-detail-label">Hinta</div>
-        </div>
-        {% endif %}
-        
-        {% if kohde.neliot is not none %}
-        <div class="property-detail-item">
-            <div class="property-detail-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="3" y1="9" x2="21" y2="9"></line>
-                    <line x1="9" y1="21" x2="9" y2="9"></line>
-                </svg>
-            </div>
-            <div class="property-detail-value">
-                {% set area = kohde.neliot|default(0)|float|round(1) %}
-                {{ area }} m²
-            </div>
-            <div class="property-detail-label">Pinta-ala</div>
-        </div>
-        {% endif %}
-        
-        {% if kohde.huoneet is not none %}
-        <div class="property-detail-item">
-            <div class="property-detail-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                </svg>
-            </div>
-            <div class="property-detail-value">
-                {{ kohde.huoneet|default(0)|int }}
-            </div>
-            <div class="property-detail-label">Huoneet</div>
-        </div>
-        {% endif %}
-        
-        {% if kohde.rakennusvuosi %}
-        <div class="property-detail-item">
-            <div class="property-detail-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
-            </div>
-            <div class="property-detail-value">{{ kohde.rakennusvuosi }}</div>
-            <div class="property-detail-label">Rakennusvuosi</div>
-        </div>
-        {% endif %}
-        
-        {% if kohde.tyyppi %}
-        <div class="property-detail-item">
-            <div class="property-detail-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                    <polyline points="1 13 12 3 23 13"></polyline>
-                </svg>
-            </div>
-            <div class="property-detail-value">{{ kohde.tyyppi|capitalize }}</div>
-            <div class="property-detail-label">Talotyyppi</div>
-        </div>
-        {% endif %}
-    </div>
-</div>
-{% endif %}
-
-{% if kohde and kohde.osoite %}
-<!-- Debug-tietoja osoitteesta, vain kehittäjille nähtäväksi -->
-<div class="container container-narrow mt-3">
-    <div class="alert alert-info">
-        <strong>Debug-tiedot:</strong><br>
-        Osoite: {{ kohde.osoite }}<br>
-        Kohteen ID: {{ kohde.id }}<br>
-        Kohteen tyyppi: {{ kohde.tyyppi }}<br>
-        Käyttäjä: {{ kohde.user_id }}
-    </div>
-</div>
-{% else %}
-<!-- Debug-tietoja jos kohdetta ei löydy -->
-<div class="container container-narrow mt-3">
-    <div class="alert alert-warning">
-        <strong>Debug: Kohdetta ei löydy!</strong><br>
-        Analysis ID: {{ analysis.id }}<br>
-        Title: {{ analysis.title }}<br>
-        Created: {{ analysis.created_at }}
-    </div>
-</div>
-{% endif %}
-
-<div class="container container-narrow">
+<div class="content-container">
     {% if risk_analysis %}
     <!-- Riskianalyysi osio -->
-    <h2 class="section-title mt-5">Riskianalyysi</h2>
-    <div class="mb-5 risk-container">
+    <h1 class="section-title mt-5 text-center">Riskianalyysi</h1>
+    <div class="mb-5 card-container">
         
         <!-- Kokonaisriskitason kortti ja donut chart -->
         <div class="row mb-5">
-            <div class="col-lg-6">
-                <div class="risk-card">
+            <div class="col-lg-6 col-md-12 mb-md-4">
+                <div class="risk-card h-100">
                     <h4 class="risk-area-title text-center mb-3">Kokonaisriskitaso</h4>
                     <div class="risk-chart-container">
                         <canvas id="riskDonutChart"></canvas>
                         <div class="risk-chart-score">
-                            <span class="{% if risk_analysis.kokonaisriskitaso <= 3.4 %}risk-score-low{% elif risk_analysis.kokonaisriskitaso <= 5.5 %}risk-score-medium{% elif risk_analysis.kokonaisriskitaso <= 6.9 %}risk-score-high{% else %}risk-score-critical{% endif %}">
+                            <span class="{% if risk_analysis.kokonaisriskitaso <= 5.5 %}risk-score-low{% elif risk_analysis.kokonaisriskitaso <= 6.9 %}risk-score-medium{% else %}risk-score-high{% endif %}">
                                 {{ risk_analysis.kokonaisriskitaso }}
                             </span><br>
                             <span class="risk-chart-label">/10</span>
                         </div>
                     </div>
                     <div class="text-center mt-3">
-                        {% if risk_analysis.kokonaisriskitaso <= 3.4 %}
-                            <span class="risk-label risk-level-low">Matala riski</span>
-                        {% elif risk_analysis.kokonaisriskitaso <= 5.5 %}
-                            <span class="risk-label risk-level-medium">Keskitason riski</span>
+                        {% if risk_analysis.kokonaisriskitaso <= 5.5 %}
+                            <span class="risk-label risk-level-low">Matala</span>
                         {% elif risk_analysis.kokonaisriskitaso <= 6.9 %}
-                            <span class="risk-label risk-level-medium">Kohonnut riski</span>
+                            <span class="risk-label risk-level-medium">Kohonnut</span>
                         {% else %}
-                            <span class="risk-label risk-level-high">Korkea riski</span>
+                            <span class="risk-label risk-level-high">Korkea</span>
                         {% endif %}
                     </div>
                 </div>
             </div>
             
-            <div class="col-lg-6">
-                <div class="risk-card d-flex flex-column justify-content-center">
+            <div class="col-lg-6 col-md-12">
+                <div class="risk-card h-100 d-flex flex-column justify-content-center">
                     <h4 class="risk-area-title mb-3">Riskianalyysin yhteenveto</h4>
                     <p>Tämä analyysi perustuu {{ risk_analysis.riskimittari|length }} eri tekijään, joiden perusteella kokonaisriski on arvioitu.</p>
                     <p>Kokonaisriskitaso ({{ risk_analysis.kokonaisriskitaso }}/10) on painotettu keskiarvo kaikista osa-alueista.</p>
@@ -860,8 +896,8 @@
             </div>
             <div class="row risk-cards-container">
                 {% for riski in risk_analysis.riskimittari %}
-                <div class="col-lg-4 col-md-6 risk-card-wrapper">
-                    <div class="risk-card {% if riski.riski_taso > 6.9 %}risk-card-high{% elif riski.riski_taso > 5.5 %}risk-card-elevated{% endif %}" data-risk-id="{{ loop.index }}">
+                <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 risk-card-wrapper">
+                    <div class="risk-card {% if riski.riski_taso > 6.9 %}risk-card-high{% elif riski.riski_taso > 5.5 %}risk-card-elevated{% else %}risk-card-low{% endif %}" data-risk-id="{{ loop.index }}">
                         <span class="risk-value">{{ riski.riski_taso }}</span>
                         <h5 class="risk-area-title">{{ riski.osa_alue }}</h5>
                         <div class="risk-card-content">
@@ -877,6 +913,8 @@
                                         <span class="risk-label risk-level-high">Korkea</span>
                                     {% elif riski.riski_taso > 5.5 %}
                                         <span class="risk-label risk-level-medium">Kohonnut</span>
+                                    {% else %}
+                                        <span class="risk-label risk-level-low">Matala</span>
                                     {% endif %}
                                 </div>
                                 <div class="text-muted small">Osuus: {{ riski.osuus_prosenttia }}%</div>
@@ -890,9 +928,12 @@
         </div>
     </div>
 
+    <!-- Spacer to push the Report section further down -->
+    <div class="mt-5 pt-5"></div>
+    
     <!-- Raportti osio -->
-    <h2 class="section-title mt-5">Raportti</h2>
-    <div class="analysis-card shadow mb-5">
+    <h1 class="section-title mt-5 text-center">Raportti</h1>
+    <div class="analysis-card card-container shadow mb-5">
         <div class="card-header-custom d-flex justify-content-between align-items-center">
             <div>
                 <strong>Analyysin sisältö</strong> 
@@ -912,7 +953,68 @@
 <script>
     // Markdown-tekstin käsittely ja UI-parannukset
     document.addEventListener('DOMContentLoaded', function() {
-        // Markdown sisällön parsiminen
+        // Remove the fix for flash messages container - no longer needed with navbar_addon
+        
+        // URL input validation
+        const urlInput = document.getElementById('url');
+        const urlError = document.getElementById('url-error');
+        const analyzeForm = document.getElementById('analyze-form');
+        
+        if (urlInput && urlError && analyzeForm) {
+            // Validate URL on input
+            urlInput.addEventListener('input', function() {
+                validateUrlField();
+            });
+            
+            // Validate URL on blur
+            urlInput.addEventListener('blur', function() {
+                if (urlInput.value.trim() !== '') {
+                    validateUrlField(true);
+                }
+            });
+            
+            // Handle form submission
+            analyzeForm.addEventListener('submit', function(e) {
+                if (!validateUrlField(true)) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Show loading state
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Analysoidaan...';
+                    
+                    // Re-enable button after 30 seconds in case of error
+                    setTimeout(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }, 30000);
+                }
+                
+                return true;
+            });
+            
+            // URL validation function
+            function validateUrlField(showError = false) {
+                const url = urlInput.value.trim();
+                const isValid = url && (url.includes('oikotie.fi') || url.includes('etuovi.com'));
+                
+                if (!isValid && showError) {
+                    urlInput.classList.add('is-invalid');
+                    urlError.classList.add('show');
+                } else {
+                    urlInput.classList.remove('is-invalid');
+                    urlError.classList.remove('show');
+                }
+                
+                return isValid;
+            }
+        }
+        
+        // Original markdown parsing code
         const analysisContent = document.getElementById('analysisContent');
         
         try {
