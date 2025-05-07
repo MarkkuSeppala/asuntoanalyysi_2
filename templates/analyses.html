@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_authenticated.html" %}
 
 {% block title %}Omat analyysit{% endblock %}
 
@@ -16,7 +16,7 @@
     }
     
     .container-narrow {
-        max-width: 900px;
+        max-width: 1100px;
         margin: 0 auto;
     }
     
@@ -61,60 +61,140 @@
         box-shadow: 0 5px 15px rgba(18, 52, 88, 0.15);
     }
     
-    .analyses-list {
-        list-style: none;
-        padding: 0;
-    }
-    
-    .analysis-item {
+    .analyses-card {
         background-color: white;
         border-radius: 12px;
-        border: none;
-        overflow: hidden;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        margin-bottom: 20px;
-        transition: all 0.3s ease;
-        border-bottom: 4px solid transparent;
-    }
-    
-    .analysis-item:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 30px;
         border-bottom: 4px solid var(--accent-color);
     }
     
-    .analysis-link {
-        display: block;
-        color: var(--neutral-color);
-        text-decoration: none;
-        padding: 20px;
+    .analyses-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
     }
     
-    .analysis-link:hover {
-        color: var(--neutral-color);
+    .analyses-table th {
+        background-color: var(--accent-color);
+        color: white;
+        font-weight: 600;
+        padding: 12px 15px;
+        text-align: left;
+        position: sticky;
+        top: 0;
+        cursor: pointer;
+        user-select: none;
     }
     
-    .analysis-title {
+    .analyses-table th:first-child {
+        border-top-left-radius: 8px;
+    }
+    
+    .analyses-table th:last-child {
+        border-top-right-radius: 8px;
+    }
+    
+    .analyses-table th:hover {
+        background-color: #1a4b7c;
+    }
+    
+    .analyses-table th::after {
+        margin-left: 5px;
+        opacity: 0.5;
+    }
+    
+    .analyses-table th.sort-asc::after {
+        content: "▲";
+        opacity: 1;
+    }
+    
+    .analyses-table th.sort-desc::after {
+        content: "▼";
+        opacity: 1;
+    }
+    
+    .analyses-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #eee;
+        vertical-align: middle;
+    }
+    
+    .analyses-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .analyses-table tr:hover {
+        background-color: rgba(241, 239, 236, 0.5);
+        cursor: pointer;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    
+    .property-address {
         color: var(--accent-color);
         font-weight: 600;
+        display: block;
     }
     
-    .analysis-date {
+    .property-type {
         color: #6c757d;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+        display: block;
     }
     
-    .analysis-url {
-        color: var(--neutral-color);
-        opacity: 0.7;
-        margin-top: 5px;
-        text-overflow: ellipsis;
-        overflow: hidden;
+    .property-details {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .property-price {
+        font-weight: 600;
         white-space: nowrap;
     }
     
-    .analysis-actions {
-        margin-top: 15px;
+    .property-size-rooms {
+        color: #6c757d;
+        font-size: 0.85rem;
+    }
+    
+    .risk-level {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+        text-align: center;
+    }
+    
+    .risk-level-low {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .risk-level-medium {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    
+    .risk-level-high {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .analysis-date {
+        white-space: nowrap;
+        color: #6c757d;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 5px;
+        justify-content: flex-end;
     }
     
     .empty-state {
@@ -143,6 +223,7 @@
     /* Hakukentän tyylit */
     .search-container {
         position: relative;
+        margin-bottom: 20px;
     }
     
     .search-container .input-group {
@@ -176,12 +257,11 @@
         padding: 2px 0;
     }
     
-    /* Animaatio hakutuloksille */
-    .analysis-item.search-hidden {
+    .analysis-row.search-hidden {
         display: none;
     }
     
-    .analysis-item.search-visible {
+    .analysis-row.search-visible {
         animation: fadeIn 0.4s ease;
     }
     
@@ -195,8 +275,8 @@
             padding: 0 15px;
         }
         
-        .analysis-link {
-            padding: 15px;
+        .analyses-table {
+            min-width: 900px;
         }
     }
 </style>
@@ -208,7 +288,7 @@
     
     {% if analyses|length > 0 %}
         <!-- Hakukenttä -->
-        <div class="search-container mb-4">
+        <div class="search-container">
             <div class="input-group">
                 <span class="input-group-text bg-white border-end-0">
                     <i class="fas fa-search text-muted"></i>
@@ -227,36 +307,82 @@
             <div class="search-status mt-2 small text-muted" id="searchStatus"></div>
         </div>
         
-        <div class="analyses-list" id="analysesList">
-            {% for analysis in analyses %}
-                <div class="analysis-item" data-search-content="{{ analysis.kohde.osoite if analysis.kohde and analysis.kohde.osoite else '' }} {{ analysis.title }} {{ analysis.content }}">
-                    <a href="{{ url_for('view_analysis', analysis_id=analysis.id) }}" class="analysis-link">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="analysis-title mb-0">
-                                {% if analysis.kohde and analysis.kohde.osoite %}
-                                    {{ analysis.kohde.osoite }}
-                                {% else %}
-                                    {{ analysis.title or 'Nimetön analyysi' }}
-                                {% endif %}
-                            </h5>
-                            <span class="analysis-date">{{ analysis.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
-                        </div>
-                        <p class="analysis-url mb-2">{{ analysis.title or 'Analyysi: ' + (analysis.created_at|string) }}</p>
-                        <div class="d-flex justify-content-end mt-3">
-                            <a href="{{ url_for('download_analysis', analysis_id=analysis.id) }}" class="btn btn-sm btn-outline-accent me-2">
-                                <i class="fas fa-download"></i> Lataa
-                            </a>
-                            <a href="{{ url_for('view_analysis', analysis_id=analysis.id) }}" class="btn btn-sm btn-accent">
-                                <i class="fas fa-eye"></i> Näytä analyysi
-                            </a>
-                        </div>
-                    </a>
-                </div>
-            {% endfor %}
+        <!-- Analyysit taulukkokortti -->
+        <div class="analyses-card">
+            <div class="table-responsive">
+                <table class="analyses-table" id="analysesTable">
+                    <thead>
+                        <tr>
+                            <th data-sort="address">Kohteen tiedot</th>
+                            <th data-sort="price">Hinta</th>
+                            <th data-sort="year">Rakennusvuosi</th>
+                            <th data-sort="size">Neliöt</th>
+                            <th data-sort="risk">Riskitaso</th>
+                            <th data-sort="date">Luontipäivä</th>
+                        </tr>
+                    </thead>
+                    <tbody id="analysesTableBody">
+                        {% for analysis in analyses %}
+                            <tr class="analysis-row" data-search-content="{{ analysis.kohde.osoite if analysis.kohde and analysis.kohde.osoite else '' }} {{ analysis.title }} {{ analysis.content }}" data-analysis-url="{{ url_for('view_analysis', analysis_id=analysis.id) }}" onclick="window.location.href=this.dataset.analysisUrl">
+                                <td>
+                                    {% if analysis.kohde and analysis.kohde.osoite %}
+                                        <span class="property-address">{{ analysis.kohde.osoite }}</span>
+                                    {% else %}
+                                        <span class="property-address">{{ analysis.title or 'Nimetön analyysi' }}</span>
+                                    {% endif %}
+                                    
+                                    {% if analysis.kohde and analysis.kohde.tyyppi %}
+                                        <span class="property-type">{{ analysis.kohde.tyyppi|capitalize }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="property-price">
+                                    {% if analysis.kohde and analysis.kohde.hinta %}
+                                        {{ analysis.kohde.hinta|int|string + ' €' }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if analysis.kohde and analysis.kohde.rakennusvuosi %}
+                                        {{ analysis.kohde.rakennusvuosi }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if analysis.kohde and analysis.kohde.neliot %}
+                                        {{ analysis.kohde.neliot|string + ' m²' }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if analysis.kohde and analysis.kohde.risk_level %}
+                                        {% set risk_level = analysis.kohde.risk_level|float %}
+                                        {% if risk_level < 4.0 %}
+                                            <span class="risk-level risk-level-low">{{ risk_level }}</span>
+                                        {% elif risk_level < 7.0 %}
+                                            <span class="risk-level risk-level-medium">{{ risk_level }}</span>
+                                        {% else %}
+                                            <span class="risk-level risk-level-high">{{ risk_level }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="analysis-date">
+                                    {{ analysis.created_at.strftime('%d.%m.%Y') }}
+                                    <div class="small text-muted">{{ analysis.created_at.strftime('%H:%M') }}</div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
         
         <!-- Ei hakutuloksia -tila -->
-        <div id="noSearchResults" class="empty-state" style="display: none;">
+        <div id="noSearchResults" class="empty-state mt-4" style="display: none;">
             <div class="empty-state-icon">
                 <i class="fas fa-search"></i>
             </div>
@@ -292,8 +418,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearSearchBtn = document.getElementById('clearSearch');
     const resetSearchBtn = document.getElementById('resetSearchBtn');
     const searchStatus = document.getElementById('searchStatus');
-    const analysesList = document.getElementById('analysesList');
-    const analysisItems = document.querySelectorAll('.analysis-item');
+    const analysesTable = document.getElementById('analysesTable');
+    const analysisRows = document.querySelectorAll('.analysis-row');
     const noSearchResults = document.getElementById('noSearchResults');
     
     // Hakufunktio
@@ -303,13 +429,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (searchTerm === '') {
             // Jos hakukenttä on tyhjä, näytä kaikki
-            analysisItems.forEach(item => {
-                item.classList.remove('search-hidden');
-                item.classList.add('search-visible');
+            analysisRows.forEach(row => {
+                row.classList.remove('search-hidden');
+                row.classList.add('search-visible');
                 
                 // Poista mahdolliset korostukset
-                const title = item.querySelector('.analysis-title');
-                title.innerHTML = title.innerHTML.replace(/<span class="highlight">|<\/span>/g, '');
+                const addressCell = row.querySelector('.property-address');
+                if (addressCell) {
+                    addressCell.innerHTML = addressCell.innerHTML.replace(/<span class="highlight">|<\/span>/g, '');
+                }
             });
             
             searchStatus.textContent = '';
@@ -317,36 +445,42 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Käy läpi kaikki analyysikohteet
-        analysisItems.forEach(item => {
-            const content = item.getAttribute('data-search-content').toLowerCase();
-            const title = item.querySelector('.analysis-title');
+        // Käy läpi kaikki analyysirivit
+        analysisRows.forEach(row => {
+            const content = row.getAttribute('data-search-content').toLowerCase();
+            const addressCell = row.querySelector('.property-address');
             
             if (content.includes(searchTerm)) {
-                // Näytä kohde jos sisältää hakutermin
-                item.classList.remove('search-hidden');
-                item.classList.add('search-visible');
+                // Näytä rivi jos sisältää hakutermin
+                row.classList.remove('search-hidden');
+                row.classList.add('search-visible');
                 
-                // Korosta hakutermi otsikossa
-                const originalText = title.textContent;
-                const regex = new RegExp('(' + searchTerm + ')', 'gi');
-                title.innerHTML = originalText.replace(regex, '<span class="highlight">$1</span>');
+                // Korosta hakutermi osoitteessa
+                if (addressCell) {
+                    const originalText = addressCell.textContent;
+                    const regex = new RegExp('(' + searchTerm + ')', 'gi');
+                    addressCell.innerHTML = originalText.replace(regex, '<span class="highlight">$1</span>');
+                }
                 
                 visibleCount++;
             } else {
-                // Piilota kohde
-                item.classList.add('search-hidden');
-                item.classList.remove('search-visible');
+                // Piilota rivi
+                row.classList.add('search-hidden');
+                row.classList.remove('search-visible');
             }
         });
         
         // Päivitä hakutiedot
         if (visibleCount === 0) {
             noSearchResults.style.display = 'block';
-            analysesList.style.display = 'none';
+            if (analysesTable) {
+                analysesTable.parentElement.style.display = 'none';
+            }
         } else {
             noSearchResults.style.display = 'none';
-            analysesList.style.display = 'block';
+            if (analysesTable) {
+                analysesTable.parentElement.style.display = 'block';
+            }
             searchStatus.textContent = `Löydetty ${visibleCount} ${visibleCount === 1 ? 'analyysi' : 'analyysia'}`;
         }
     }
@@ -361,10 +495,89 @@ document.addEventListener('DOMContentLoaded', function() {
     // Tapahtumakuuntelijat
     searchInput.addEventListener('input', performSearch);
     clearSearchBtn.addEventListener('click', clearSearch);
-    resetSearchBtn.addEventListener('click', clearSearch);
+    if (resetSearchBtn) {
+        resetSearchBtn.addEventListener('click', clearSearch);
+    }
     
     // Tyhjennä hakukenttä, kun sivu ladataan
     searchInput.value = '';
+    
+    // Taulukon järjestäminen
+    const tableHeaders = document.querySelectorAll('.analyses-table th');
+    let currentSort = { column: null, direction: null };
+    
+    function sortTable(column) {
+        const tableBody = document.getElementById('analysesTableBody');
+        const rows = Array.from(tableBody.querySelectorAll('tr.analysis-row'));
+        
+        // Määritä järjestyssuunta
+        let direction = 'asc';
+        if (currentSort.column === column) {
+            direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        }
+        
+        // Nollaa aiemmat järjestystyylit
+        tableHeaders.forEach(header => {
+            header.classList.remove('sort-asc', 'sort-desc');
+        });
+        
+        // Aseta järjestystyyli
+        const headerElement = document.querySelector(`th[data-sort="${column}"]`);
+        headerElement.classList.add(direction === 'asc' ? 'sort-asc' : 'sort-desc');
+        
+        // Järjestä rivit
+        rows.sort((a, b) => {
+            let valueA, valueB;
+            
+            if (column === 'address') {
+                valueA = a.querySelector('.property-address')?.textContent.trim() || '';
+                valueB = b.querySelector('.property-address')?.textContent.trim() || '';
+            } 
+            else if (column === 'price') {
+                valueA = parseInt(a.querySelector('td:nth-child(2)')?.textContent.replace(/[^0-9]/g, '')) || 0;
+                valueB = parseInt(b.querySelector('td:nth-child(2)')?.textContent.replace(/[^0-9]/g, '')) || 0;
+            }
+            else if (column === 'year') {
+                valueA = parseInt(a.querySelector('td:nth-child(3)')?.textContent) || 0;
+                valueB = parseInt(b.querySelector('td:nth-child(3)')?.textContent) || 0;
+            }
+            else if (column === 'size') {
+                valueA = parseFloat(a.querySelector('td:nth-child(4)')?.textContent) || 0;
+                valueB = parseFloat(b.querySelector('td:nth-child(4)')?.textContent) || 0;
+            }
+            else if (column === 'risk') {
+                valueA = parseFloat(a.querySelector('td:nth-child(5) .risk-level')?.textContent) || 0;
+                valueB = parseFloat(b.querySelector('td:nth-child(5) .risk-level')?.textContent) || 0;
+            }
+            else if (column === 'date') {
+                const dateA = a.querySelector('td:nth-child(6)')?.textContent.trim();
+                const dateB = b.querySelector('td:nth-child(6)')?.textContent.trim();
+                valueA = new Date(dateA.split('.').reverse().join('-'));
+                valueB = new Date(dateB.split('.').reverse().join('-'));
+            }
+            
+            // Järjestä A-Z/pienimmästä suurimpaan tai päinvastoin
+            if (direction === 'asc') {
+                return valueA > valueB ? 1 : -1;
+            } else {
+                return valueA < valueB ? 1 : -1;
+            }
+        });
+        
+        // Päivitä taulukon järjestys
+        rows.forEach(row => tableBody.appendChild(row));
+        
+        // Päivitä nykyinen järjestystila
+        currentSort = { column, direction };
+    }
+    
+    // Lisää klikkaustapahtumakuuntelijat otsikkoihin
+    tableHeaders.forEach(header => {
+        const sortColumn = header.getAttribute('data-sort');
+        if (sortColumn) {
+            header.addEventListener('click', () => sortTable(sortColumn));
+        }
+    });
 });
 </script>
 {% endblock %} 

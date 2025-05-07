@@ -2,61 +2,236 @@
 
 {% block title %}Kirjaudu sisään{% endblock %}
 
+{% block extra_css %}
+<style>
+    .login-section {
+        padding: 60px 0;
+        background-color: var(--primary-color);
+    }
+    
+    .login-card {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        border: none;
+    }
+    
+    .login-header {
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-light));
+        padding: 25px 30px;
+        position: relative;
+    }
+    
+    .login-header h3 {
+        color: white;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    
+    .login-header p {
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 0;
+    }
+    
+    .login-body {
+        padding: 35px 30px;
+        background: white;
+    }
+    
+    .form-control {
+        padding: 12px 15px;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+    
+    .form-control:focus {
+        box-shadow: 0 0 0 3px rgba(18, 52, 88, 0.15);
+        border-color: var(--accent-color);
+    }
+    
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #333;
+    }
+    
+    .form-check-label {
+        font-size: 0.95rem;
+        color: #555;
+    }
+    
+    .card-footer {
+        background-color: #f9f9f9;
+        border-top: 1px solid rgba(0,0,0,0.05);
+        padding: 20px;
+    }
+    
+    .submit-btn {
+        padding: 13px 20px;
+        font-weight: 600;
+        border-radius: 10px;
+        border: none;
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-light));
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(18, 52, 88, 0.2);
+    }
+    
+    .submit-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(18, 52, 88, 0.3);
+    }
+    
+    /* Google-napin tyyli */
+    .google-btn {
+        background-color: #fff;
+        color: #757575;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-family: 'Roboto', sans-serif;
+        font-weight: 500;
+        font-size: 16px;
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+    
+    .google-btn:hover {
+        background-color: #f8f8f8;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    
+    .google-btn .google-icon {
+        margin-right: 12px;
+        height: 24px;
+        width: 24px;
+    }
+    
+    .google-btn .google-text {
+        padding-top: 1px;
+    }
+    
+    .or-divider {
+        position: relative;
+        text-align: center;
+        margin: 25px 0;
+    }
+    
+    .or-divider::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background-color: #e0e0e0;
+        z-index: 1;
+    }
+    
+    .or-divider span {
+        position: relative;
+        background-color: #fff;
+        padding: 0 15px;
+        display: inline-block;
+        z-index: 2;
+        color: #757575;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Kirjaudu sisään</h4>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> Sovelluksen käyttö edellyttää kirjautumista. Jos sinulla ei ole vielä tunnuksia, voit rekisteröityä alta.
+<section class="login-section py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-10">
+                <div class="login-card card shadow">
+                    <div class="login-header">
+                        <h3>Kirjaudu sisään</h3>
+                        <p>Syötä tietosi alle jatkaaksesi Kotiko-palvelun käyttöä.</p>
                     </div>
-                    
-                    <form method="POST">
-                        {{ form.hidden_tag() }}
-                        <div class="form-group mb-3">
-                            {{ form.email.label(class="form-label") }}
-                            {{ form.email(class="form-control") }}
-                            {% for error in form.email.errors %}
-                                <span class="text-danger">{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                        <div class="form-group mb-3">
-                            {{ form.password.label(class="form-label") }}
-                            {{ form.password(class="form-control") }}
-                            {% for error in form.password.errors %}
-                                <span class="text-danger">{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                        <div class="form-check mb-3">
-                            {{ form.remember(class="form-check-input") }}
-                            {{ form.remember.label(class="form-check-label") }}
-                        </div>
-                        <div class="d-grid gap-2 mb-3">
-                            {{ form.submit(class="btn btn-primary btn-block") }}
-                        </div>
-                    </form>
-                    
-                    <hr class="my-4">
-                    
-                    <div class="text-center mb-3">
-                        <p>Tai kirjaudu sisään käyttäen:</p>
-                    </div>
-                    
-                    <div class="d-grid gap-2">
-                        <a href="{{ url_for('oauth.google_login') }}" class="btn btn-outline-danger">
-                            <i class="fab fa-google me-2"></i> Google-kirjautuminen
+                    <div class="login-body">
+                        <!-- Google kirjautuminen -->
+                        <a href="{{ url_for('oauth.google_login') }}" class="btn btn-block google-btn d-flex justify-content-center w-100">
+                            <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+                                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                                <path fill="none" d="M0 0h48v48H0z"/>
+                            </svg>
+                            <span class="google-text">Jatka Google-tilillä</span>
                         </a>
+                        
+                        <div class="or-divider">
+                            <span>tai</span>
+                        </div>
+                        
+                        <form method="POST">
+                            {{ form.hidden_tag() }}
+                            <div class="mb-3">
+                                {{ form.email.label(class="form-label") }}
+                                {% if form.email.errors %}
+                                    {{ form.email(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.email.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.email(class="form-control") }}
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.password.label(class="form-label") }}
+                                {% if form.password.errors %}
+                                    {{ form.password(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.password.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.password(class="form-control") }}
+                                {% endif %}
+                            </div>
+                            <div class="form-check mb-4">
+                                {{ form.remember(class="form-check-input") }}
+                                {{ form.remember.label(class="form-check-label") }}
+                            </div>
+                            <div class="d-grid gap-2 mb-4">
+                                {{ form.submit(class="btn btn-primary submit-btn") }}
+                            </div>
+                        </form>
                     </div>
-                </div>
-                <div class="card-footer text-center">
-                    <p class="mb-0">Ei vielä käyttäjätiliä? <a href="{{ url_for('auth.register') }}" class="fw-bold">Rekisteröidy tästä</a></p>
+                    <div class="card-footer text-center">
+                        <div class="small">
+                            Ei vielä käyttäjätiliä? <a href="{{ url_for('auth.register') }}" class="fw-bold">Rekisteröidy tästä</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Lisätään kuvake submit-painikkeeseen
+    const submitBtn = document.querySelector('input[type="submit"]');
+    if (submitBtn) {
+        submitBtn.classList.add('btn', 'btn-primary', 'submit-btn');
+        // Luodaan span-elementti kuvaketta varten
+        const iconSpan = document.createElement('span');
+        iconSpan.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>';
+        // Lisätään kuvake napin eteen
+        submitBtn.parentNode.insertBefore(iconSpan, submitBtn);
+    }
+});
+</script>
 {% endblock %} 

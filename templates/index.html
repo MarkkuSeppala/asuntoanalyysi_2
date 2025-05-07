@@ -833,7 +833,7 @@
                                     <td>{{ analysis.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
                                     <td>
                                         {% if analysis.kohde and analysis.kohde.risk_level %}
-                                            <span class="badge {% if analysis.kohde.risk_level <= 3.4 %}bg-success{% elif analysis.kohde.risk_level <= 5.5 %}bg-warning{% elif analysis.kohde.risk_level <= 6.9 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                            <span class="badge {% if analysis.kohde.risk_level <= 3.4 %}bg-success{% elif analysis.kohde.risk_level <= 5.5 %}bg-success{% elif analysis.kohde.risk_level <= 6.9 %}bg-warning{% else %}bg-danger{% endif %}">
                                                 {{ analysis.kohde.risk_level }}/10
                                             </span>
                                         {% else %}

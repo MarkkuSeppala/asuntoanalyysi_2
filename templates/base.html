@@ -28,9 +28,15 @@
         }
         
         .navbar {
-            padding: 15px 0;
+            padding: 12px 0;
             transition: all 0.3s ease;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .navbar .container {
+            padding-left: 0;
+            display: flex;
+            justify-content: space-between;
         }
         
         .navbar-dark.bg-primary {
@@ -45,7 +51,16 @@
             font-weight: 800;
             font-size: 2rem;
             letter-spacing: -0.5px;
-            margin-left: -15px;
+            margin-left: -25px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar-brand img {
+            height: 48px;
+            max-width: 100%;
+            padding: 0;
         }
         
         .navbar-brand .brand-accent {
@@ -177,6 +192,27 @@
             .navbar-brand {
                 margin-left: 0;
             }
+            
+            .navbar-brand img {
+                height: 40px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .navbar-brand img {
+                height: 36px;
+            }
+        }
+
+        .center-nav {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+        }
+        
+        .center-nav .nav-item {
+            margin: 0 10px;
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -184,11 +220,27 @@
 <body>
     <!-- Navigaatiopalkki -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">Koto<span class="brand-accent">lyysi</span></a>
+        <div class="container position-relative">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='img/kotiko-logo.png') }}" alt="Kotiko">
+            </a>
+            
+            <!-- Keskitetyt linkit (näkyvät vain ei-kirjautuneille) -->
+            {% if not current_user.is_authenticated %}
+            <ul class="navbar-nav center-nav d-none d-lg-flex">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('palvelu') }}"><i class="fas fa-info-circle me-1"></i> Palvelu</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('products') }}"><i class="fas fa-shopping-cart me-1"></i> Tuotteet</a>
+                </li>
+            </ul>
+            {% endif %}
+            
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     {% if current_user.is_authenticated %}
@@ -199,10 +251,11 @@
                         <a class="nav-link" href="{{ url_for('list_analyses') }}"><i class="fas fa-archive me-1"></i> Arkisto</a>
                     </li>
                     {% else %}
-                    <li class="nav-item">
+                    <!-- Nämä linkit näkyvät vain mobiilivalikossa -->
+                    <li class="nav-item d-lg-none">
                         <a class="nav-link" href="{{ url_for('palvelu') }}"><i class="fas fa-info-circle me-1"></i> Palvelu</a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item d-lg-none">
                         <a class="nav-link" href="{{ url_for('products') }}"><i class="fas fa-shopping-cart me-1"></i> Tuotteet</a>
                     </li>
                     {% endif %}
