@@ -251,6 +251,11 @@ def products():
     """Tuotteet - sivusto tuotevaihtoehtoineen"""
     return render_template('products.html')
 
+@app.route('/palvelu')
+def palvelu():
+    """Palvelu - sivu, joka kuvaa palvelun toimintaa"""
+    return render_template('palvelu.html')
+
 @app.route('/')
 def index():
     """Etusivu, jossa käyttäjä voi syöttää asuntolinkin tai näkee landing-sivun"""

@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+
+{% block title %}Kotiko - Palvelun kuvaus{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #F1EFEC;
+        --secondary-color: #D4C9BE;
+        --accent-color: #123458;
+        --accent-hover: #1a4b7c;
+        --neutral-color: #030303;
+        --light-bg: #f9f9f9;
+        --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        --card-hover-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        --card-radius: 16px;
+        --transition-normal: all 0.3s ease;
+    }
+    
+    body {
+        font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+        color: var(--neutral-color);
+        background-color: var(--primary-color);
+        line-height: 1.6;
+    }
+    
+    .page-hero {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        padding: 80px 0;
+        margin-bottom: 60px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -50px;
+        left: 0;
+        width: 100%;
+        height: 100px;
+        background-color: var(--primary-color);
+        transform: skewY(-3deg);
+        z-index: 1;
+    }
+    
+    .page-title {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 20px;
+        color: var(--neutral-color);
+        position: relative;
+        z-index: 2;
+    }
+    
+    .page-subtitle {
+        font-size: 1.3rem;
+        margin-bottom: 0;
+        max-width: 700px;
+        opacity: 0.9;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .content-section {
+        padding: 40px 0;
+    }
+    
+    .section-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 30px;
+        color: var(--accent-color);
+        position: relative;
+        display: inline-block;
+    }
+    
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+        width: 60px;
+        height: 4px;
+        background-color: var(--accent-color);
+    }
+    
+    .info-card {
+        background-color: white;
+        border-radius: var(--card-radius);
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+        margin-bottom: 30px;
+        transition: var(--transition-normal);
+        border-bottom: 4px solid transparent;
+    }
+    
+    .info-card:hover {
+        transform: translateY(-7px);
+        box-shadow: var(--card-hover-shadow);
+        border-bottom: 4px solid var(--accent-color);
+    }
+    
+    .info-card-header {
+        background-color: white;
+        padding: 25px 30px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        position: relative;
+    }
+    
+    .info-card-header::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 30px;
+        width: 50px;
+        height: 3px;
+        background-color: var(--accent-color);
+    }
+    
+    .info-card-title {
+        margin-bottom: 0;
+        font-weight: 700;
+        color: var(--accent-color);
+    }
+    
+    .info-card-body {
+        padding: 30px;
+    }
+    
+    .feature-icon {
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+        color: var(--accent-color);
+        display: inline-block;
+        padding: 20px;
+        background-color: rgba(18, 52, 88, 0.1);
+        border-radius: 12px;
+    }
+    
+    .step-number {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        width: 36px;
+        height: 36px;
+        background-color: var(--accent-color);
+        color: white;
+        border-radius: 50%;
+        font-weight: bold;
+        margin-right: 15px;
+    }
+    
+    .cta-section {
+        background-color: var(--accent-color);
+        border-radius: var(--card-radius);
+        padding: 50px;
+        color: white;
+        margin: 50px 0;
+        text-align: center;
+    }
+    
+    .cta-title {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+    
+    .cta-text {
+        font-size: 1.2rem;
+        margin-bottom: 30px;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .btn-light {
+        background-color: white;
+        color: var(--accent-color);
+        font-weight: 600;
+        padding: 12px 30px;
+        border-radius: 8px;
+        transition: var(--transition-normal);
+    }
+    
+    .btn-light:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(255, 255, 255, 0.2);
+    }
+    
+    @media (max-width: 768px) {
+        .page-title {
+            font-size: 2.5rem;
+        }
+        
+        .page-subtitle {
+            font-size: 1.1rem;
+        }
+        
+        .section-title {
+            font-size: 1.8rem;
+        }
+        
+        .cta-title {
+            font-size: 1.8rem;
+        }
+        
+        .cta-section {
+            padding: 30px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="page-hero">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <h1 class="page-title">Kotiko - Asuntoanalyysipalvelu</h1>
+                <p class="page-subtitle">Tarjoamme tekoälyyn perustuvaa asuntoanalyysia, joka auttaa sinua tekemään parempia päätöksiä asuntomarkkinoilla.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Palvelukuvaus -->
+<section class="content-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mb-5">
+                <h2 class="section-title">Mitä Kotiko tarjoaa?</h2>
+                <p>Kotiko on älykäs tekoälypalvelu, joka analysoi asuntoilmoituksia ja tarjoaa sinulle kattavan analyysin asunnosta. Palvelu käy läpi ilmoituksen tiedot, tunnistaa potentiaaliset riskit ja tarjoaa sinulle kokonaisvaltaisen näkemyksen asunnon todellisesta arvosta ja kunnosta.</p>
+                
+                <p>Palvelumme käyttää kehittyneitä tekoälyalgoritmeja, jotka on koulutettu tuhansilla asuntoilmoituksilla tunnistamaan erilaisia riskitekijöitä, hintatasoja ja asuntomarkkinoiden trendejä. Näin saat nopeasti ja helposti selkeän kuvan asunnon todellisesta kunnosta ja arvosta.</p>
+                
+                <p>Kotiko-analyysi toimii sekä Oikotien että Etuoven asuntoilmoituksille, ja se pystyy analysoimaan kaikentyyppisiä asuntoja - kerrostaloista omakotitaloihin.</p>
+            </div>
+            <div class="col-lg-4">
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <h4 class="info-card-title"><i class="fas fa-lightbulb me-2"></i> Täydellinen työkalu asunnonostajalle</h4>
+                    </div>
+                    <div class="info-card-body">
+                        <p>Kotiko tarjoaa puolueettoman, tekoälyyn perustuvan analyysin, joka auttaa sinua:</p>
+                        <ul>
+                            <li>Tunnistamaan piilevät riskit</li>
+                            <li>Arvioimaan asunnon todellisen arvon</li>
+                            <li>Vertailemaan kohteita tehokkaasti</li>
+                            <li>Säästämään aikaa asuntojen etsinnässä</li>
+                            <li>Tekemään tietoon perustuvia ostopäätöksiä</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Miten se toimii -->
+<section class="content-section bg-light py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="section-title">Miten Kotiko toimii?</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="info-card h-100">
+                    <div class="info-card-body text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-link"></i>
+                        </div>
+                        <h4 class="mb-3">1. Syötä asuntoilmoituksen linkki</h4>
+                        <p>Kopioi ja liitä Oikotien tai Etuoven asuntoilmoituksen URL-osoite palveluumme tai lataa PDF-esite.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="info-card h-100">
+                    <div class="info-card-body text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <h4 class="mb-3">2. Tekoäly analysoi kohteen</h4>
+                        <p>Tekoälymme käy läpi kaikki ilmoituksen tiedot ja muodostaa kokonaisvaltaisen analyysin kohteesta.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="info-card h-100">
+                    <div class="info-card-body text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <h4 class="mb-3">3. Saat kattavan raportin</h4>
+                        <p>Muutamassa minuutissa saat yksityiskohtaisen raportin asunnosta, mukaan lukien riskit ja arvonkehitysnäkymät.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Ominaisuudet -->
+<section class="content-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 mb-5">
+                <h2 class="section-title">Analyysin sisältö</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="d-flex align-items-start">
+                    <span class="step-number">1</span>
+                    <div>
+                        <h4>Perustiedot ja yhteenveto</h4>
+                        <p>Selkeä yhteenveto asunnon perustiedoista ja tärkeimmistä ominaisuuksista.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="d-flex align-items-start">
+                    <span class="step-number">2</span>
+                    <div>
+                        <h4>Riskianalyysi</h4>
+                        <p>Yksityiskohtainen analyysi asuntoon liittyvistä mahdollisista riskeistä ja niiden vakavuudesta.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="d-flex align-items-start">
+                    <span class="step-number">3</span>
+                    <div>
+                        <h4>Kunto- ja korjausarvio</h4>
+                        <p>Arvio asunnon nykyisestä kunnosta ja mahdollisista tulevista korjaustarpeista.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="d-flex align-items-start">
+                    <span class="step-number">4</span>
+                    <div>
+                        <h4>Hinta-analyysi</h4>
+                        <p>Arvio asunnon hinnan kohtuullisuudesta ja vertailu alueen keskihintoihin.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="d-flex align-items-start">
+                    <span class="step-number">5</span>
+                    <div>
+                        <h4>Sijainti ja ympäristö</h4>
+                        <p>Arvio asunnon sijainnin eduista ja mahdollisista haasteista.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="d-flex align-items-start">
+                    <span class="step-number">6</span>
+                    <div>
+                        <h4>Tulevaisuudennäkymät</h4>
+                        <p>Näkemys asunnon arvon mahdollisesta kehityksestä tulevaisuudessa.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="content-section">
+    <div class="container">
+        <div class="cta-section">
+            <h2 class="cta-title">Aloita asuntojen analysointi jo tänään</h2>
+            <p class="cta-text">Tee parempia päätöksiä asuntomarkkinoilla Kotikon analyysien avulla. Rekisteröidy nyt ja analysoi asuntoja helposti ja nopeasti.</p>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg">Rekisteröidy nyt</a>
+        </div>
+    </div>
+</section>
+{% endblock %} 

@@ -509,21 +509,22 @@
     }
     
     .loading-progress-container {
-        width: 350px;
-        height: 12px;
+        width: 400px;
+        height: 15px;
         background-color: var(--primary-color);
-        border-radius: 6px;
+        border-radius: 8px;
         margin-top: 25px;
         overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05) inset;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) inset;
     }
     
     .loading-progress-bar {
         height: 100%;
         width: 0;
         background: linear-gradient(90deg, var(--accent-color), var(--accent-hover));
-        animation: progressAnimation 30s linear forwards;
-        border-radius: 6px;
+        border-radius: 8px;
+        transition: width 0.1s linear;
+        box-shadow: 0 0 10px rgba(18, 52, 88, 0.3);
     }
     
     /* Error states */
@@ -557,12 +558,6 @@
         0% { opacity: 0.8; }
         50% { opacity: 1; }
         100% { opacity: 0.8; }
-    }
-    
-    @keyframes progressAnimation {
-        0% { width: 0; }
-        90% { width: 90%; }
-        100% { width: 100%; }
     }
     
     @keyframes fadeIn {
@@ -874,10 +869,11 @@
 <div class="loading-overlay" id="loading-overlay">
     <div class="loading-spinner"></div>
     <h3 class="loading-text">Analysoidaan kohdetta...</h3>
-    <p class="loading-subtext" id="loading-message">Tekoäly käy läpi asunnon tiedot ja muodostaa kokonaisvaltaisen analyysin. Tämä voi kestää hetken, joten ole hyvä ja odota.</p>
+    <p class="loading-subtext mb-4">Analyysin tekeminen kestää noin 2 minuuttia. Ole hyvä ja odota.</p>
     <div class="loading-progress-container">
         <div class="loading-progress-bar"></div>
     </div>
+    <p class="loading-subtext mt-3" id="loading-message">Tekoäly käy läpi asunnon tiedot ja muodostaa kokonaisvaltaisen analyysin.</p>
 </div>
 {% endblock %}
 
@@ -945,6 +941,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Aloita vaihtuva latausviestien näyttäminen
             startRotatingLoadingMessages();
+            
+            // Aloita latauspalkki
+            startLoadingBar(110); // 110 sekuntia
         }, 300);
     });
     
@@ -1019,6 +1018,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show loading overlay with slight delay for better UX
         setTimeout(() => {
             loadingOverlay.classList.add('show');
+            
+            // Aloita latauspalkki
+            startLoadingBar(110); // 110 sekuntia
         }, 500);
         
         // Submit the file to the server
@@ -1120,26 +1122,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Vaihtuvia latausviestejä varten
     function startRotatingLoadingMessages() {
         const loadingMessages = [
-            "Haetaanpa hintatietoa, kaupankäynnin kalliskasta.",
-            "Kysellähän kämppätietoa, turuilta ja toreilta.",
-            "Lasketahan lainasummat, rahoituksen raamitukset.",
-            "Luetaanpa ilmoitukset, myytävien maitten päältä.",
-            "Nostetaan nyt neliöhinnat, punnitaanpa paikkakunnat.",
-            "Mitataanpa myyntihinnat, huonehinnat huvitellaan.",
-            "Otettahan Oikotieltä, asuntojen aartehia.",
-            "Katsellaanpa kauppakirjat, lainhuudot ja lainatiedot.",
-            "Kurkistetaan kulutukset, lämmön, veden, varjotusten.",
-            "Kuunnellaanpa kuntotarkast, raporttien reunoilta.",
-            "Lähdetähän liikkehelle, etsitähän ensikodit, myytävien maitten päältä.",
-            "Nostetahan neliöhintoja, tarkastellaan tonttimaat, rannat, pellot, pientalotkin.",
-            "Kaivetahan karttakuvat, maitten, teitten mittasuhteet, naapurusten näkymätkin.",
-            "Lasketahan lämmitykset, katsotahan kulutukset, sähkölaskut selvitellään.",
-            "Punnitaanpa paikkakunnat, katsotahan kaupunginosat, kukkulat ja kylänraitat.",
-            "Haetaanpa hallintakirjat, tutkistellaan tonttijaot, perustiedot pureksitaan.",
-            "Tutkitaanpa tontinrajoja, mittanauhat mittoillahan, nurkat nostetahan näkyviin.",
-            "Rahoituksen raamituksia lasketahan laskin kädessä, sopimukset sovitahan.",
-            "Lasketahan lainalyhenteet, kuukaudet kulutellaan, maksut maksutellaan muistiin.",
-            "Kaivetahan kauppahinnat, luetaanpa luovutukset, puhalletaan pölyt päältä."
+            "Haetaan myynti-ilmoituksen tietoja...",
+            "Analysoidaan asunnon perustietoja...",
+            "Arvioidaan asunnon kuntoa...",
+            "Lasketaan hinta-arvioita...",
+            "Tutkitaan sijaintia ja palveluita...",
+            "Kartoitetaan riskitekijöitä...",
+            "Analysoidaan kauppahintoja ja arvonkehitystä...",
+            "Laaditaan kokonaisarviota...",
+            "Viimeistellään raporttia..."
         ];
 
         const messageElement = document.getElementById('loading-message');
@@ -1151,20 +1142,37 @@ document.addEventListener('DOMContentLoaded', function() {
         // Lisää pieni fade-efekti
         messageElement.style.transition = 'opacity 0.8s ease';
         
+        // Laske viestien näyttöaika perustuen kokonaiskestoon
+        const totalMessages = loadingMessages.length - 1; // Yksi viesti vähemmän koska viimeinen jää pysyväksi
+        const totalDuration = 110000; // 110 sekuntia millisekunteina
+        const messageDisplayTime = Math.floor(totalDuration / totalMessages);
+        
         // Aloita viestien kierto
         const messageRotationInterval = setInterval(() => {
             messageElement.style.opacity = '0';
             
             setTimeout(() => {
-                // Odota 3 sekuntia ennen kuin näytetään seuraava viesti
+                // Vaihda viestiä kun edellinen on feidattu pois
                 setTimeout(() => {
-                    currentIndex = (currentIndex + 1) % loadingMessages.length;
+                    currentIndex++;
+                    
+                    // Jos ollaan viimeisessä viestissä, pysäytetään kierto
+                    if (currentIndex >= loadingMessages.length - 1) {
+                        currentIndex = loadingMessages.length - 1; // Varmistetaan että käytetään viimeistä viestiä
+                        messageElement.textContent = loadingMessages[currentIndex];
+                        messageElement.style.opacity = '1';
+                        
+                        // Pysäytetään kierto kun ollaan viimeisessä viestissä
+                        clearInterval(messageRotationInterval);
+                        return;
+                    }
+                    
                     messageElement.textContent = loadingMessages[currentIndex];
                     messageElement.style.opacity = '1';
-                }, 3000); // 3 sekunnin tauko viestien välissä
+                }, 800); // 0.8 sekunnin tauko viestien välissä
             }, 800); // Odota fade-out -efektin ajan
             
-        }, 15000); // Vaihda viesti 15 sekunnin välein
+        }, messageDisplayTime); // Viestien vaihtoaika 
         
         // Tallenna interval globaaliin scopeen, jotta voimme pysäyttää sen myöhemmin
         window.messageRotationInterval = messageRotationInterval;
@@ -1175,7 +1183,51 @@ document.addEventListener('DOMContentLoaded', function() {
         if (window.messageRotationInterval) {
             clearInterval(window.messageRotationInterval);
         }
+        if (window.progressBarInterval) {
+            clearInterval(window.progressBarInterval);
+        }
     });
+    
+    // Funktio latauspalkin etenemisen hallintaan
+    function startLoadingBar(durationInSeconds) {
+        const progressBar = document.querySelector('.loading-progress-bar');
+        const totalDuration = durationInSeconds * 1000; // muunna millisekunneiksi
+        const updateInterval = 100; // Päivitä 100ms välein
+        const incrementPerUpdate = (updateInterval / totalDuration) * 100;
+        
+        let currentProgress = 0;
+        progressBar.style.width = '0%';
+        
+        // Pysäytä mahdollinen aiempi intervalli
+        if (window.progressBarInterval) {
+            clearInterval(window.progressBarInterval);
+        }
+        
+        // Aloita uusi intervalli
+        const progressBarInterval = setInterval(() => {
+            currentProgress += incrementPerUpdate;
+            
+            // Rajoita 99%:iin, jotta käyttäjä näkee että prosessi on edelleen käynnissä
+            // jos se kestää kauemmin kuin odotettiin
+            if (currentProgress >= 99) {
+                currentProgress = 99;
+                clearInterval(progressBarInterval);
+                
+                // Pidä palkki 99%:ssa kunnes sivu oikeasti päivittyy
+                window.progressBarInterval = null;
+            }
+            
+            // Päivitä latauspalkki
+            progressBar.style.width = currentProgress + '%';
+            
+        }, updateInterval);
+        
+        // Tallenna intervalli globaaliin scopeen, jotta voimme pysäyttää sen myöhemmin
+        window.progressBarInterval = progressBarInterval;
+        
+        // Palauta intervallin ID, jos tarvitsemme sitä
+        return progressBarInterval;
+    }
 });
 </script>
 {% endblock %} 
