@@ -18,6 +18,7 @@ from flask_session import Session
 import pytz
 
 import api_call
+import paytrail_service  # Import the Paytrail service
 from models import db, User, Analysis, RiskAnalysis, Kohde, Product, Payment, Subscription
 from auth import auth
 from oauth import oauth_bp, init_google_blueprint  # Päivitetty import
@@ -1269,6 +1270,293 @@ def cancel_subscription(subscription_id):
         flash('Tilauksen peruuttamisessa tapahtui virhe. Yritä uudelleen.', 'danger')
         return redirect(url_for('my_subscription'))
 
+# Paytrail payment routes
+@app.route('/checkout/paytrail/<int:product_id>', methods=['GET'])
+@login_required
+def checkout_paytrail(product_id):
+    """Checkout process with Paytrail payment integration"""
+    try:
+        logger.info(f"====== STARTING PAYTRAIL CHECKOUT PROCESS ======")
+        logger.info(f"Request method: {request.method}, User ID: {current_user.id}, Product ID: {product_id}")
+        
+        # Get the product
+        product = Product.query.get_or_404(product_id)
+        logger.info(f"Product found: {product.name}, price: {product.price}, type: {product.product_type}")
+        
+        if not product.active:
+            logger.warning(f"Product {product_id} is not active")
+            flash('Tuote ei ole enää saatavilla.', 'danger')
+            return redirect(url_for('products'))
+            
+        # Get the base URL for redirects
+        if app.config.get('FLASK_ENV') == 'production':
+            base_url = request.host_url.rstrip('/')
+        else:
+            # For local development, use the request host
+            base_url = request.host_url.rstrip('/')
+            
+        logger.info(f"Using base URL for redirects: {base_url}")
+        logger.info(f"Full request host URL: {request.host_url}")
+            
+        # Create payment in Paytrail
+        logger.info(f"Creating payment in Paytrail for user_id={current_user.id}")
+        payment_data = paytrail_service.create_payment(
+            user_id=current_user.id,
+            product=product,
+            redirect_url_base=base_url
+        )
+        
+        logger.info(f"Payment creation result: success={payment_data['success']}")
+        
+        if not payment_data['success']:
+            error_msg = payment_data.get("error", "Unknown error")
+            logger.error(f"Payment creation failed: {error_msg}")
+            flash(f'Maksun luomisessa tapahtui virhe: {error_msg}', 'danger')
+            return redirect(url_for('checkout', product_id=product_id))
+            
+        # Create a pending payment in our database
+        logger.info(f"Creating pending payment in database with transaction_id={payment_data['transaction_id']}")
+        payment = Payment(
+            user_id=current_user.id,
+            product_id=product.id,
+            amount=product.price,
+            payment_method='paytrail',
+            transaction_id=payment_data['transaction_id'],
+            status='pending'  # Will be updated when payment is completed
+        )
+        
+        db.session.add(payment)
+        db.session.commit()
+        logger.info(f"Payment saved to database with id={payment.id}")
+        
+        # Store payment data in session for validation
+        session['payment_stamp'] = payment_data['stamp']
+        session['payment_reference'] = payment_data['reference']
+        session['payment_transaction_id'] = payment_data['transaction_id']
+        logger.info(f"Payment data stored in session: transaction_id={payment_data['transaction_id']}, stamp={payment_data['stamp']}")
+        
+        # Redirect to Paytrail payment page
+        payment_url = payment_data['payment_url']
+        logger.info(f"Redirecting user to Paytrail payment page: {payment_url}")
+        return redirect(payment_url)
+        
+    except Exception as e:
+        logger.exception(f"Exception in Paytrail checkout: {e}")
+        flash('Maksusivun lataamisessa tapahtui virhe. Yritä uudelleen.', 'danger')
+        return redirect(url_for('products'))
+
+@app.route('/payment/success', methods=['GET'])
+@login_required
+def payment_success():
+    """Handle successful payment redirect from Paytrail"""
+    try:
+        # Verify payment signature
+        if not paytrail_service.verify_payment_signature(request.args):
+            logger.error("Invalid payment signature")
+            flash('Maksun vahvistuksessa tapahtui virhe. Tarkista maksu tililtäsi.', 'warning')
+            return redirect(url_for('my_subscription'))
+            
+        # Get transaction ID from query params
+        transaction_id = request.args.get('checkout-transaction-id')
+        if not transaction_id:
+            logger.error("Missing transaction ID in success redirect")
+            flash('Maksun vahvistuksessa tapahtui virhe. Tarkista maksu tililtäsi.', 'warning')
+            return redirect(url_for('my_subscription'))
+            
+        # Verify transaction ID against session data
+        if session.get('payment_transaction_id') != transaction_id:
+            logger.error(f"Transaction ID mismatch: {session.get('payment_transaction_id')} != {transaction_id}")
+            flash('Maksun vahvistuksessa tapahtui virhe. Tarkista maksu tililtäsi.', 'warning')
+            return redirect(url_for('my_subscription'))
+            
+        # Update payment status in database
+        payment = Payment.query.filter_by(transaction_id=transaction_id).first()
+        if not payment:
+            logger.error(f"Payment not found for transaction ID: {transaction_id}")
+            flash('Maksun vahvistuksessa tapahtui virhe. Tarkista maksu tililtäsi.', 'warning')
+            return redirect(url_for('my_subscription'))
+            
+        # If payment is already processed, just redirect
+        if payment.status == 'completed':
+            flash('Maksu on jo käsitelty onnistuneesti!', 'success')
+            return redirect(url_for('my_subscription'))
+            
+        # Update payment status
+        payment.status = 'completed'
+        payment.updated_at = datetime.utcnow()
+        
+        # Get product information
+        product = Product.query.get(payment.product_id)
+        
+        # If it's a one-time purchase, add analyses to user
+        if product and product.product_type == 'one_time':
+            user = User.query.get(payment.user_id)
+            if user:
+                user.add_analyses(product.analyses_count)
+                flash(f'Kiitos ostoksestasi! {product.analyses_count} analyysiä on lisätty tilillesi.', 'success')
+                
+        # If it's a subscription, create subscription
+        elif product and product.product_type == 'subscription':
+            # Create subscription
+            subscription = Subscription(
+                user_id=payment.user_id,
+                product_id=product.id,
+                subscription_type='monthly',
+                status='active',
+                expires_at=datetime.utcnow() + timedelta(days=30),
+                next_billing_date=datetime.utcnow() + timedelta(days=30),
+                last_payment_date=datetime.utcnow(),
+                payment_id=payment.transaction_id
+            )
+            
+            db.session.add(subscription)
+            
+            # Update payment subscription_id
+            payment.subscription_id = subscription.id
+            
+            flash('Tilauksesi on aktivoitu onnistuneesti! Voit nyt tehdä rajattomasti analyysejä.', 'success')
+        
+        db.session.commit()
+        
+        # Clear payment data from session
+        session.pop('payment_stamp', None)
+        session.pop('payment_reference', None)
+        session.pop('payment_transaction_id', None)
+        
+        return redirect(url_for('my_subscription'))
+        
+    except Exception as e:
+        logger.exception(f"Virhe maksun käsittelyssä: {e}")
+        flash('Maksun käsittelyssä tapahtui virhe. Tarkista maksu tililtäsi.', 'warning')
+        return redirect(url_for('my_subscription'))
+
+@app.route('/payment/cancel', methods=['GET'])
+@login_required
+def payment_cancel():
+    """Handle cancelled payment redirect from Paytrail"""
+    try:
+        # Get transaction ID from query params
+        transaction_id = request.args.get('checkout-transaction-id')
+        if transaction_id:
+            # Update payment status in database
+            payment = Payment.query.filter_by(transaction_id=transaction_id).first()
+            if payment:
+                payment.status = 'cancelled'
+                payment.updated_at = datetime.utcnow()
+                db.session.commit()
+                
+        # Clear payment data from session
+        session.pop('payment_stamp', None)
+        session.pop('payment_reference', None)
+        session.pop('payment_transaction_id', None)
+        
+        flash('Maksu peruutettiin.', 'info')
+        return redirect(url_for('products'))
+        
+    except Exception as e:
+        logger.exception(f"Virhe maksun peruutuksen käsittelyssä: {e}")
+        flash('Maksun peruutuksen käsittelyssä tapahtui virhe.', 'warning')
+        return redirect(url_for('products'))
+
+@app.route('/payment/callback/success', methods=['GET'])
+def payment_callback_success():
+    """Handle success callback from Paytrail"""
+    try:
+        # Verify payment signature
+        if not paytrail_service.verify_payment_signature(request.args):
+            logger.error("Invalid payment signature in callback")
+            return "ERROR: Invalid signature", 400
+            
+        # Get transaction ID from query params
+        transaction_id = request.args.get('checkout-transaction-id')
+        if not transaction_id:
+            logger.error("Missing transaction ID in callback")
+            return "ERROR: Missing transaction ID", 400
+            
+        # Update payment status in database
+        payment = Payment.query.filter_by(transaction_id=transaction_id).first()
+        if not payment:
+            logger.error(f"Payment not found for transaction ID: {transaction_id}")
+            return "ERROR: Payment not found", 404
+            
+        # If payment is already processed, just return success
+        if payment.status == 'completed':
+            return "OK: Payment already processed", 200
+            
+        # Update payment status
+        payment.status = 'completed'
+        payment.updated_at = datetime.utcnow()
+        
+        # Get product information
+        product = Product.query.get(payment.product_id)
+        
+        # If it's a one-time purchase, add analyses to user
+        if product and product.product_type == 'one_time':
+            user = User.query.get(payment.user_id)
+            if user:
+                user.add_analyses(product.analyses_count)
+                
+        # If it's a subscription, create or update subscription
+        elif product and product.product_type == 'subscription':
+            # Check if user already has an active subscription
+            existing_subscription = Subscription.query.filter_by(
+                user_id=payment.user_id,
+                status='active',
+                subscription_type='monthly'
+            ).first()
+            
+            if existing_subscription:
+                # Extend existing subscription
+                existing_subscription.expires_at = datetime.utcnow() + timedelta(days=30)
+                existing_subscription.next_billing_date = datetime.utcnow() + timedelta(days=30)
+                existing_subscription.last_payment_date = datetime.utcnow()
+                existing_subscription.payment_id = payment.transaction_id
+            else:
+                # Create new subscription
+                subscription = Subscription(
+                    user_id=payment.user_id,
+                    product_id=product.id,
+                    subscription_type='monthly',
+                    status='active',
+                    expires_at=datetime.utcnow() + timedelta(days=30),
+                    next_billing_date=datetime.utcnow() + timedelta(days=30),
+                    last_payment_date=datetime.utcnow(),
+                    payment_id=payment.transaction_id
+                )
+                
+                db.session.add(subscription)
+                
+                # Update payment subscription_id
+                payment.subscription_id = subscription.id
+            
+        db.session.commit()
+        
+        return "OK", 200
+        
+    except Exception as e:
+        logger.exception(f"Error processing payment callback: {e}")
+        return "ERROR: Internal server error", 500
+
+@app.route('/payment/callback/cancel', methods=['GET'])
+def payment_callback_cancel():
+    """Handle cancel callback from Paytrail"""
+    try:
+        # Get transaction ID from query params
+        transaction_id = request.args.get('checkout-transaction-id')
+        if transaction_id:
+            # Update payment status in database
+            payment = Payment.query.filter_by(transaction_id=transaction_id).first()
+            if payment:
+                payment.status = 'cancelled'
+                payment.updated_at = datetime.utcnow()
+                db.session.commit()
+                
+        return "OK", 200
+        
+    except Exception as e:
+        logger.exception(f"Error processing cancel callback: {e}")
+        return "ERROR: Internal server error", 500
+
 # Lisätään diagnostiikkareitit kehitysympäristöön
 @app.route('/debug/session')
 def debug_session():
@@ -1332,6 +1620,119 @@ def debug_clear_session():
         "success": True,
         "message": "Istunto tyhjennetty onnistuneesti"
     })
+
+@app.route('/debug/logs')
+@login_required
+def debug_logs():
+    """Show application logs for debugging (only in development)"""
+    # Only allow admin users to see logs
+    if not current_user.is_admin:
+        flash('Sinulla ei ole oikeuksia tähän toimintoon.', 'danger')
+        return redirect(url_for('index'))
+        
+    try:
+        log_entries = []
+        log_file = os.path.join(os.getcwd(), 'logs', 'app.log')
+        
+        # Create logs directory if it doesn't exist
+        os.makedirs(os.path.dirname(log_file), exist_ok=True)
+        
+        # Read log file if it exists
+        if os.path.exists(log_file):
+            with open(log_file, 'r', encoding='utf-8') as f:
+                # Get last 200 lines
+                lines = f.readlines()[-200:]
+                log_entries = lines
+        else:
+            log_entries = ["Log file does not exist: " + log_file]
+            
+        # Create a test log entry to verify logging is working
+        logger.info("Debug logs page viewed")
+            
+        return render_template('debug_logs.html', log_entries=log_entries)
+    except Exception as e:
+        logger.exception(f"Error in debug logs: {e}")
+        flash('Lokitiedostojen näyttämisessä tapahtui virhe.', 'danger')
+        return redirect(url_for('index'))
+
+@app.route('/debug/paytrail/<int:product_id>', methods=['GET'])
+@login_required
+def debug_paytrail(product_id):
+    """Debug endpoint for Paytrail integration"""
+    # Only allow admin users to access this endpoint
+    if not current_user.is_admin:
+        flash('Sinulla ei ole oikeuksia tähän toimintoon.', 'danger')
+        return redirect(url_for('index'))
+        
+    try:
+        # Get the product
+        product = Product.query.get_or_404(product_id)
+        
+        # Get the base URL for redirects
+        base_url = request.host_url.rstrip('/')
+        
+        # Create test payload (don't actually call the API)
+        stamp = f"debug-test-{int(datetime.utcnow().timestamp())}"
+        reference = f"debug-user-{current_user.id}-product-{product.id}"
+        
+        # Simulate payment data
+        debug_data = {
+            "product": {
+                "id": product.id,
+                "name": product.name,
+                "price": product.price,
+                "type": product.product_type,
+                "active": product.active
+            },
+            "user": {
+                "id": current_user.id,
+                "email": current_user.email,
+                "is_admin": current_user.is_admin
+            },
+            "urls": {
+                "base_url": base_url,
+                "success_url": f"{base_url}{url_for('payment_success')}",
+                "cancel_url": f"{base_url}{url_for('payment_cancel')}",
+                "success_callback": f"{base_url}{url_for('payment_callback_success')}",
+                "cancel_callback": f"{base_url}{url_for('payment_callback_cancel')}"
+            },
+            "session": {
+                "payment_stamp": session.get('payment_stamp'),
+                "payment_reference": session.get('payment_reference'),
+                "payment_transaction_id": session.get('payment_transaction_id')
+            },
+            "test_data": {
+                "stamp": stamp,
+                "reference": reference
+            },
+            "checkout_url": url_for('checkout_paytrail', product_id=product.id)
+        }
+        
+        # Get active pending payments for this user
+        pending_payments = Payment.query.filter_by(
+            user_id=current_user.id,
+            status='pending',
+            payment_method='paytrail'
+        ).order_by(Payment.created_at.desc()).limit(5).all()
+        
+        pending_payment_data = []
+        for payment in pending_payments:
+            pending_payment_data.append({
+                "id": payment.id,
+                "transaction_id": payment.transaction_id,
+                "amount": payment.amount,
+                "status": payment.status,
+                "created_at": payment.created_at.strftime("%Y-%m-%d %H:%M:%S")
+            })
+        
+        debug_data["pending_payments"] = pending_payment_data
+        
+        # Render the debug page
+        return render_template('debug_paytrail.html', debug_data=debug_data)
+        
+    except Exception as e:
+        logger.exception(f"Error in debug Paytrail: {e}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     # Luodaan templates-kansio, jos sitä ei ole

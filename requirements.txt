@@ -24,3 +24,6 @@ Flask-Session==0.5.0
 blinker>=1.7.0
 # Aikavyöhykkeiden käsittelyyn
 pytz==2023.3
+# UUID-generointiin maksukäsittelyssä
+uuid==1.30
+# Hashlib ja hmac kuuluvat Pythonin standardikirjastoon, joten niitä ei tarvitse asentaa erikseen

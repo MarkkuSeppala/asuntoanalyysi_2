@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Debug Paytrail Integration{% endblock %}
+
+{% block extra_css %}
+<style>
+    .debug-container {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .debug-section {
+        margin-bottom: 20px;
+    }
+    
+    .debug-card {
+        background-color: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .json-display {
+        background-color: #1e1e1e;
+        color: #f0f0f0;
+        padding: 15px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-family: monospace;
+        font-size: 14px;
+        white-space: pre-wrap;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .test-buttons {
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Paytrail Integration Debug</h1>
+    
+    <div class="test-buttons">
+        <a href="{{ debug_data.checkout_url }}" class="btn btn-primary">Test Paytrail Checkout</a>
+        <a href="{{ url_for('checkout', product_id=debug_data.product.id) }}" class="btn btn-secondary ms-2">Go to Regular Checkout</a>
+    </div>
+    
+    <div class="debug-container">
+        <div class="debug-section">
+            <h3>Product Information</h3>
+            <div class="debug-card">
+                <p><strong>ID:</strong> {{ debug_data.product.id }}</p>
+                <p><strong>Name:</strong> {{ debug_data.product.name }}</p>
+                <p><strong>Price:</strong> {{ debug_data.product.price }}€</p>
+                <p><strong>Type:</strong> {{ debug_data.product.type }}</p>
+                <p><strong>Active:</strong> {{ debug_data.product.active }}</p>
+            </div>
+        </div>
+        
+        <div class="debug-section">
+            <h3>User Information</h3>
+            <div class="debug-card">
+                <p><strong>ID:</strong> {{ debug_data.user.id }}</p>
+                <p><strong>Email:</strong> {{ debug_data.user.email }}</p>
+                <p><strong>Is Admin:</strong> {{ debug_data.user.is_admin }}</p>
+            </div>
+        </div>
+        
+        <div class="debug-section">
+            <h3>URLs</h3>
+            <div class="debug-card">
+                <p><strong>Base URL:</strong> {{ debug_data.urls.base_url }}</p>
+                <p><strong>Success URL:</strong> {{ debug_data.urls.success_url }}</p>
+                <p><strong>Cancel URL:</strong> {{ debug_data.urls.cancel_url }}</p>
+                <p><strong>Success Callback:</strong> {{ debug_data.urls.success_callback }}</p>
+                <p><strong>Cancel Callback:</strong> {{ debug_data.urls.cancel_callback }}</p>
+                <p><strong>Checkout URL:</strong> {{ debug_data.checkout_url }}</p>
+            </div>
+        </div>
+        
+        <div class="debug-section">
+            <h3>Session Data</h3>
+            <div class="debug-card">
+                <p><strong>Payment Stamp:</strong> {{ debug_data.session.payment_stamp or 'Not set' }}</p>
+                <p><strong>Payment Reference:</strong> {{ debug_data.session.payment_reference or 'Not set' }}</p>
+                <p><strong>Payment Transaction ID:</strong> {{ debug_data.session.payment_transaction_id or 'Not set' }}</p>
+            </div>
+        </div>
+        
+        <div class="debug-section">
+            <h3>Test Data</h3>
+            <div class="debug-card">
+                <p><strong>Test Stamp:</strong> {{ debug_data.test_data.stamp }}</p>
+                <p><strong>Test Reference:</strong> {{ debug_data.test_data.reference }}</p>
+            </div>
+        </div>
+        
+        <div class="debug-section">
+            <h3>Pending Payments</h3>
+            {% if debug_data.pending_payments %}
+                {% for payment in debug_data.pending_payments %}
+                <div class="debug-card">
+                    <p><strong>ID:</strong> {{ payment.id }}</p>
+                    <p><strong>Transaction ID:</strong> {{ payment.transaction_id }}</p>
+                    <p><strong>Amount:</strong> {{ payment.amount }}€</p>
+                    <p><strong>Status:</strong> {{ payment.status }}</p>
+                    <p><strong>Created:</strong> {{ payment.created_at }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="debug-card">
+                    <p>No pending payments found.</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="debug-section">
+            <h3>JSON Data</h3>
+            <div class="json-display">{{ debug_data | tojson(indent=2) }}</div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

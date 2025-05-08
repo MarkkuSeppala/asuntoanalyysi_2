@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+I'm testing the app both in Render.com (production) and Docker (development). Also the PostgreSQL databases are in Render.com (production database) and in Docker (development / testing database).
+
+
+You won't have direct access to neither of these databases. Docker database can be accessed with command "docker-compose exec db psql -U postgres -d asuntoanalyysi"

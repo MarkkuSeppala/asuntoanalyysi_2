@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Debug Logs{% endblock %}
+
+{% block extra_css %}
+<style>
+    .log-container {
+        background-color: #1e1e1e;
+        color: #f0f0f0;
+        padding: 20px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-family: monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        margin-bottom: 30px;
+        max-height: 800px;
+        overflow-y: auto;
+    }
+    
+    .log-entry {
+        white-space: pre-wrap;
+        margin-bottom: 2px;
+        padding: 2px 0;
+    }
+    
+    .log-entry:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .log-error {
+        color: #ff6b6b;
+    }
+    
+    .log-warning {
+        color: #ffd166;
+    }
+    
+    .log-info {
+        color: #6bccf9;
+    }
+    
+    .log-debug {
+        color: #6bff9f;
+    }
+    
+    .controls {
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Application Logs</h1>
+    
+    <div class="controls">
+        <button id="refreshLogs" class="btn btn-primary">Refresh Logs</button>
+        <button id="scrollToBottom" class="btn btn-secondary ms-2">Scroll to Bottom</button>
+        <button id="clearLogs" class="btn btn-danger ms-2">Clear Logs</button>
+        
+        <div class="form-check form-check-inline ms-4">
+            <input class="form-check-input" type="checkbox" id="showErrors" checked>
+            <label class="form-check-label" for="showErrors">Errors</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="showWarnings" checked>
+            <label class="form-check-label" for="showWarnings">Warnings</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="showInfo" checked>
+            <label class="form-check-label" for="showInfo">Info</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="showDebug" checked>
+            <label class="form-check-label" for="showDebug">Debug</label>
+        </div>
+    </div>
+    
+    <div class="log-container">
+        {% for log in log_entries %}
+            <div class="log-entry 
+                {% if 'ERROR' in log %}log-error{% elif 'WARNING' in log %}log-warning
+                {% elif 'INFO' in log %}log-info{% elif 'DEBUG' in log %}log-debug{% endif %}"
+                data-level="{% if 'ERROR' in log %}error{% elif 'WARNING' in log %}warning
+                {% elif 'INFO' in log %}info{% elif 'DEBUG' in log %}debug{% else %}other{% endif %}">
+                {{ log }}
+            </div>
+        {% else %}
+            <div class="log-entry">No log entries found.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Automatically scroll to bottom when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        const logContainer = document.querySelector('.log-container');
+        logContainer.scrollTop = logContainer.scrollHeight;
+        
+        // Filter logs based on checkboxes
+        function filterLogs() {
+            const showErrors = document.getElementById('showErrors').checked;
+            const showWarnings = document.getElementById('showWarnings').checked;
+            const showInfo = document.getElementById('showInfo').checked;
+            const showDebug = document.getElementById('showDebug').checked;
+            
+            document.querySelectorAll('.log-entry').forEach(function(entry) {
+                const level = entry.dataset.level;
+                if (level === 'error' && !showErrors) {
+                    entry.style.display = 'none';
+                } else if (level === 'warning' && !showWarnings) {
+                    entry.style.display = 'none';
+                } else if (level === 'info' && !showInfo) {
+                    entry.style.display = 'none';
+                } else if (level === 'debug' && !showDebug) {
+                    entry.style.display = 'none';
+                } else {
+                    entry.style.display = '';
+                }
+            });
+        }
+        
+        // Event listeners for filter checkboxes
+        document.getElementById('showErrors').addEventListener('change', filterLogs);
+        document.getElementById('showWarnings').addEventListener('change', filterLogs);
+        document.getElementById('showInfo').addEventListener('change', filterLogs);
+        document.getElementById('showDebug').addEventListener('change', filterLogs);
+        
+        // Scroll to bottom button
+        document.getElementById('scrollToBottom').addEventListener('click', function() {
+            logContainer.scrollTop = logContainer.scrollHeight;
+        });
+        
+        // Refresh logs button
+        document.getElementById('refreshLogs').addEventListener('click', function() {
+            window.location.reload();
+        });
+        
+        // Clear logs button (just a placeholder - would need server-side implementation)
+        document.getElementById('clearLogs').addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear the logs?')) {
+                // Here you would typically make an AJAX call to clear logs on the server
+                alert('This feature requires server-side implementation.');
+            }
+        });
+    });
+</script>
+{% endblock %} 
