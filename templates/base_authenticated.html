@@ -25,136 +25,202 @@
         
         body {
             font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+            overflow-x: hidden; /* Estetään horisontaalinen vieritys */
         }
         
+        /* Modern Navbar Styles */
         .navbar {
-            padding: 15px 0;
+            padding: 0.8rem 0;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            position: sticky; /* Pitää navbarin kiinnitettynä, ei tarvita erillistä scrolled-efektiä */
+            top: 0;
+            z-index: 1030;
         }
         
         .navbar-dark.bg-primary {
             background-color: var(--accent-color) !important;
         }
         
-        .bg-light {
-            background-color: var(--primary-color) !important;
+        /* Navbar scroll effect */
+        /* .navbar-scrolled {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
         }
+        
+        .navbar-scrolled .navbar-brand img {
+            height: 44px;
+        } */
         
         .navbar-brand {
             font-weight: 800;
-            font-size: 2rem;
-            letter-spacing: -0.5px;
-            margin-left: -25px;
+            font-size: 1.8rem;
             padding: 0;
             display: flex;
             align-items: center;
+            margin-right: 1.5rem; /* Lisätään oikealle marginaalia */
         }
         
         .navbar-brand img {
-            height: 48px;
+            height: 40px;
             max-width: 100%;
             padding: 0;
+            transition: transform 0.3s ease;
         }
         
-        .navbar-brand .brand-accent {
-            color: var(--secondary-color);
+        .navbar-brand:hover img {
+            transform: scale(1.05);
         }
         
-        .nav-link {
-            font-weight: 500;
-            padding: 8px 16px !important;
-            transition: all 0.2s ease;
-            border-radius: 6px;
-            margin: 0 3px;
-        }
-        
-        .nav-link:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        
-        .navbar-nav .nav-item.active .nav-link {
-            background-color: rgba(255, 255, 255, 0.15);
-        }
-        
-        .navbar .btn {
-            padding: 8px 16px;
-            font-weight: 600;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-        }
-        
-        /* Tyylikkäämpi navbar */
+        /* Main Navigation Links */
         .navbar-nav .nav-link {
             position: relative;
             font-weight: 600;
             letter-spacing: 0.3px;
-            padding: 10px 18px !important;
-            margin: 0 5px;
+            padding: 0.8rem 1.2rem;
+            margin: 0 0.15rem;
             border-radius: 8px;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            word-wrap: break-word; /* Estää pitkien sanojen aiheuttamat overflow-ongelmat */
+            max-width: 100%; /* Rajoittaa linkin maksimileveyden */
         }
         
         .navbar-nav .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.12);
+            transform: translateY(-1px);
+        }
+        
+        .navbar-nav .nav-link.active {
             background-color: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
-        }
-        
-        .navbar-nav .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            width: 0;
-            height: 3px;
-            background-color: var(--secondary-color);
-            transition: all 0.3s ease;
-            transform: translateX(-50%);
-            opacity: 0;
-        }
-        
-        .navbar-nav .nav-link:hover::after {
-            width: 70%;
-            opacity: 1;
         }
         
         .navbar-nav .nav-link i {
             margin-right: 8px;
-            font-size: 1.1em;
-            transition: all 0.3s ease;
+            font-size: 1rem;
+            transition: all 0.25s ease;
         }
         
         .navbar-nav .nav-link:hover i {
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
         
+        /* Dropdown Menu Styling */
         .dropdown-menu {
             border: none;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            padding: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            border-radius: 12px;
+            padding: 0.8rem;
+            margin-top: 0.5rem;
+            min-width: 200px;
+            backdrop-filter: blur(10px);
+            animation: dropdownFade 0.2s ease-out;
+        }
+        
+        @keyframes dropdownFade {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .dropdown-item {
-            padding: 8px 15px;
-            border-radius: 6px;
+            padding: 0.7rem 1rem;
+            border-radius: 8px;
             transition: all 0.2s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
         }
         
         .dropdown-item:hover {
-            background-color: rgba(18, 52, 88, 0.1);
+            background-color: rgba(18, 52, 88, 0.08);
+            transform: translateX(2px);
         }
         
-        .btn-primary {
-            background-color: var(--accent-color);
-            border-color: var(--accent-color);
+        .dropdown-item i {
+            margin-right: 10px;
+            width: 18px;
+            text-align: center;
         }
         
-        .btn-primary:hover {
-            background-color: var(--accent-light);
-            border-color: var(--accent-light);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(18, 52, 88, 0.2);
+        .dropdown-divider {
+            margin: 0.5rem 0;
+            opacity: 0.1;
+        }
+        
+        /* User Account Menu */
+        .user-profile-link {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .user-profile-link:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        .user-profile-link i {
+            font-size: 1.2rem;
+            margin-right: 8px;
+        }
+        
+        /* Mobile user menu styles */
+        .mobile-user-section {
+            background-color: rgba(255, 255, 255, 0.07);
+            border-radius: 10px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .mobile-user-header {
+            font-weight: 600;
+            padding: 0.7rem 1.2rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        
+        .mobile-user-header i {
+            font-size: 1.2rem;
+            margin-right: 8px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .mobile-profile-link {
+            padding: 0.8rem 1.2rem !important;
+            display: flex;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.9) !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+        
+        .mobile-profile-link:last-child {
+            border-bottom: none;
+        }
+        
+        .mobile-profile-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+            font-size: 1rem;
+        }
+        
+        .mobile-profile-link:hover {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            transform: none !important;
+        }
+        
+        /* Buttons in navbar */
+        .navbar .btn {
+            padding: 0.5rem 1.2rem;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s ease;
         }
         
         .btn-outline-light {
@@ -164,91 +230,221 @@
         .btn-outline-light:hover {
             color: var(--accent-color);
             transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 10px rgba(255, 255, 255, 0.15);
         }
         
-        .text-primary {
-            color: var(--accent-color) !important;
-        }
-        
-        @media (max-width: 992px) {
+        /* Mobile Responsiveness */
+        @media (max-width: 991.98px) {
             .navbar-collapse {
                 background-color: var(--accent-color);
-                padding: 20px;
-                border-radius: 8px;
-                margin-top: 10px;
+                padding: 1rem;
+                border-radius: 12px;
+                margin-top: 1rem;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+                max-height: calc(100vh - 70px);
+                overflow-y: auto;
+                width: 100%;
+                left: 0;
+                right: 0;
+                position: absolute;
+                z-index: 1000;
+                transform: none !important; /* Estää transformaatiot jotka voivat vaikuttaa sijaintiin */
+                top: 100%; /* Varmistaa että navbar-collapse tulee aina navbarin alle */
             }
             
-            .nav-item {
-                margin-bottom: 5px;
+            .navbar-nav.ms-4 {
+                margin-left: 0 !important;
             }
-            
-            .navbar-brand {
-                margin-left: 0;
+
+            ul.navbar-nav:not(.me-auto) {
+                margin-top: 1rem;
+                padding-top: 1rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
             }
             
             .navbar-brand img {
-                height: 40px;
+                height: 38px;
+            }
+            
+            .user-profile-link {
+                margin-top: 0.5rem;
+            }
+            
+            .dropdown-menu {
+                background-color: rgba(255, 255, 255, 0.05);
+                margin-left: 0;
+                margin-right: 0;
+                box-shadow: none;
+                width: calc(100% - 2rem);
+                margin: 0.5rem auto;
+                transform: none !important; /* Estää dropdown-valikon transformaatiot */
+                top: 100% !important; /* Varmistaa että dropdown avautuu alaspäin */
+                position: static !important; /* Pakottaa staattisen sijainnin */
+            }
+            
+            .dropdown-item {
+                color: rgba(255, 255, 255, 0.9);
+            }
+            
+            .dropdown-item:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+            }
+            
+            .navbar-nav .nav-link {
+                padding: 0.7rem 1rem;
+                width: 100%;
+            }
+
+            /* Specific overrides for dropdowns INSIDE the collapsed navbar */
+            .navbar-collapse .nav-item > .dropdown-menu {
+                position: static !important; /* Force static positioning within the flow */
+                float: none !important; /* Ensure no floating */
+                display: block !important; /* Varmistaa että dropdown on näkyvissä */
+                
+                /* Override properties from general .dropdown-menu that are not suitable for this static version */
+                min-width: auto !important; /* Allow it to be as narrow as its content or parent dictates */
+                animation: none !important; /* Disable desktop animations */
+                backdrop-filter: none !important; /* Disable desktop backdrop filter */
+                transform: none !important; /* Estää transformaatiot */
+                
+                /* The width and margin for block display are already set by the less specific .dropdown-menu rule above for mobile */
+                /* It will use: width: calc(100% - 2rem); and margin: 0.5rem auto; */
+                /* padding: 0.8rem; and border-radius: 12px; are inherited from desktop and are acceptable */
             }
         }
         
         @media (max-width: 576px) {
+            .container {
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+                width: 100%;
+                max-width: 100%;
+            }
+            
             .navbar-brand img {
                 height: 36px;
             }
+            
+            .navbar-toggler {
+                padding: 0.35rem 0.6rem;
+                font-size: 0.9rem;
+                border-color: rgba(255,255,255,0.25);
+            }
+            
+            .navbar-toggler:focus {
+                box-shadow: 0 0 0 0.2rem var(--accent-light);
+            }
+            
+            .navbar .btn {
+                width: 100%;
+                margin-bottom: 0.5rem;
+                text-align: left;
+            }
         }
-
-        .center-nav {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
+    </style>
+    <style>
+        /* Globaalit overflow-korjaukset */
+        * {
+            box-sizing: border-box;
+            max-width: 100%;
         }
         
-        .center-nav .nav-item {
-            margin: 0 10px;
+        img, svg, video, canvas, audio, iframe, embed, object {
+            display: block;
+            max-width: 100%;
+        }
+        
+        main {
+            overflow-x: hidden;
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Navigaatiopalkki -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container position-relative">
+    <!-- Modern Responsive Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container">
             <a class="navbar-brand" href="{{ url_for('index') }}">
                 <img src="{{ url_for('static', filename='img/kotiko-logo.png') }}" alt="Kotiko">
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <!-- Kirjautuneilla käyttäjillä näytetään analyysi ja arkisto -linkit -->
+                <ul class="navbar-nav me-auto ms-4">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}"><i class="fas fa-search-location me-1"></i> Tee analyysi</a>
+                        <a class="nav-link {% if request.path == url_for('index') %}active{% endif %}" 
+                           href="{{ url_for('index') }}">
+                            <i class="fas fa-search-location"></i> Tee analyysi
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('list_analyses') }}"><i class="fas fa-archive me-1"></i> Arkisto</a>
+                        <a class="nav-link {% if request.path == url_for('list_analyses') %}active{% endif %}" 
+                           href="{{ url_for('list_analyses') }}">
+                            <i class="fas fa-archive"></i> Arkisto
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'products' in request.path %}active{% endif %}" 
+                           href="{{ url_for('products') }}">
+                            <i class="fas fa-shopping-cart"></i> Tuotteet
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'palvelu' in request.path %}active{% endif %}" 
+                           href="{{ url_for('palvelu') }}">
+                            <i class="fas fa-concierge-bell"></i> Palvelut
+                        </a>
                     </li>
                 </ul>
                 <ul class="navbar-nav">
                     {% if current_user.is_authenticated %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle me-1"></i> {{ current_user.username }}
+                    <!-- Desktop: Käyttäjävalikko dropdown-muodossa -->
+                    <li class="nav-item dropdown d-none d-lg-block">
+                        <a class="nav-link user-profile-link dropdown-toggle" href="#" id="navbarDropdown" 
+                           role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i> {{ current_user.username }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i class="fas fa-id-card me-2"></i> Profiili</a></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('auth.profile') }}">
+                                    <i class="fas fa-id-card"></i> Profiili
+                                </a>
+                            </li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-2"></i> Kirjaudu ulos</a></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt"></i> Kirjaudu ulos
+                                </a>
+                            </li>
                         </ul>
+                    </li>
+                    
+                    <!-- Mobile: Käyttäjävalikko linkkeinä suoraan navigaatiossa -->
+                    <li class="nav-item d-block d-lg-none">
+                        <div class="mobile-user-section">
+                            <div class="mobile-user-header py-2">
+                                <i class="fas fa-user-circle"></i> {{ current_user.username }}
+                            </div>
+                            <a class="nav-link mobile-profile-link" href="{{ url_for('auth.profile') }}">
+                                <i class="fas fa-id-card"></i> Profiili
+                            </a>
+                            <a class="nav-link mobile-profile-link" href="{{ url_for('auth.logout') }}">
+                                <i class="fas fa-sign-out-alt"></i> Kirjaudu ulos
+                            </a>
+                        </div>
                     </li>
                     {% else %}
                     <li class="nav-item me-2">
-                        <a class="nav-link btn btn-outline-light" href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt me-1"></i> Kirjaudu</a>
+                        <a class="nav-link btn btn-outline-light" href="{{ url_for('auth.login') }}">
+                            <i class="fas fa-sign-in-alt me-1"></i> Kirjaudu
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link btn btn-light text-primary" href="{{ url_for('auth.register') }}"><i class="fas fa-user-plus me-1"></i> Rekisteröidy</a>
+                        <a class="nav-link btn btn-light text-primary" href="{{ url_for('auth.register') }}">
+                            <i class="fas fa-user-plus me-1"></i> Rekisteröidy
+                        </a>
                     </li>
                     {% endif %}
                 </ul>

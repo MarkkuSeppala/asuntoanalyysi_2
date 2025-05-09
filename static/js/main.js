@@ -7,6 +7,39 @@ document.addEventListener('DOMContentLoaded', function() {
         return new bootstrap.Dropdown(dropdownToggleEl);
     });
 
+    // Poistetaan navigaatiopalkin scroll-efekti, koska se aiheuttaa ongelmia logon koon kanssa
+    // const navbar = document.querySelector('.navbar');
+    // if (navbar) {
+    //     window.addEventListener('scroll', function() {
+    //         if (window.scrollY > 50) {
+    //             navbar.classList.add('navbar-scrolled');
+    //         } else {
+    //             navbar.classList.remove('navbar-scrolled');
+    //         }
+    //     });
+    // }
+
+    // Aktiivisen sivun merkintä
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('.navbar-nav .nav-link').forEach(link => {
+        if (link.getAttribute('href') === currentPath) {
+            link.classList.add('active');
+        }
+    });
+
+    // Mobile menu sulkeutuminen klikatessa linkkiä
+    const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+    const menuToggle = document.getElementById('navbarNav');
+    const bsCollapse = menuToggle ? new bootstrap.Collapse(menuToggle, {toggle: false}) : null;
+    
+    navLinks.forEach(function(link) {
+        link.addEventListener('click', function() {
+            if (window.innerWidth < 992 && bsCollapse && menuToggle.classList.contains('show')) {
+                bsCollapse.hide();
+            }
+        });
+    });
+
     // Lomakkeiden validointi
     const forms = document.querySelectorAll('.needs-validation');
     Array.from(forms).forEach(form => {

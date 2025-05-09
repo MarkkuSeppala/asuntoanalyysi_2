@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_authenticated.html" if current_user.is_authenticated else "base.html" %}
 
 {% block title %}Kotiko - Palvelun kuvaus{% endblock %}
 

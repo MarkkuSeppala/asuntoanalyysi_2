@@ -76,6 +76,14 @@
         border-bottom: 3px solid var(--secondary-color);
     }
     
+    /* Add style for risk-cards-section-title */
+    .risk-cards-section-title {
+        text-align: center;
+        color: var(--accent-color);
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    
     .btn-accent {
         background-color: var(--accent-color);
         color: white;
@@ -122,12 +130,6 @@
         max-width: 1000px;
         margin-left: auto;
         margin-right: auto;
-    }
-    
-    .analysis-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--card-shadow-hover);
-        border-bottom: 4px solid var(--accent-color);
     }
     
     .card-header-custom {
@@ -292,12 +294,6 @@
         cursor: pointer;
     }
     
-    .risk-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--card-shadow-hover);
-        border-bottom: 4px solid var(--accent-color);
-    }
-    
     /* Piilotetaan kortin sisältö oletuksena */
     .risk-card-content {
         max-height: 0;
@@ -441,7 +437,7 @@
         background-color: white;
         border-radius: 16px;
         padding: 25px 15px;
-        box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.03);
+        box-shadow: var(--card-shadow);
     }
     
     .risk-card-wrapper {
@@ -493,6 +489,18 @@
         width: 200px;
         height: 200px;
         margin: 0 auto;
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Ylimmän rivin korttien yhteneväinen korkeus */
+    .row.mb-5 .risk-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding-bottom: 20px;
     }
     
     .risk-chart-score {
@@ -568,11 +576,6 @@
         transition: var(--transition-standard);
     }
     
-    .property-details-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--card-shadow-hover);
-    }
-    
     .property-details-title {
         color: var(--accent-color);
         font-weight: 600;
@@ -596,10 +599,6 @@
         margin: 10px 15px;
         min-width: 120px;
         transition: var(--transition-standard);
-    }
-    
-    .property-detail-item:hover {
-        transform: translateY(-3px);
     }
     
     .property-detail-icon {
@@ -715,6 +714,110 @@
     .risk-thumb-down {
         background-color: #dc3545; /* Bootstrap red */
     }
+
+    /* Riskiluokkien listauksen tyylit */
+    .risk-rankings-container {
+        max-height: none;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        padding-right: 10px;
+        padding-bottom: 0;
+    }
+    
+    .risk-rankings-container::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .risk-rankings-container::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.05);
+        border-radius: 8px;
+    }
+    
+    .risk-rankings-container::-webkit-scrollbar-thumb {
+        background-color: var(--accent-color);
+        border-radius: 8px;
+    }
+    
+    /* Kokonaisriski- ja riskitaso-otsakkeet */
+    .risk-area-title-large {
+        font-weight: 700;
+        color: var(--accent-color);
+        margin-bottom: 25px;
+        font-size: 1.5rem;
+        text-align: center;
+        width: 100%;
+    }
+    
+    .risk-ranking-item:last-child {
+        margin-bottom: 0 !important;
+    }
+    
+    .risk-ranking-item {
+        padding: 8px 5px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        transition: all 0.2s ease;
+    }
+    
+    .risk-ranking-item:hover {
+        background-color: rgba(0,0,0,0.01);
+    }
+    
+    .risk-ranking-title {
+        font-weight: 500;
+        color: #333;
+        flex: 1;
+        padding-right: 10px;
+    }
+    
+    .risk-ranking-value {
+        font-weight: 600;
+        color: var(--accent-color);
+        display: flex;
+        align-items: center;
+    }
+    
+    .risk-dot {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+    
+    .risk-bar-container {
+        height: 8px;
+        background-color: rgba(0,0,0,0.05);
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .risk-bar {
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .risk-bar-fill {
+        height: 100%;
+        width: 100%;
+    }
+    
+    .risk-bar-low {
+        background-color: #28a745; /* green for low risk */
+    }
+    
+    .risk-bar-medium {
+        background-color: #ffc107; /* yellow/amber for medium risk */
+    }
+    
+    .risk-bar-high {
+        background-color: #f44336; /* red for high risk */
+    }
 </style>
 {% endblock %}
 
@@ -731,19 +834,31 @@
             </div>
         </div>
         
-        {% if risk_analysis %}
-        <div class="risk-indicator">
-            {% if risk_analysis.kokonaisriskitaso <= 5.5 %}
-            <div class="risk-thumb risk-thumb-up">
-                <i class="fas fa-thumbs-up"></i>
-            </div>
-            {% elif risk_analysis.kokonaisriskitaso > 7.4 %}
-            <div class="risk-thumb risk-thumb-down">
-                <i class="fas fa-thumbs-down"></i>
+        <div class="d-flex align-items-center">
+            {% if analysis and analysis.property_url %}
+            <a href="{{ analysis.property_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-accent btn-sm me-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                </svg>
+                Alkuperäinen ilmoitus
+            </a>
+            {% endif %}
+            
+            {% if risk_analysis %}
+            <div class="risk-indicator">
+                {% if risk_analysis.kokonaisriskitaso <= 5.5 %}
+                <div class="risk-thumb risk-thumb-up">
+                    <i class="fas fa-thumbs-up"></i>
+                </div>
+                {% elif risk_analysis.kokonaisriskitaso > 7.4 %}
+                <div class="risk-thumb risk-thumb-down">
+                    <i class="fas fa-thumbs-down"></i>
+                </div>
+                {% endif %}
             </div>
             {% endif %}
         </div>
-        {% endif %}
     </div>
 
     <!-- Kohteen perustiedot kortti -->
@@ -822,18 +937,6 @@
             </div>
             {% endif %}
         </div>
-        
-        {% if analysis and analysis.property_url %}
-        <div class="property-source-link mt-4 text-center">
-            <a href="{{ analysis.property_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-accent btn-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                </svg>
-                Alkuperäinen ilmoitus
-            </a>
-        </div>
-        {% endif %}
     </div>
     {% endif %}
 </div>
@@ -856,15 +959,17 @@
         <!-- Kokonaisriskitason kortti ja donut chart -->
         <div class="row mb-5">
             <div class="col-lg-6 col-md-12 mb-md-4">
-                <div class="risk-card h-100">
-                    <h4 class="risk-area-title text-center mb-3">Kokonaisriskitaso</h4>
+                <div class="risk-card">
+                    <h4 class="risk-area-title-large">Kokonaisriskitaso</h4>
                     <div class="risk-chart-container">
-                        <canvas id="riskDonutChart"></canvas>
-                        <div class="risk-chart-score">
-                            <span class="{% if risk_analysis.kokonaisriskitaso <= 5.5 %}risk-score-low{% elif risk_analysis.kokonaisriskitaso <= 6.9 %}risk-score-medium{% else %}risk-score-high{% endif %}">
-                                {{ risk_analysis.kokonaisriskitaso }}
-                            </span><br>
-                            <span class="risk-chart-label">/10</span>
+                        <div>
+                            <canvas id="riskDonutChart"></canvas>
+                            <div class="risk-chart-score">
+                                <span class="{% if risk_analysis.kokonaisriskitaso <= 5.5 %}risk-score-low{% elif risk_analysis.kokonaisriskitaso <= 6.9 %}risk-score-medium{% else %}risk-score-high{% endif %}">
+                                    {{ risk_analysis.kokonaisriskitaso }}
+                                </span><br>
+                                <span class="risk-chart-label">/10</span>
+                            </div>
                         </div>
                     </div>
                     <div class="text-center mt-3">
@@ -880,11 +985,41 @@
             </div>
             
             <div class="col-lg-6 col-md-12">
-                <div class="risk-card h-100 d-flex flex-column justify-content-center">
-                    <h4 class="risk-area-title mb-3">Riskianalyysin yhteenveto</h4>
-                    <p>Tämä analyysi perustuu {{ risk_analysis.riskimittari|length }} eri tekijään, joiden perusteella kokonaisriski on arvioitu.</p>
-                    <p>Kokonaisriskitaso ({{ risk_analysis.kokonaisriskitaso }}/10) on painotettu keskiarvo kaikista osa-alueista.</p>
-                    <p class="mb-0">Alla näet jokaisen riskiosa-alueen eritellyn analyysin.</p>
+                <div class="risk-card">
+                    <h4 class="risk-area-title-large">Riskiluokat</h4>
+                    <div class="risk-rankings-container">
+                        {% set sorted_risks = risk_analysis.riskimittari|sort(attribute='riski_taso', reverse=true) %}
+                        {% for riski in sorted_risks %}
+                        <div class="risk-ranking-item mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <div class="risk-ranking-title">
+                                    {{ riski.osa_alue }}
+                                </div>
+                                <div class="risk-ranking-value fw-bold">
+                                    {{ riski.riski_taso }}
+                                    {% if riski.riski_taso > 6.9 %}
+                                        <span class="risk-dot risk-level-high ms-1"></span>
+                                    {% elif riski.riski_taso > 5.5 %}
+                                        <span class="risk-dot risk-level-medium ms-1"></span>
+                                    {% else %}
+                                        <span class="risk-dot risk-level-low ms-1"></span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="risk-bar-container">
+                                <div class="risk-bar" style="width: {{ riski.riski_taso * 10 }}%;">
+                                {% if riski.riski_taso > 6.9 %}
+                                    <div class="risk-bar-fill risk-bar-high"></div>
+                                {% elif riski.riski_taso > 5.5 %}
+                                    <div class="risk-bar-fill risk-bar-medium"></div>
+                                {% else %}
+                                    <div class="risk-bar-fill risk-bar-low"></div>
+                                {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>

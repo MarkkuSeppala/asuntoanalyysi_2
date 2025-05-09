@@ -1,323 +1,243 @@
-{% extends "base.html" %}
-
-{% block title %}Omat tilaustiedot - Asuntoanalyysi{% endblock %}
-
-{% block extra_head %}
-<style>
-    .subscription-container {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 30px;
-    }
-    
-    .subscription-header {
-        margin-bottom: 30px;
-    }
-    
-    .subscription-card {
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        margin-bottom: 30px;
-    }
-    
-    .subscription-card-header {
-        background: linear-gradient(135deg, #123458, #436891);
-        color: white;
-        padding: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .subscription-card-header h3 {
-        margin: 0;
-        font-size: 1.6rem;
-    }
-    
-    .subscription-badge {
-        background-color: rgba(255, 255, 255, 0.2);
-        border-radius: 20px;
-        padding: 5px 15px;
-        font-size: 0.9rem;
-    }
-    
-    .subscription-card-body {
-        padding: 30px;
-        background-color: white;
-    }
-    
-    .info-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 12px 0;
-        border-bottom: 1px solid #eee;
-    }
-    
-    .info-row:last-child {
-        border-bottom: none;
-    }
-    
-    .info-label {
-        font-weight: 600;
-        color: #666;
-    }
-    
-    .analysis-count {
-        font-size: 2.5rem;
-        font-weight: 800;
-        color: #123458;
-        text-align: center;
-        margin: 20px 0;
-    }
-    
-    .payment-history-card {
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    }
-    
-    .payment-history-header {
-        background-color: #f8f9fa;
-        padding: 20px;
-        border-bottom: 1px solid #eee;
-    }
-    
-    .payment-history-header h3 {
-        margin: 0;
-        font-size: 1.4rem;
-    }
-    
-    .payment-history-body {
-        padding: 0;
-        background-color: white;
-    }
-    
-    .payment-item {
-        padding: 15px 20px;
-        border-bottom: 1px solid #eee;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .payment-item:last-child {
-        border-bottom: none;
-    }
-    
-    .payment-date {
-        color: #666;
-        font-size: 0.9rem;
-    }
-    
-    .payment-status {
-        padding: 3px 10px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-    }
-    
-    .payment-status-completed {
-        background-color: #e8f5e9;
-        color: #2e7d32;
-    }
-    
-    .payment-status-pending {
-        background-color: #fff8e1;
-        color: #f57f17;
-    }
-    
-    .payment-status-failed {
-        background-color: #ffebee;
-        color: #c62828;
-    }
-    
-    .buy-more-card {
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        text-align: center;
-        padding: 30px;
-        background-color: white;
-    }
-</style>
-{% endblock %}
+{% extends "layout.html" %}
 
 {% block content %}
-<section class="py-5">
-    <div class="subscription-container">
-        <div class="subscription-header">
-            <h1>Omat tilaustietoni</h1>
-            <p class="text-muted">Hallinnoi tilaustasi ja näe maksuhistoriasi</p>
+<div class="container mt-4">
+    <h1 class="mb-4">Tilaukseni</h1>
+    
+    <!-- Flash messages -->
+    {% for category, message in get_flashed_messages(with_categories=true) %}
+    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    
+    <!-- Active subscription -->
+    {% if subscription and subscription.is_active() %}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0">Aktiivinen tilaus</h5>
         </div>
-        
-        <div class="row">
-            <div class="col-md-8">
-                {% if subscription %}
-                <!-- Aktiivinen tilaus -->
-                <div class="subscription-card">
-                    <div class="subscription-card-header">
-                        <h3>{{ subscription.subscription_type|capitalize }} tilaus</h3>
-                        <span class="subscription-badge">
-                            {% if subscription.status == 'active' %}
-                                Aktiivinen
-                            {% elif subscription.status == 'cancelled' %}
-                                Peruutettu
-                            {% else %}
-                                {{ subscription.status|capitalize }}
-                            {% endif %}
-                        </span>
-                    </div>
-                    <div class="subscription-card-body">
-                        <div class="info-row">
-                            <span class="info-label">Tilattu</span>
-                            <span>{{ finnish_time(subscription.created_at).strftime('%d.%m.%Y') }}</span>
-                        </div>
-                        
-                        {% if subscription.expires_at %}
-                        <div class="info-row">
-                            <span class="info-label">Voimassa</span>
-                            <span>{{ finnish_time(subscription.expires_at).strftime('%d.%m.%Y') }} asti</span>
-                        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <h5>{{ subscription.product.name }}</h5>
+                    <p class="text-muted">Tilaustunnus: {{ subscription.id }}</p>
+                    
+                    <div class="mb-3">
+                        <strong>Tila:</strong> 
+                        <span class="badge bg-success">Aktiivinen</span>
+                        {% if subscription.cancel_at_period_end %}
+                        <span class="badge bg-warning">Päättyy laskutuskauden lopussa</span>
                         {% endif %}
-                        
-                        {% if subscription.next_billing_date %}
-                        <div class="info-row">
-                            <span class="info-label">Seuraava laskutus</span>
-                            <span>{{ finnish_time(subscription.next_billing_date).strftime('%d.%m.%Y') }}</span>
-                        </div>
-                        {% endif %}
-                        
-                        <div class="info-row">
-                            <span class="info-label">Tila</span>
-                            <span>
-                                {% if subscription.status == 'active' %}
-                                    {% if subscription.cancel_at_period_end %}
-                                        Peruutetaan kauden lopussa
-                                    {% else %}
-                                        Aktiivinen
-                                    {% endif %}
-                                {% elif subscription.status == 'cancelled' %}
-                                    Peruutettu
-                                {% else %}
-                                    {{ subscription.status|capitalize }}
-                                {% endif %}
-                            </span>
-                        </div>
-                        
-                        <div class="mt-4">
-                            {% if subscription.status == 'active' and not subscription.cancel_at_period_end %}
-                            <form action="{{ url_for('cancel_subscription', subscription_id=subscription.id) }}" method="POST" id="cancelForm">
-                                <input type="hidden" name="cancel_immediately" value="false" id="cancelImmediately">
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-outline-danger">Peruuta tilaus kauden lopussa</button>
-                                    <button type="button" class="btn btn-outline-secondary" onclick="cancelImmediatelyAction()">Peruuta heti</button>
-                                </div>
-                            </form>
-                            {% elif subscription.status == 'active' and subscription.cancel_at_period_end %}
-                            <div class="alert alert-info">
-                                Tilauksesi on peruutettu ja päättyy {{ finnish_time(subscription.expires_at).strftime('%d.%m.%Y') }}.
-                            </div>
-                            {% endif %}
-                        </div>
                     </div>
-                </div>
-                {% else %}
-                <!-- Ei tilausta -->
-                <div class="subscription-card">
-                    <div class="subscription-card-header">
-                        <h3>Ei aktiivista tilausta</h3>
-                    </div>
-                    <div class="subscription-card-body">
-                        <p>Sinulla ei ole tällä hetkellä aktiivista tilausta.</p>
-                        
-                        {% if analyses_left > 0 %}
-                        <div class="alert alert-info">
-                            Sinulla on jäljellä {{ analyses_left }} analyysiä. Kun ne on käytetty, tarvitset tilauksen tai uuden analyysikerran ostamisen.
-                        </div>
+                    
+                    <div class="mb-3">
+                        <strong>Tilaustyyppi:</strong> 
+                        {% if subscription.subscription_type == 'monthly' %}
+                        Kuukausitilaus
                         {% else %}
-                        <div class="alert alert-warning">
-                            Sinulla ei ole jäljellä analyysejä. Hanki tilaus tai osta analyysejä jatkaaksesi palvelun käyttöä.
-                        </div>
+                        {{ subscription.subscription_type }}
                         {% endif %}
-                        
-                        <div class="d-grid gap-2 mt-4">
-                            <a href="{{ url_for('products') }}" class="btn btn-primary">Katso tilausvaihtoehdot</a>
-                        </div>
                     </div>
-                </div>
-                {% endif %}
-                
-                <!-- Maksuhistoria -->
-                {% if payments %}
-                <div class="payment-history-card mt-4">
-                    <div class="payment-history-header">
-                        <h3>Maksuhistoria</h3>
+                    
+                    <div class="mb-3">
+                        <strong>Voimassa:</strong> {{ subscription.created_at.strftime('%d.%m.%Y') }} - {{ subscription.expires_at.strftime('%d.%m.%Y') }}
                     </div>
-                    <div class="payment-history-body">
-                        {% for payment in payments %}
-                        <div class="payment-item">
-                            <div>
-                                <div>{{ payment.product.name }}</div>
-                                <div class="payment-date">{{ finnish_time(payment.created_at).strftime('%d.%m.%Y %H:%M') }}</div>
-                            </div>
-                            <div>
-                                <div>{{ "%.2f"|format(payment.amount) }}€</div>
-                                <span class="payment-status payment-status-{{ payment.status }}">
-                                    {% if payment.status == 'completed' %}
-                                        Maksettu
-                                    {% elif payment.status == 'pending' %}
-                                        Odottaa
-                                    {% elif payment.status == 'failed' %}
-                                        Epäonnistui
-                                    {% else %}
-                                        {{ payment.status|capitalize }}
-                                    {% endif %}
-                                </span>
-                            </div>
-                        </div>
-                        {% endfor %}
+                    
+                    {% if subscription.next_billing_date %}
+                    <div class="mb-3">
+                        <strong>Seuraava laskutuspäivä:</strong> {{ subscription.next_billing_date.strftime('%d.%m.%Y') }}
                     </div>
-                </div>
-                {% endif %}
-            </div>
-            
-            <div class="col-md-4">
-                <!-- Jäljellä olevat analyysit -->
-                <div class="subscription-card mb-4">
-                    <div class="subscription-card-header">
-                        <h3>Analyysit</h3>
-                    </div>
-                    <div class="subscription-card-body">
-                        {% if subscription and subscription.subscription_type == 'monthly' %}
-                        <div class="analysis-count">∞</div>
-                        <p class="text-center">Rajaton määrä analyysejä kuukaudessa</p>
-                        {% else %}
-                        <div class="analysis-count">{{ analyses_left }}</div>
-                        <p class="text-center">Jäljellä olevaa analyysiä</p>
-                        {% endif %}
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <strong>Hinta:</strong> {{ subscription.product.price }}€ / kuukausi
                     </div>
                 </div>
                 
-                <!-- Osta lisää -->
-                <div class="buy-more-card">
-                    <h4>Tarvitsetko lisää analyysejä?</h4>
-                    <p>Osta lisää analyysejä tai vaihda kuukausitilaajaksi</p>
-                    <a href="{{ url_for('products') }}" class="btn btn-primary mt-2">Katso vaihtoehdot</a>
+                <div class="col-md-4">
+                    <!-- Subscription actions -->
+                    <div class="d-grid gap-2">
+                        {% if subscription.cancel_at_period_end %}
+                        <!-- Option to undo cancellation -->
+                        <a href="{{ url_for('renew_subscription', subscription_id=subscription.id) }}" class="btn btn-success">
+                            <i class="fas fa-redo-alt"></i> Jatka tilausta
+                        </a>
+                        {% else %}
+                        <!-- Cancel subscription button - opens modal -->
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelSubscriptionModal">
+                            <i class="fas fa-times-circle"></i> Peruuta tilaus
+                        </button>
+                        {% endif %}
+                        
+                        <!-- Renew subscription now button -->
+                        <a href="{{ url_for('renew_subscription', subscription_id=subscription.id) }}" class="btn btn-primary">
+                            <i class="fas fa-sync-alt"></i> Uusi tilaus nyt
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</section>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    function cancelImmediatelyAction() {
-        if (confirm('Haluatko varmasti peruuttaa tilauksesi välittömästi? Tätä toimintoa ei voi perua.')) {
-            document.getElementById('cancelImmediately').value = 'true';
-            document.getElementById('cancelForm').submit();
-        }
-    }
-</script>
+    
+    <!-- Cancel Subscription Modal -->
+    <div class="modal fade" id="cancelSubscriptionModal" tabindex="-1" aria-labelledby="cancelSubscriptionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="cancelSubscriptionModalLabel">Vahvista tilauksen peruutus</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Oletko varma, että haluat peruuttaa tilauksesi?</p>
+                    
+                    <form id="cancelSubscriptionForm" action="{{ url_for('process_subscription_cancellation') }}" method="POST">
+                        <input type="hidden" name="subscription_id" value="{{ subscription.id }}">
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="cancel_type" id="cancelAtPeriodEnd" value="period_end" checked>
+                            <label class="form-check-label" for="cancelAtPeriodEnd">
+                                Peruuta laskutuskauden lopussa ({{ subscription.expires_at.strftime('%d.%m.%Y') }})
+                            </label>
+                            <small class="form-text text-muted d-block">Voit käyttää palvelua laskutuskauden loppuun asti.</small>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="cancel_type" id="cancelImmediately" value="immediate">
+                            <label class="form-check-label" for="cancelImmediately">
+                                Peruuta välittömästi
+                            </label>
+                            <small class="form-text text-muted d-block">Tilaus päättyy heti, etkä voi enää käyttää palvelua.</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Peruuta</button>
+                    <button type="button" class="btn btn-danger" onclick="document.getElementById('cancelSubscriptionForm').submit();">
+                        Vahvista peruutus
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Payment History -->
+    {% if payments %}
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="card-title mb-0">Maksuhistoria</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Päivämäärä</th>
+                            <th>Summa</th>
+                            <th>Maksutapa</th>
+                            <th>Tila</th>
+                            <th>Tapahtuma-ID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td>{{ payment.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                            <td>{{ payment.amount }}€</td>
+                            <td>{{ payment.payment_method }}</td>
+                            <td>
+                                {% if payment.status == 'completed' %}
+                                <span class="badge bg-success">Maksettu</span>
+                                {% elif payment.status == 'pending' %}
+                                <span class="badge bg-warning">Odottaa</span>
+                                {% elif payment.status == 'failed' %}
+                                <span class="badge bg-danger">Epäonnistui</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ payment.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ payment.transaction_id }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% elif subscription and not subscription.is_active() %}
+    <!-- Inactive subscription -->
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="card-title mb-0">Päättynyt tilaus</h5>
+        </div>
+        <div class="card-body">
+            <p>Tilauksesi on päättynyt. Voit aktivoida uuden tilauksen alla olevista vaihtoehdoista.</p>
+            
+            <div class="mb-3">
+                <strong>Tila:</strong> 
+                {% if subscription.status == 'cancelled' %}
+                <span class="badge bg-secondary">Peruutettu</span>
+                {% elif subscription.status == 'expired' %}
+                <span class="badge bg-secondary">Vanhentunut</span>
+                {% elif subscription.status == 'payment_failed' %}
+                <span class="badge bg-danger">Maksu epäonnistui</span>
+                {% else %}
+                <span class="badge bg-secondary">{{ subscription.status }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <strong>Päättymispäivä:</strong> {{ subscription.expires_at.strftime('%d.%m.%Y') }}
+            </div>
+            
+            <!-- Reactivate button -->
+            <a href="{{ url_for('renew_subscription', subscription_id=subscription.id) }}" class="btn btn-success">
+                <i class="fas fa-redo-alt"></i> Aktivoi tilaus uudelleen
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <!-- No subscription -->
+    <div class="alert alert-info">
+        <h4 class="alert-heading">Ei aktiivista tilausta</h4>
+        <p>Sinulla ei ole aktiivista tilausta tällä hetkellä. Valitse alla olevista vaihtoehdoista sinulle sopivin tilaus.</p>
+    </div>
+    {% endif %}
+    
+    <!-- Available Subscription Products -->
+    {% if subscription_products %}
+    <h2 class="mb-3 mt-4">Saatavilla olevat tilaukset</h2>
+    
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
+        {% for product in subscription_products %}
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ product.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-price text-center">{{ product.price }}€ <span class="period">/kuukausi</span></h6>
+                    <p class="card-text">{{ product.description }}</p>
+                    <ul class="list-unstyled mb-4">
+                        <li><i class="fas fa-check text-success me-2"></i>Rajaton määrä analyysejä</li>
+                        <li><i class="fas fa-check text-success me-2"></i>30 päivän tilausjakso</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Peruutettavissa milloin tahansa</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <div class="d-grid">
+                        <a href="{{ url_for('checkout_paytrail', product_id=product.id) }}" class="btn btn-primary">
+                            Tilaa nyt
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
 {% endblock %} 

@@ -28,6 +28,10 @@ import etuovi_downloader  # Import the etuovi_downloader
 import oikotie_downloader  # Import the oikotie_downloader
 import info_extract  # Käytetään info_extract-moduulia kat_api_call-moduulin kautta
 
+# Import subscription modules
+from subscription_service import subscription_service
+from subscription_scheduler import subscription_scheduler
+
 # Asetetaan lokitus
 logging.basicConfig(
     level=logging.INFO,
@@ -1213,33 +1217,8 @@ def process_payment(product_id):
 @app.route('/my_subscription')
 @login_required
 def my_subscription():
-    """Näyttää käyttäjän tilaustiedot"""
-    try:
-        # Haetaan käyttäjän aktiivinen tilaus
-        subscription = Subscription.query.filter_by(
-            user_id=current_user.id,
-            status='active'
-        ).first()
-        
-        # Haetaan käyttäjän maksut
-        payments = Payment.query.filter_by(
-            user_id=current_user.id,
-            status='completed'
-        ).order_by(Payment.created_at.desc()).all()
-        
-        # Haetaan tuotevalikoima
-        products = Product.query.filter_by(active=True).all()
-        
-        return render_template('my_subscription.html', 
-                              subscription=subscription,
-                              payments=payments,
-                              products=products,
-                              analyses_left=current_user.analyses_left)
-        
-    except Exception as e:
-        logger.exception(f"Virhe tilaustietojen näyttämisessä: {e}")
-        flash('Tilaustietojen lataamisessa tapahtui virhe. Yritä uudelleen.', 'danger')
-        return redirect(url_for('index'))
+    """Redirect to the new endpoint for backwards compatibility"""
+    return redirect(url_for('view_my_subscription'))
 
 @app.route('/cancel_subscription/<int:subscription_id>', methods=['POST'])
 @login_required
@@ -1252,7 +1231,7 @@ def cancel_subscription(subscription_id):
         # Tarkistetaan että käyttäjällä on oikeus peruuttaa tämä tilaus
         if subscription.user_id != current_user.id:
             flash('Sinulla ei ole oikeutta peruuttaa tätä tilausta.', 'danger')
-            return redirect(url_for('my_subscription'))
+            return redirect(url_for('view_my_subscription'))
             
         # Peruutetaan tilaus 
         cancel_immediately = request.form.get('cancel_immediately') == 'true'
@@ -1263,12 +1242,12 @@ def cancel_subscription(subscription_id):
         else:
             flash('Tilauksesi on merkitty peruutettavaksi nykyisen laskutuskauden lopussa.', 'success')
             
-        return redirect(url_for('my_subscription'))
+        return redirect(url_for('view_my_subscription'))
         
     except Exception as e:
         logger.exception(f"Virhe tilauksen peruuttamisessa: {e}")
         flash('Tilauksen peruuttamisessa tapahtui virhe. Yritä uudelleen.', 'danger')
-        return redirect(url_for('my_subscription'))
+        return redirect(url_for('view_my_subscription'))
 
 # Paytrail payment routes
 @app.route('/checkout/paytrail/<int:product_id>', methods=['GET'])
@@ -1354,32 +1333,32 @@ def payment_success():
         if not paytrail_service.verify_payment_signature(request.args):
             logger.error("Invalid payment signature")
             flash('Maksun vahvistuksessa tapahtui virhe. Tarkista maksu tililtäsi.', 'warning')
-            return redirect(url_for('my_subscription'))
+            return redirect(url_for('view_my_subscription'))
             
         # Get transaction ID from query params
         transaction_id = request.args.get('checkout-transaction-id')
         if not transaction_id:
             logger.error("Missing transaction ID in success redirect")
             flash('Maksun vahvistuksessa tapahtui virhe. Tarkista maksu tililtäsi.', 'warning')
-            return redirect(url_for('my_subscription'))
+            return redirect(url_for('view_my_subscription'))
             
         # Verify transaction ID against session data
         if session.get('payment_transaction_id') != transaction_id:
             logger.error(f"Transaction ID mismatch: {session.get('payment_transaction_id')} != {transaction_id}")
             flash('Maksun vahvistuksessa tapahtui virhe. Tarkista maksu tililtäsi.', 'warning')
-            return redirect(url_for('my_subscription'))
+            return redirect(url_for('view_my_subscription'))
             
         # Update payment status in database
         payment = Payment.query.filter_by(transaction_id=transaction_id).first()
         if not payment:
             logger.error(f"Payment not found for transaction ID: {transaction_id}")
             flash('Maksun vahvistuksessa tapahtui virhe. Tarkista maksu tililtäsi.', 'warning')
-            return redirect(url_for('my_subscription'))
+            return redirect(url_for('view_my_subscription'))
             
         # If payment is already processed, just redirect
         if payment.status == 'completed':
             flash('Maksu on jo käsitelty onnistuneesti!', 'success')
-            return redirect(url_for('my_subscription'))
+            return redirect(url_for('view_my_subscription'))
             
         # Update payment status
         payment.status = 'completed'
@@ -1423,12 +1402,12 @@ def payment_success():
         session.pop('payment_reference', None)
         session.pop('payment_transaction_id', None)
         
-        return redirect(url_for('my_subscription'))
+        return redirect(url_for('view_my_subscription'))
         
     except Exception as e:
         logger.exception(f"Virhe maksun käsittelyssä: {e}")
         flash('Maksun käsittelyssä tapahtui virhe. Tarkista maksu tililtäsi.', 'warning')
-        return redirect(url_for('my_subscription'))
+        return redirect(url_for('view_my_subscription'))
 
 @app.route('/payment/cancel', methods=['GET'])
 @login_required
@@ -1733,6 +1712,135 @@ def debug_paytrail(product_id):
     except Exception as e:
         logger.exception(f"Error in debug Paytrail: {e}")
         return jsonify({"error": str(e)}), 500
+
+# Start subscription scheduler if in production or if specified
+if os.environ.get('FLASK_ENV') == 'production' or os.environ.get('RUN_SUBSCRIPTION_SCHEDULER') == 'true':
+    logger.info("Starting subscription scheduler...")
+    with app.app_context():
+        subscription_scheduler.start()
+    logger.info("Subscription scheduler started")
+
+# Subscription management routes
+@app.route('/my-subscription', methods=['GET'])
+@login_required
+def view_my_subscription():
+    """View and manage user's subscription"""
+    # Get user's active subscription
+    subscription = Subscription.query.filter_by(
+        user_id=current_user.id,
+        status='active'
+    ).first()
+    
+    # Get payment history for the subscription
+    payments = []
+    if subscription:
+        payments = Payment.query.filter_by(
+            subscription_id=subscription.id
+        ).order_by(Payment.created_at.desc()).all()
+    
+    # Get available subscription products for upgrading/changing
+    subscription_products = Product.query.filter_by(
+        product_type='subscription',
+        active=True
+    ).all()
+    
+    return render_template(
+        'my_subscription.html',
+        subscription=subscription,
+        payments=payments,
+        subscription_products=subscription_products
+    )
+
+@app.route('/subscription/cancel', methods=['POST'])
+@login_required
+def process_subscription_cancellation():
+    """Cancel a subscription"""
+    try:
+        subscription_id = request.form.get('subscription_id')
+        if not subscription_id:
+            flash('Tilauksen tunnus puuttuu.', 'danger')
+            return redirect(url_for('view_my_subscription'))
+            
+        # Convert to int
+        subscription_id = int(subscription_id)
+        
+        # Check if the subscription belongs to the current user
+        subscription = Subscription.query.filter_by(
+            id=subscription_id,
+            user_id=current_user.id
+        ).first()
+        
+        if not subscription:
+            flash('Tilausta ei löydy.', 'danger')
+            return redirect(url_for('view_my_subscription'))
+            
+        # Get cancel type (immediate or at period end)
+        cancel_type = request.form.get('cancel_type', 'period_end')
+        immediate = (cancel_type == 'immediate')
+        
+        # Cancel subscription
+        result = subscription_service.cancel_subscription(subscription_id, immediate=immediate)
+        
+        if result:
+            if immediate:
+                flash('Tilauksesi on peruutettu välittömästi.', 'success')
+            else:
+                flash('Tilauksesi päättyy nykyisen laskutuskauden lopussa.', 'success')
+        else:
+            flash('Tilauksen peruuttamisessa tapahtui virhe. Yritä uudelleen.', 'danger')
+            
+        return redirect(url_for('view_my_subscription'))
+        
+    except Exception as e:
+        logger.exception(f"Error cancelling subscription: {e}")
+        flash('Tilauksen peruuttamisessa tapahtui virhe. Yritä uudelleen.', 'danger')
+        return redirect(url_for('view_my_subscription'))
+
+@app.route('/subscription/renew/<int:subscription_id>', methods=['GET'])
+@login_required
+def renew_subscription(subscription_id):
+    """Create a renewal payment for subscription"""
+    try:
+        # Check if the subscription belongs to the current user
+        subscription = Subscription.query.filter_by(
+            id=subscription_id,
+            user_id=current_user.id
+        ).first()
+        
+        if not subscription:
+            flash('Tilausta ei löydy.', 'danger')
+            return redirect(url_for('view_my_subscription'))
+            
+        # Get base URL for redirects
+        if app.config.get('FLASK_ENV') == 'production':
+            base_url = request.host_url.rstrip('/')
+        else:
+            # For local development, use the request host
+            base_url = request.host_url.rstrip('/')
+            
+        # Process recurring payment
+        payment_result = subscription_service.process_recurring_payment(
+            subscription_id,
+            redirect_url_base=base_url
+        )
+        
+        if payment_result["success"]:
+            # Store payment data in session for validation
+            session['payment_stamp'] = payment_result['stamp']
+            session['payment_reference'] = payment_result['reference']
+            session['payment_transaction_id'] = payment_result['transaction_id']
+            
+            # Redirect to Paytrail payment page
+            return redirect(payment_result['payment_url'])
+        else:
+            error_msg = payment_result.get("error", "Unknown error")
+            flash(f'Maksun luomisessa tapahtui virhe: {error_msg}', 'danger')
+            return redirect(url_for('view_my_subscription'))
+            
+    except Exception as e:
+        logger.exception(f"Error renewing subscription: {e}")
+        flash('Tilauksen uusimisessa tapahtui virhe. Yritä uudelleen.', 'danger')
+        return redirect(url_for('view_my_subscription'))
 
 if __name__ == '__main__':
     # Luodaan templates-kansio, jos sitä ei ole

@@ -27,3 +27,4 @@ pytz==2023.3
 # UUID-generointiin maksukäsittelyssä
 uuid==1.30
 # Hashlib ja hmac kuuluvat Pythonin standardikirjastoon, joten niitä ei tarvitse asentaa erikseen
+schedule==1.2.0
